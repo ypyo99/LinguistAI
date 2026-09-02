@@ -32,12 +32,15 @@ Rules:
 Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
 
     try {
-      const models = ['gemini-3.6-flash', 'gemini-1.5-flash'];
+      const model = 'gemini-3.6-flash';
       let res;
       let errData;
       let fullText = '';
+      let attempt = 0;
+      const maxAttempts = 3;
       
-      for (const model of models) {
+      while (attempt < maxAttempts) {
+        attempt++;
         setGeneratingCount(0);
         fullText = '';
         
@@ -85,14 +88,16 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
         
         errData = await res.json().catch(() => ({}));
         
-        // 429(Too Many Requests)나 500번대(서버 에러/High Demand)가 아니면 바로 에러 던짐
-        if (res.status !== 429 && res.status < 500) {
-          throw new Error((errData && errData.error && errData.error.message) || `HTTP ${res.status}`);
+        // 429(Too Many Requests)나 500번대(서버 에러/High Demand)인 경우 재시도
+        if (res.status === 429 || res.status >= 500) {
+          if (attempt < maxAttempts) {
+            console.warn(`[Retry] 서버 혼잡 (${res.status}), 2초 후 재시도 (${attempt}/${maxAttempts})...`);
+            await new Promise(r => setTimeout(r, 2000));
+            continue;
+          }
         }
-        console.warn(`[Fallback] ${model} 실패 (${res.status}), 다음 모델 시도...`);
-      }
-
-      if (!res.ok) {
+        
+        // 재시도 횟수를 초과했거나 다른 에러인 경우 던짐
         throw new Error((errData && errData.error && errData.error.message) || `HTTP ${res.status}`);
       }
 
