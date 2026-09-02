@@ -193,57 +193,59 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
               />
             </div>
 
+            {/* 난이도 + 문장 개수 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-md">
+              <div className="flex flex-col gap-1 sm:gap-base">
+                <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="difficulty">
+                  난이도
+                </label>
+                <select
+                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                  id="difficulty"
+                  value={difficulty}
+                  onChange={e => setDifficulty(e.target.value)}
+                >
+                  <option>초급</option>
+                  <option>중급</option>
+                  <option>고급</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1 sm:gap-base">
+                <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="count">
+                  문장 개수
+                </label>
+                <input
+                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                  id="count"
+                  max="20"
+                  min="1"
+                  type="number"
+                  value={count}
+                  onChange={e => setCount(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
             {inputMode === 'api' ? (
               <>
-                {/* 난이도 + 문장 개수 + AI 모델 */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-md">
-                  <div className="flex flex-col gap-1 sm:gap-base">
-                    <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="difficulty">
-                      난이도
-                    </label>
-                    <select
-                      className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
-                      id="difficulty"
-                      value={difficulty}
-                      onChange={e => setDifficulty(e.target.value)}
-                    >
-                      <option>초급</option>
-                      <option>중급</option>
-                      <option>고급</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1 sm:gap-base">
-                    <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="count">
-                      문장 개수
-                    </label>
-                    <input
-                      className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
-                      id="count"
-                      max="20"
-                      min="1"
-                      type="number"
-                      value={count}
-                      onChange={e => setCount(Number(e.target.value))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1 sm:gap-base">
-                    <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="model">
-                      AI 모델 (에러시 변경)
-                    </label>
-                    <input
-                      list="model-list"
-                      className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base font-mono"
-                      id="model"
-                      value={model}
-                      placeholder="예: gemini-3.6-flash"
-                      onChange={e => setModel(e.target.value)}
-                    />
-                    <datalist id="model-list">
-                      <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
-                      <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                    </datalist>
-                  </div>
+                {/* AI 모델 */}
+                <div className="flex flex-col gap-1 sm:gap-base">
+                  <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="model">
+                    AI 모델 (에러시 변경)
+                  </label>
+                  <input
+                    list="model-list"
+                    className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base font-mono"
+                    id="model"
+                    value={model}
+                    placeholder="예: gemini-3.6-flash"
+                    onChange={e => setModel(e.target.value)}
+                  />
+                  <datalist id="model-list">
+                    <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  </datalist>
                 </div>
 
                 {/* 에러 메시지 */}
