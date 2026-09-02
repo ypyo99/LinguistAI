@@ -190,7 +190,7 @@ export default function StudyTab({ sentences = [], apiKey }) {
                     반복 횟수
                   </label>
                   <input
-                    className="w-24 sm:w-32 h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                    className="w-56 sm:w-72 h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
                     id="repeat" max="5" min="1" type="number"
                     value={repeat}
                     onChange={e => setRepeat(Math.max(1, Math.min(5, Number(e.target.value))))}
@@ -200,7 +200,7 @@ export default function StudyTab({ sentences = [], apiKey }) {
                 {/* 재생 속도 */}
                 <div className="flex items-center gap-4">
                   <span className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20">재생 속도</span>
-                  <div className="w-56 sm:w-64">
+                  <div className="w-56 sm:w-72">
                     <RadioGroup
                       name="speed"
                       value={speed}
@@ -217,7 +217,7 @@ export default function StudyTab({ sentences = [], apiKey }) {
                 {/* 재생 모드 */}
                 <div className="flex items-center gap-4">
                   <span className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20">재생 모드</span>
-                  <div className="w-40 sm:w-48">
+                  <div className="w-56 sm:w-72">
                     <RadioGroup
                       name="mode"
                       value={mode}
@@ -234,7 +234,7 @@ export default function StudyTab({ sentences = [], apiKey }) {
                 <div className="flex items-center gap-4">
                   <span className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20">언어 순서</span>
                   <select
-                    className="w-40 sm:w-48 h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                    className="w-56 sm:w-72 h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
                     value={langOrder}
                     onChange={e => setLangOrder(e.target.value)}
                   >
