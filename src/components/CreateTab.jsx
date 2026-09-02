@@ -59,12 +59,16 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
         if (res.ok) {
           const reader = res.body.getReader();
           const decoder = new TextDecoder('utf-8');
+          let buffer = '';
           
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
+            
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // 마지막 불완전한 라인은 버퍼에 남김
+            
             for (const line of lines) {
               if (line.startsWith('data: ')) {
                 const dataStr = line.slice(6);
@@ -78,7 +82,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                     setGeneratingCount(Math.min(matchCount, count));
                   }
                 } catch (e) {
-                  // 청크 분할로 인한 JSON 파싱 에러 무시
+                  // 청크 분할로 인한 JSON 파싱 에러 방어
                 }
               }
             }
