@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 export default function SetupTab({ apiKey, onSave }) {
   // Gemini API Key State
   const [input, setInput] = useState(apiKey || '');
