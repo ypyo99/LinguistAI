@@ -185,24 +185,22 @@ export default function StudyTab({ sentences = [], apiKey }) {
             {showSettings && (
               <div className="space-y-3 sm:space-y-md">
                 {/* 반복 횟수 */}
-                <div className="flex items-center justify-between gap-3">
-                  <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0" htmlFor="repeat">
+                <div className="flex items-center gap-4">
+                  <label className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20" htmlFor="repeat">
                     반복 횟수
                   </label>
-                  <div className="w-3/5 sm:w-2/3 max-w-[240px]">
-                    <input
-                      className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
-                      id="repeat" max="5" min="1" type="number"
-                      value={repeat}
-                      onChange={e => setRepeat(Math.max(1, Math.min(5, Number(e.target.value))))}
-                    />
-                  </div>
+                  <input
+                    className="w-24 sm:w-32 h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                    id="repeat" max="5" min="1" type="number"
+                    value={repeat}
+                    onChange={e => setRepeat(Math.max(1, Math.min(5, Number(e.target.value))))}
+                  />
                 </div>
 
                 {/* 재생 속도 */}
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0">재생 속도</span>
-                  <div className="w-3/5 sm:w-2/3 max-w-[240px]">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20">재생 속도</span>
+                  <div className="w-56 sm:w-64">
                     <RadioGroup
                       name="speed"
                       value={speed}
@@ -217,9 +215,9 @@ export default function StudyTab({ sentences = [], apiKey }) {
                 </div>
 
                 {/* 재생 모드 */}
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0">재생 모드</span>
-                  <div className="w-3/5 sm:w-2/3 max-w-[240px]">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20">재생 모드</span>
+                  <div className="w-40 sm:w-48">
                     <RadioGroup
                       name="mode"
                       value={mode}
@@ -233,18 +231,16 @@ export default function StudyTab({ sentences = [], apiKey }) {
                 </div>
 
                 {/* 언어 순서 */}
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0">언어 순서</span>
-                  <div className="w-3/5 sm:w-2/3 max-w-[240px]">
-                    <select
-                      className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
-                      value={langOrder}
-                      onChange={e => setLangOrder(e.target.value)}
-                    >
-                      <option value="en-ko">영어 → 한국어</option>
-                      <option value="ko-en">한국어 → 영어</option>
-                    </select>
-                  </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20">언어 순서</span>
+                  <select
+                    className="w-40 sm:w-48 h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                    value={langOrder}
+                    onChange={e => setLangOrder(e.target.value)}
+                  >
+                    <option value="en-ko">영어 → 한국어</option>
+                    <option value="ko-en">한국어 → 영어</option>
+                  </select>
                 </div>
               </div>
             )}
