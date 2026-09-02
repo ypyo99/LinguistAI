@@ -189,12 +189,14 @@ export default function StudyTab({ sentences = [], apiKey }) {
                   <label className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20" htmlFor="repeat">
                     반복 횟수
                   </label>
-                  <input
+                  <select
                     className="w-56 sm:w-72 h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
-                    id="repeat" max="5" min="1" type="number"
+                    id="repeat"
                     value={repeat}
-                    onChange={e => setRepeat(Math.max(1, Math.min(5, Number(e.target.value))))}
-                  />
+                    onChange={e => setRepeat(Number(e.target.value))}
+                  >
+                    {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}회</option>)}
+                  </select>
                 </div>
 
                 {/* 재생 속도 */}

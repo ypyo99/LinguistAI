@@ -214,15 +214,14 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                 <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="count">
                   문장 개수
                 </label>
-                <input
+                <select
                   className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
                   id="count"
-                  max="20"
-                  min="1"
-                  type="number"
                   value={count}
                   onChange={e => setCount(Number(e.target.value))}
-                />
+                >
+                  {Array.from({length: 20}, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}개</option>)}
+                </select>
               </div>
             </div>
 

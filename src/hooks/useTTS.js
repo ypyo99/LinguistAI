@@ -1,39 +1,6 @@
 import { useRef, useCallback, useEffect } from 'react';
 
-// ── Google Cloud TTS 설정 ────────────────────────────────────────
-const CLOUD_VOICE = {
-  'ko-KR': { languageCode: 'ko-KR', name: 'ko-KR-Standard-A', ssmlGender: 'FEMALE' },
-  'en-US': { languageCode: 'en-US', name: 'en-US-Standard-D', ssmlGender: 'MALE'   },
-};
-
-async function cloudTTSFetch(text, lang, rate, apiKey) {
-  const voice = CLOUD_VOICE[lang] || CLOUD_VOICE['en-US'];
-  const res = await fetch(
-    `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        input: { text },
-        voice,
-        audioConfig: {
-          audioEncoding: 'MP3',
-          speakingRate: rate,
-          pitch: 0,
-          effectsProfileId: ['headphone-class-device'],
-        },
-      }),
-    }
-  );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err && err.error && err.error.message) || `Cloud TTS HTTP ${res.status}`);
-  }
-  const { audioContent } = await res.json();
-  return `data:audio/mp3;base64,${audioContent}`;
-}
-
-// ── Web Speech API 폴백 ───────────────────────────────────────────
+// ── Web Speech API ───────────────────────────────────────────
 const VOICE_PRIORITY = {
   'ko-KR': [
     n => n === 'Google 한국어',
@@ -82,27 +49,12 @@ function webSpeechSpeak(text, lang, rate, voiceCache) {
   });
 }
 
-// ── 오디오 재생 헬퍼 ──────────────────────────────────────────────
-function playDataUrl(url, audioRef) {
-  return new Promise(resolve => {
-    const audio = new Audio(url);
-    audioRef.current = audio;
-    audio.onended = () => { audioRef.current = null; resolve(); };
-    audio.onerror = () => { audioRef.current = null; resolve(); };
-    audio.play().catch(resolve);
-  });
-}
-
 // ── 메인 훅 ──────────────────────────────────────────────────────
 /**
- * useTTS(apiKey?)
- *
- * 우선순위:
- *  1. Google Cloud TTS WaveNet  (월 100만 자 무료, 고품질)
- *  2. Web Speech API            (폴백, 브라우저 내장)
+ * useTTS()
+ * 기기 내장 Web Speech API 전용
  */
-export function useTTS(apiKey) {
-  const audioRef   = useRef(null);
+export function useTTS() {
   const voiceCache = useRef({});
 
   // voices 비동기 로드 대응
@@ -113,7 +65,7 @@ export function useTTS(apiKey) {
         const v = pickVoice(lang);
         if (v) {
           voiceCache.current[lang] = v;
-          console.info(`[TTS] fallback 음성 준비: ${lang} → "${v.name}"`);
+          console.info(`[TTS] 준비 완료: ${lang} → "${v.name}"`);
         }
       });
     };
@@ -126,11 +78,6 @@ export function useTTS(apiKey) {
   }, []);
 
   const stop = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = '';
-      audioRef.current = null;
-    }
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
@@ -139,21 +86,9 @@ export function useTTS(apiKey) {
   const speak = useCallback(
     async (text, lang, rate = 1.0) => {
       stop();
-
-      if (apiKey) {
-        try {
-          const url = await cloudTTSFetch(text, lang, rate, apiKey);
-          return playDataUrl(url, audioRef);
-        } catch (e) {
-          console.warn('[TTS] Cloud TTS 실패 → Web Speech API 사용:', e.message);
-          console.info('[TTS] Cloud TTS 활성화 방법: https://console.cloud.google.com/apis/library/texttospeech.googleapis.com');
-        }
-      }
-
-      // 폴백: Web Speech API
       return webSpeechSpeak(text, lang, rate, voiceCache);
     },
-    [apiKey, stop]
+    [stop]
   );
 
   return { speak, stop };
