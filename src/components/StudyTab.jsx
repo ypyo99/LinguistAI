@@ -185,58 +185,66 @@ export default function StudyTab({ sentences = [], apiKey }) {
             {showSettings && (
               <div className="space-y-3 sm:space-y-md">
                 {/* 반복 횟수 */}
-                <div className="flex flex-col gap-1 sm:gap-base">
-                  <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="repeat">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0" htmlFor="repeat">
                     반복 횟수
                   </label>
-                  <input
-                    className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
-                    id="repeat" max="5" min="1" type="number"
-                    value={repeat}
-                    onChange={e => setRepeat(Math.max(1, Math.min(5, Number(e.target.value))))}
-                  />
+                  <div className="w-3/5 sm:w-2/3 max-w-[240px]">
+                    <input
+                      className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                      id="repeat" max="5" min="1" type="number"
+                      value={repeat}
+                      onChange={e => setRepeat(Math.max(1, Math.min(5, Number(e.target.value))))}
+                    />
+                  </div>
                 </div>
 
                 {/* 재생 속도 */}
-                <div className="flex flex-col gap-1 sm:gap-base">
-                  <span className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant">재생 속도</span>
-                  <RadioGroup
-                    name="speed"
-                    value={speed}
-                    onChange={setSpeed}
-                    options={[
-                      { val: 'slow',   label: '느림' },
-                      { val: 'normal', label: '보통' },
-                      { val: 'fast',   label: '빠름' },
-                    ]}
-                  />
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0">재생 속도</span>
+                  <div className="w-3/5 sm:w-2/3 max-w-[240px]">
+                    <RadioGroup
+                      name="speed"
+                      value={speed}
+                      onChange={setSpeed}
+                      options={[
+                        { val: 'slow',   label: '느림' },
+                        { val: 'normal', label: '보통' },
+                        { val: 'fast',   label: '빠름' },
+                      ]}
+                    />
+                  </div>
                 </div>
 
                 {/* 재생 모드 */}
-                <div className="flex flex-col gap-1 sm:gap-base">
-                  <span className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant">재생 모드</span>
-                  <RadioGroup
-                    name="mode"
-                    value={mode}
-                    onChange={setMode}
-                    options={[
-                      { val: 'sequential', label: '순차', icon: 'format_list_numbered' },
-                      { val: 'random',     label: '랜덤', icon: 'shuffle' },
-                    ]}
-                  />
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0">재생 모드</span>
+                  <div className="w-3/5 sm:w-2/3 max-w-[240px]">
+                    <RadioGroup
+                      name="mode"
+                      value={mode}
+                      onChange={setMode}
+                      options={[
+                        { val: 'sequential', label: '순차', icon: 'format_list_numbered' },
+                        { val: 'random',     label: '랜덤', icon: 'shuffle' },
+                      ]}
+                    />
+                  </div>
                 </div>
 
                 {/* 언어 순서 */}
-                <div className="flex flex-col gap-1 sm:gap-base">
-                  <span className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant">언어 순서</span>
-                  <select
-                    className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
-                    value={langOrder}
-                    onChange={e => setLangOrder(e.target.value)}
-                  >
-                    <option value="en-ko">영어 → 한국어</option>
-                    <option value="ko-en">한국어 → 영어</option>
-                  </select>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0">언어 순서</span>
+                  <div className="w-3/5 sm:w-2/3 max-w-[240px]">
+                    <select
+                      className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                      value={langOrder}
+                      onChange={e => setLangOrder(e.target.value)}
+                    >
+                      <option value="en-ko">영어 → 한국어</option>
+                      <option value="ko-en">한국어 → 영어</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             )}
