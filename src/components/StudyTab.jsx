@@ -262,6 +262,22 @@ export default function StudyTab({ sentences = [], apiKey }) {
             </span>
             {isPlaying ? '재생 중지' : '전체 재생'}
           </button>
+
+          {/* 현재 재생 중인 문장 표시 */}
+          {(isPlaying || singleIdx !== null) && (currentIdx !== null || singleIdx !== null) && (
+            <div className="mt-2 p-4 sm:p-md rounded-xl bg-primary-container text-on-primary-container shadow-sm border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="text-xs sm:text-sm font-bold mb-1 sm:mb-2 opacity-80 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm sm:text-base animate-pulse">volume_up</span>
+                현재 재생 중
+              </div>
+              <p className="text-base sm:text-lg font-semibold leading-snug mb-1">
+                {sentences[currentIdx !== null ? currentIdx : singleIdx]?.en}
+              </p>
+              <p className="text-sm sm:text-base opacity-90 leading-snug">
+                {sentences[currentIdx !== null ? currentIdx : singleIdx]?.ko}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* ── 재생 목록 ── */}
