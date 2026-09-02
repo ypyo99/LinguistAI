@@ -30,9 +30,9 @@ const radioBase =
 
 function RadioGroup({ name, options, value, onChange }) {
   return (
-    <div className={`grid gap-2 grid-cols-${options.length}`}>
+    <div className="flex gap-2 w-full">
       {options.map(({ val, label, icon }) => (
-        <label key={val} className="text-center">
+        <label key={val} className="flex-1 text-center">
           <input
             className="peer sr-only"
             type="radio"
@@ -41,7 +41,7 @@ function RadioGroup({ name, options, value, onChange }) {
             checked={value === val}
             onChange={() => onChange(val)}
           />
-          <div className={`${radioBase} flex items-center justify-center gap-1`}>
+          <div className={`${radioBase} h-full flex items-center justify-center gap-1`}>
             {icon && <span className="material-symbols-outlined text-base">{icon}</span>}
             {label}
           </div>
