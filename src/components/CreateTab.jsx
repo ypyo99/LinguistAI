@@ -185,17 +185,19 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                 <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="model">
                   AI 모델 (에러시 변경)
                 </label>
-                <select
-                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                <input
+                  list="model-list"
+                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base font-mono"
                   id="model"
                   value={model}
+                  placeholder="예: gemini-3.6-flash"
                   onChange={e => setModel(e.target.value)}
-                >
+                />
+                <datalist id="model-list">
                   <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
-                  <option value="gemini-3.6-pro">Gemini 3.6 Pro</option>
-                  <option value="gemini-4.0-flash">Gemini 4.0 Flash</option>
-                  <option value="gemini-4.0-pro">Gemini 4.0 Pro</option>
-                </select>
+                  <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                  <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                </datalist>
               </div>
             </div>
 
