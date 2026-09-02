@@ -20,7 +20,7 @@ function delay(ms) {
 
 // ── 라디오 셀렉트 스타일 ────────────────────────────
 const radioBase =
-  'px-2 sm:px-md py-2 sm:py-sm rounded-lg border cursor-pointer select-none text-center ' +
+  'px-2 sm:px-md rounded-lg border cursor-pointer select-none text-center ' +
   'border-outline-variant dark:border-outline ' +
   'text-on-surface-variant dark:text-on-dark-surface-variant ' +
   'text-xs sm:text-label-md transition-colors ' +
@@ -30,9 +30,9 @@ const radioBase =
 
 function RadioGroup({ name, options, value, onChange }) {
   return (
-    <div className="flex gap-2 w-full">
+    <div className="flex gap-2 w-full h-10 sm:h-11">
       {options.map(({ val, label, icon }) => (
-        <label key={val} className="flex-1 text-center">
+        <label key={val} className="flex-1 text-center h-full">
           <input
             className="peer sr-only"
             type="radio"
