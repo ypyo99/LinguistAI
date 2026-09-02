@@ -135,12 +135,12 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
 
           <div className="space-y-3 sm:space-y-md">
             {/* 주제 */}
-            <div className="flex items-center gap-3 sm:gap-4">
-              <label className="text-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant whitespace-nowrap min-w-[60px]" htmlFor="topic">
-                주제 <span className="opacity-60 text-xs font-normal">(선택)</span>
+            <div className="flex flex-col gap-1 sm:gap-base">
+              <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="topic">
+                주제 <span className="opacity-60">(비워두면 일상 회화)</span>
               </label>
               <input
-                className="flex-1 w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring placeholder:text-outline-variant dark:placeholder:text-on-dark-surface-variant transition-colors duration-200 text-sm sm:text-base"
+                className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring placeholder:text-outline-variant dark:placeholder:text-on-dark-surface-variant transition-colors duration-200 text-sm sm:text-base"
                 id="topic"
                 placeholder="예: 비즈니스 미팅, 여행, 음식 주문..."
                 type="text"
@@ -152,12 +152,12 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
 
             {/* 난이도 + 문장 개수 + AI 모델 */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-md">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <label className="text-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant whitespace-nowrap min-w-[60px]" htmlFor="difficulty">
+              <div className="flex flex-col gap-1 sm:gap-base">
+                <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="difficulty">
                   난이도
                 </label>
                 <select
-                  className="flex-1 w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
                   id="difficulty"
                   value={difficulty}
                   onChange={e => setDifficulty(e.target.value)}
@@ -167,12 +167,12 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                   <option>고급</option>
                 </select>
               </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <label className="text-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant whitespace-nowrap min-w-[60px]" htmlFor="count">
+              <div className="flex flex-col gap-1 sm:gap-base">
+                <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="count">
                   문장 개수
                 </label>
                 <input
-                  className="flex-1 w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
                   id="count"
                   max="20"
                   min="1"
@@ -181,20 +181,20 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                   onChange={e => setCount(Number(e.target.value))}
                 />
               </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <label className="text-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant whitespace-nowrap min-w-[60px]" htmlFor="model">
-                  AI 모델
+              <div className="flex flex-col gap-1 sm:gap-base">
+                <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="model">
+                  AI 모델 (에러시 변경)
                 </label>
                 <select
-                  className="flex-1 w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
                   id="model"
                   value={model}
                   onChange={e => setModel(e.target.value)}
                 >
-                  <option value="gemini-3.6-flash">3.6 Flash</option>
-                  <option value="gemini-1.5-pro">1.5 Pro</option>
-                  <option value="gemini-2.5-flash">2.5 Flash</option>
-                  <option value="gemini-1.5-flash">1.5 Flash</option>
+                  <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
+                  <option value="gemini-3.6-pro">Gemini 3.6 Pro</option>
+                  <option value="gemini-4.0-flash">Gemini 4.0 Flash</option>
+                  <option value="gemini-4.0-pro">Gemini 4.0 Pro</option>
                 </select>
               </div>
             </div>
