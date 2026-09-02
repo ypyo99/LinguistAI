@@ -51,6 +51,7 @@ const VOICE_PRIORITY = {
 };
 
 function pickVoice(lang) {
+  if (!window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices();
   const cands  = voices.filter(v => v.lang.startsWith(lang.split('-')[0]));
   for (const pred of VOICE_PRIORITY[lang] ?? [() => true]) {
@@ -69,7 +70,11 @@ function webSpeechSpeak(text, lang, rate, voiceCache) {
     if (v) { utt.voice = v; voiceCache.current[lang] ??= v; }
     utt.onend   = resolve;
     utt.onerror = resolve;
-    window.speechSynthesis.speak(utt);
+    if (window.speechSynthesis) {
+      window.speechSynthesis.speak(utt);
+    } else {
+      resolve();
+    }
   });
 }
 
@@ -109,8 +114,11 @@ export function useTTS(apiKey) {
       });
     };
     cache();
-    window.speechSynthesis.onvoiceschanged = cache;
-    return () => { window.speechSynthesis.onvoiceschanged = null; };
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = cache;
+      return () => { window.speechSynthesis.onvoiceschanged = null; };
+    }
+    return () => {};
   }, []);
 
   const stop = useCallback(() => {
@@ -119,7 +127,9 @@ export function useTTS(apiKey) {
       audioRef.current.src = '';
       audioRef.current = null;
     }
-    window.speechSynthesis.cancel();
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
   }, []);
 
   const speak = useCallback(

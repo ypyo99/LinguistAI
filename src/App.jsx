@@ -10,12 +10,14 @@ function App() {
   const [activeTab, setActiveTab] = useState('study');
 
   // ── 공유 상태 ──────────────────────────────
-  const [apiKey, setApiKey] = useState(
-    () => localStorage.getItem('linguist-api-key') || ''
-  );
-  const [ttsApiKey, setTtsApiKey] = useState(
-    () => localStorage.getItem('linguist-tts-key') || ''
-  );
+  const [apiKey, setApiKey] = useState(() => {
+    try { return localStorage.getItem('linguist-api-key') || ''; }
+    catch { return ''; }
+  });
+  const [ttsApiKey, setTtsApiKey] = useState(() => {
+    try { return localStorage.getItem('linguist-tts-key') || ''; }
+    catch { return ''; }
+  });
   const [sentences, setSentences] = useState([
     { en: 'Excuse me, where is the nearest train station?', ko: '실례합니다, 가장 가까운 기차역이 어디에 있나요?' },
     { en: 'I would like to book a table for two at 7 PM.', ko: '오후 7시에 두 명 자리를 예약하고 싶습니다.' },
@@ -23,14 +25,18 @@ function App() {
   ]);
 
   const handleSaveKey = (key) => {
-    if (key) localStorage.setItem('linguist-api-key', key);
-    else localStorage.removeItem('linguist-api-key');
+    try {
+      if (key) localStorage.setItem('linguist-api-key', key);
+      else localStorage.removeItem('linguist-api-key');
+    } catch (e) { console.warn('localStorage 비활성화됨'); }
     setApiKey(key);
   };
 
   const handleSaveTtsKey = (key) => {
-    if (key) localStorage.setItem('linguist-tts-key', key);
-    else localStorage.removeItem('linguist-tts-key');
+    try {
+      if (key) localStorage.setItem('linguist-tts-key', key);
+      else localStorage.removeItem('linguist-tts-key');
+    } catch (e) { console.warn('localStorage 비활성화됨'); }
     setTtsApiKey(key);
   };
 
