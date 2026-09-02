@@ -7,6 +7,7 @@ export default function CreateTab({ apiKey, onGenerate }) {
   const [topic, setTopic] = usePersistentState('linguist-create-topic', '');
   const [difficulty, setDifficulty] = usePersistentState('linguist-create-difficulty', '초급');
   const [count, setCount] = usePersistentState('linguist-create-count', 5);
+  const [model, setModel] = usePersistentState('linguist-create-model', 'gemini-3.6-flash');
   const [loading, setLoading] = useState(false);
   const [generatingCount, setGeneratingCount] = useState(0);
   const [error, setError] = useState('');
@@ -32,7 +33,6 @@ Rules:
 Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
 
     try {
-      const model = 'gemini-3.6-flash';
       let res;
       let errData;
       let fullText = '';
@@ -150,8 +150,8 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
               />
             </div>
 
-            {/* 난이도 + 문장 개수 */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-md">
+            {/* 난이도 + 문장 개수 + AI 모델 */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-md">
               <div className="flex flex-col gap-1 sm:gap-base">
                 <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="difficulty">
                   난이도
@@ -180,6 +180,22 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                   value={count}
                   onChange={e => setCount(Number(e.target.value))}
                 />
+              </div>
+              <div className="flex flex-col gap-1 sm:gap-base">
+                <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="model">
+                  AI 모델 (에러시 변경)
+                </label>
+                <select
+                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                  id="model"
+                  value={model}
+                  onChange={e => setModel(e.target.value)}
+                >
+                  <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
+                  <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                  <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                </select>
               </div>
             </div>
 
