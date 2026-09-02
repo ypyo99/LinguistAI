@@ -31,20 +31,35 @@ Rules:
 Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
 
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.8, maxOutputTokens: 2048 },
-          }),
+      const models = ['gemini-3.6-flash', 'gemini-1.5-flash'];
+      let res;
+      let errData;
+      
+      for (const model of models) {
+        res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.8, maxOutputTokens: 2048 },
+            }),
+          }
+        );
+        
+        if (res.ok) break;
+        
+        errData = await res.json().catch(() => ({}));
+        
+        // 429(Too Many Requests)나 500번대(서버 에러/High Demand)가 아니면 바로 에러 던짐
+        if (res.status !== 429 && res.status < 500) {
+          throw new Error((errData && errData.error && errData.error.message) || `HTTP ${res.status}`);
         }
-      );
+        console.warn(`[Fallback] ${model} 실패 (${res.status}), 다음 모델 시도...`);
+      }
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
         throw new Error((errData && errData.error && errData.error.message) || `HTTP ${res.status}`);
       }
 
