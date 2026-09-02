@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+}
+
+@layer components {
+  .input-focus-ring:focus {
+    outline: none;
+    border-color: #2563EB;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  }
+  .tab-fade-in {
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  /* 터치 친화적인 최소 크기 보장 */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
