@@ -8,10 +8,22 @@ export default function CreateTab({ apiKey, onGenerate }) {
   const [difficulty, setDifficulty] = usePersistentState('linguist-create-difficulty', '초급');
   const [count, setCount] = usePersistentState('linguist-create-count', 5);
   const [model, setModel] = usePersistentState('linguist-create-model', 'gemini-3.6-flash');
+  const [inputMode, setInputMode] = usePersistentState('linguist-create-input-mode', 'api');
+  const [manualText, setManualText] = useState('');
+  
   const [loading, setLoading] = useState(false);
   const [generatingCount, setGeneratingCount] = useState(0);
   const [error, setError] = useState('');
   const [preview, setPreview] = usePersistentState('linguist-create-preview', []);
+
+  const generatedPrompt = `Generate exactly ${count} English learning sentences for a Korean learner.
+Topic: "${topic || '일상 회화'}"
+Level: ${DIFFICULTY_MAP[difficulty]}
+Rules:
+- Each sentence must be natural, practical, and appropriate for the level
+- Korean translation must be accurate and natural
+- Return ONLY a valid JSON array, no markdown fences, no explanation
+Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
 
   const handleGenerate = async () => {
     if (!apiKey) {
@@ -23,14 +35,7 @@ export default function CreateTab({ apiKey, onGenerate }) {
     setError('');
     setPreview([]);
 
-    const prompt = `Generate exactly ${count} English learning sentences for a Korean learner.
-Topic: "${topic || '일상 회화'}"
-Level: ${DIFFICULTY_MAP[difficulty]}
-Rules:
-- Each sentence must be natural, practical, and appropriate for the level
-- Korean translation must be accurate and natural
-- Return ONLY a valid JSON array, no markdown fences, no explanation
-Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
+    const prompt = generatedPrompt;
 
     try {
       let res;
@@ -120,6 +125,28 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
     }
   };
 
+  const handleParseManual = () => {
+    try {
+      setError('');
+      setPreview([]);
+      if (!manualText.trim()) throw new Error('텍스트를 입력해주세요.');
+      
+      const jsonMatch = manualText.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) throw new Error('텍스트에서 JSON 배열([ ... ]) 형식을 찾을 수 없습니다.');
+      
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('유효한 문장 데이터를 찾지 못했습니다.');
+      
+      if (!parsed[0].en || !parsed[0].ko) {
+         throw new Error('데이터에 "en" 또는 "ko" 속성이 누락되었습니다.');
+      }
+      
+      setPreview(parsed);
+    } catch (e) {
+      setError(`오류: ${e.message}`);
+    }
+  };
+
   const handleApply = () => {
     if (preview.length > 0) onGenerate(preview);
   };
@@ -129,9 +156,25 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
       <div className="max-w-2xl mx-auto flex flex-col gap-4 sm:gap-lg">
         {/* 입력 패널 */}
         <section className="bg-surface-container-lowest dark:bg-dark-surface rounded-xl shadow-sm border border-outline-variant dark:border-outline p-4 sm:p-lg transition-colors duration-200">
-          <h2 className="text-base sm:text-title-md font-semibold mb-4 sm:mb-md text-on-surface dark:text-on-dark-surface">
-            학습 문장 생성
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-md gap-3">
+            <h2 className="text-base sm:text-title-md font-semibold text-on-surface dark:text-on-dark-surface">
+              학습 문장 만들기
+            </h2>
+            <div className="flex bg-surface-variant/30 dark:bg-dark-surface-bright/30 p-1 rounded-lg shrink-0">
+              <button
+                onClick={() => setInputMode('api')}
+                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'api' ? 'bg-surface dark:bg-dark-surface shadow-sm text-primary dark:text-inverse-primary' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
+              >
+                API 자동 생성
+              </button>
+              <button
+                onClick={() => setInputMode('manual')}
+                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'manual' ? 'bg-surface dark:bg-dark-surface shadow-sm text-primary dark:text-inverse-primary' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
+              >
+                직접 붙여넣기
+              </button>
+            </div>
+          </div>
 
           <div className="space-y-3 sm:space-y-md">
             {/* 주제 */}
@@ -150,86 +193,141 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
               />
             </div>
 
-            {/* 난이도 + 문장 개수 + AI 모델 */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-md">
-              <div className="flex flex-col gap-1 sm:gap-base">
-                <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="difficulty">
-                  난이도
-                </label>
-                <select
-                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
-                  id="difficulty"
-                  value={difficulty}
-                  onChange={e => setDifficulty(e.target.value)}
+            {inputMode === 'api' ? (
+              <>
+                {/* 난이도 + 문장 개수 + AI 모델 */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-md">
+                  <div className="flex flex-col gap-1 sm:gap-base">
+                    <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="difficulty">
+                      난이도
+                    </label>
+                    <select
+                      className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                      id="difficulty"
+                      value={difficulty}
+                      onChange={e => setDifficulty(e.target.value)}
+                    >
+                      <option>초급</option>
+                      <option>중급</option>
+                      <option>고급</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1 sm:gap-base">
+                    <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="count">
+                      문장 개수
+                    </label>
+                    <input
+                      className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
+                      id="count"
+                      max="20"
+                      min="1"
+                      type="number"
+                      value={count}
+                      onChange={e => setCount(Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1 sm:gap-base">
+                    <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="model">
+                      AI 모델 (에러시 변경)
+                    </label>
+                    <input
+                      list="model-list"
+                      className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base font-mono"
+                      id="model"
+                      value={model}
+                      placeholder="예: gemini-3.6-flash"
+                      onChange={e => setModel(e.target.value)}
+                    />
+                    <datalist id="model-list">
+                      <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
+                      <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    </datalist>
+                  </div>
+                </div>
+
+                {/* 에러 메시지 */}
+                {error && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-error-container text-on-error-container text-xs sm:text-sm">
+                    <span className="material-symbols-outlined text-base shrink-0 mt-0.5">error</span>
+                    {error}
+                  </div>
+                )}
+
+                {/* 생성 버튼 */}
+                <button
+                  onClick={handleGenerate}
+                  disabled={loading}
+                  className="w-full h-11 bg-primary-container text-on-primary rounded-xl text-sm sm:text-label-md font-medium hover:bg-primary active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <option>초급</option>
-                  <option>중급</option>
-                  <option>고급</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-1 sm:gap-base">
-                <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="count">
-                  문장 개수
-                </label>
-                <input
-                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
-                  id="count"
-                  max="20"
-                  min="1"
-                  type="number"
-                  value={count}
-                  onChange={e => setCount(Number(e.target.value))}
-                />
-              </div>
-              <div className="flex flex-col gap-1 sm:gap-base">
-                <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="model">
-                  AI 모델 (에러시 변경)
-                </label>
-                <input
-                  list="model-list"
-                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base font-mono"
-                  id="model"
-                  value={model}
-                  placeholder="예: gemini-3.6-flash"
-                  onChange={e => setModel(e.target.value)}
-                />
-                <datalist id="model-list">
-                  <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
-                  <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                  <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                </datalist>
-              </div>
-            </div>
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      Gemini가 생성 중... ({generatingCount}/{count})
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-xl">auto_awesome</span>
+                      문장 생성하기
+                    </>
+                  )}
+                </button>
+              </>
+            ) : (
+              <>
+                {/* 직접 붙여넣기 모드 */}
+                <div className="flex flex-col gap-3 sm:gap-md">
+                  <div className="p-3 sm:p-4 rounded-lg bg-surface-variant/30 dark:bg-dark-surface-bright/30 border border-outline-variant/50 text-sm">
+                    <p className="mb-2 font-medium text-on-surface dark:text-on-dark-surface">1. 아래 프롬프트를 복사하여 ChatGPT나 Gemini에 물어보세요.</p>
+                    <div className="relative">
+                      <textarea
+                        readOnly
+                        value={generatedPrompt}
+                        className="w-full h-24 p-3 rounded-md bg-surface-container-lowest dark:bg-dark-bg text-on-surface-variant dark:text-on-dark-surface-variant font-mono text-xs border border-outline-variant dark:border-outline focus:outline-none resize-none"
+                      />
+                      <button
+                        onClick={() => navigator.clipboard.writeText(generatedPrompt)}
+                        className="absolute right-2 top-2 p-1.5 rounded-md bg-primary-container text-on-primary hover:bg-primary hover:text-white transition-colors"
+                        title="프롬프트 복사"
+                      >
+                        <span className="material-symbols-outlined text-sm">content_copy</span>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-1 sm:gap-base">
+                    <label className="font-medium text-on-surface dark:text-on-dark-surface">2. 답변(JSON)을 아래에 붙여넣어 주세요.</label>
+                    <textarea
+                      className="w-full h-32 p-3 rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring font-mono text-sm sm:text-base resize-y"
+                      placeholder={`[\n  {"en": "Hello", "ko": "안녕하세요"}\n]`}
+                      value={manualText}
+                      onChange={e => setManualText(e.target.value)}
+                    />
+                  </div>
+                </div>
 
-            {/* 에러 메시지 */}
-            {error && (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-error-container text-on-error-container text-xs sm:text-sm">
-                <span className="material-symbols-outlined text-base shrink-0 mt-0.5">error</span>
-                {error}
-              </div>
+                {/* 에러 메시지 */}
+                {error && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-error-container text-on-error-container text-xs sm:text-sm">
+                    <span className="material-symbols-outlined text-base shrink-0 mt-0.5">error</span>
+                    {error}
+                  </div>
+                )}
+
+                {/* 적용 버튼 */}
+                <button
+                  onClick={handleParseManual}
+                  disabled={!manualText.trim()}
+                  className="w-full h-11 bg-primary-container text-on-primary rounded-xl text-sm sm:text-label-md font-medium hover:bg-primary active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <span className="material-symbols-outlined text-xl">data_object</span>
+                  붙여넣은 텍스트 파싱하기
+                </button>
+              </>
             )}
-
-            {/* 생성 버튼 */}
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="w-full h-11 bg-primary-container text-on-primary rounded-xl text-sm sm:text-label-md font-medium hover:bg-primary active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                  </svg>
-                  Gemini가 생성 중... ({generatingCount}/{count})
-                </>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-xl">auto_awesome</span>
-                  문장 생성하기
-                </>
-              )}
-            </button>
           </div>
         </section>
 
