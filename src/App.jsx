@@ -12,11 +12,11 @@ function App() {
   // ── 공유 상태 ──────────────────────────────
   const [apiKey, setApiKey] = useState(() => {
     try { return localStorage.getItem('linguist-api-key') || ''; }
-    catch { return ''; }
+    catch (e) { return ''; }
   });
   const [ttsApiKey, setTtsApiKey] = useState(() => {
     try { return localStorage.getItem('linguist-tts-key') || ''; }
-    catch { return ''; }
+    catch (e) { return ''; }
   });
   const [sentences, setSentences] = useState([
     { en: 'Excuse me, where is the nearest train station?', ko: '실례합니다, 가장 가까운 기차역이 어디에 있나요?' },

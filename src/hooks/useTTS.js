@@ -7,7 +7,7 @@ const CLOUD_VOICE = {
 };
 
 async function cloudTTSFetch(text, lang, rate, apiKey) {
-  const voice = CLOUD_VOICE[lang] ?? CLOUD_VOICE['en-US'];
+  const voice = CLOUD_VOICE[lang] || CLOUD_VOICE['en-US'];
   const res = await fetch(
     `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
     {
@@ -27,7 +27,7 @@ async function cloudTTSFetch(text, lang, rate, apiKey) {
   );
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Cloud TTS HTTP ${res.status}`);
+    throw new Error((err && err.error && err.error.message) || `Cloud TTS HTTP ${res.status}`);
   }
   const { audioContent } = await res.json();
   return `data:audio/mp3;base64,${audioContent}`;
@@ -54,11 +54,12 @@ function pickVoice(lang) {
   if (!window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices();
   const cands  = voices.filter(v => v.lang.startsWith(lang.split('-')[0]));
-  for (const pred of VOICE_PRIORITY[lang] ?? [() => true]) {
+  const priorityList = VOICE_PRIORITY[lang] || [() => true];
+  for (const pred of priorityList) {
     const v = cands.find(v => pred(v.name));
     if (v) return v;
   }
-  return cands[0] ?? null;
+  return cands[0] || null;
 }
 
 function webSpeechSpeak(text, lang, rate, voiceCache) {
@@ -66,8 +67,11 @@ function webSpeechSpeak(text, lang, rate, voiceCache) {
     const utt = new SpeechSynthesisUtterance(text);
     utt.lang  = lang;
     utt.rate  = rate;
-    const v   = voiceCache.current[lang] ?? pickVoice(lang);
-    if (v) { utt.voice = v; voiceCache.current[lang] ??= v; }
+    const v   = voiceCache.current[lang] || pickVoice(lang);
+    if (v) { 
+      utt.voice = v; 
+      if (!voiceCache.current[lang]) voiceCache.current[lang] = v;
+    }
     utt.onend   = resolve;
     utt.onerror = resolve;
     if (window.speechSynthesis) {

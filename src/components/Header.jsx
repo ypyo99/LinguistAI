@@ -4,27 +4,37 @@ export default function Header() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    if (
-      localStorage.getItem('color-theme') === 'dark' ||
-      (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
-    ) {
-      document.documentElement.classList.add('dark');
-      setIsDark(true);
-    } else {
-      document.documentElement.classList.remove('dark');
+    try {
+      if (
+        localStorage.getItem('color-theme') === 'dark' ||
+        (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ) {
+        document.documentElement.classList.add('dark');
+        setIsDark(true);
+      } else {
+        document.documentElement.classList.remove('dark');
+        setIsDark(false);
+      }
+    } catch (e) {
+      // localStorage is blocked
       setIsDark(false);
     }
   }, []);
 
   const toggleTheme = () => {
-    if (isDark) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('color-theme', 'light');
-      setIsDark(false);
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('color-theme', 'dark');
-      setIsDark(true);
+    try {
+      if (isDark) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('color-theme', 'light');
+        setIsDark(false);
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('color-theme', 'dark');
+        setIsDark(true);
+      }
+    } catch (e) {
+      setIsDark(!isDark);
+      document.documentElement.classList.toggle('dark');
     }
   };
 

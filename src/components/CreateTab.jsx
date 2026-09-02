@@ -44,11 +44,12 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error?.message || `HTTP ${res.status}`);
+        throw new Error((errData && errData.error && errData.error.message) || `HTTP ${res.status}`);
       }
 
       const data = await res.json();
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+      const rawText = (parts && parts[0] && parts[0].text) || '';
 
       // JSON 추출 (마크다운 코드블록 제거 포함)
       const jsonMatch = rawText.match(/\[[\s\S]*\]/);
