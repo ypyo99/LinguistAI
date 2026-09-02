@@ -8,6 +8,7 @@ export default function CreateTab({ apiKey, onGenerate }) {
   const [difficulty, setDifficulty] = usePersistentState('linguist-create-difficulty', '초급');
   const [count, setCount] = usePersistentState('linguist-create-count', 5);
   const [loading, setLoading] = useState(false);
+  const [generatingCount, setGeneratingCount] = useState(0);
   const [error, setError] = useState('');
   const [preview, setPreview] = usePersistentState('linguist-create-preview', []);
 
@@ -34,10 +35,14 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
       const models = ['gemini-3.6-flash', 'gemini-1.5-flash'];
       let res;
       let errData;
+      let fullText = '';
       
       for (const model of models) {
+        setGeneratingCount(0);
+        fullText = '';
+        
         res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -48,7 +53,35 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
           }
         );
         
-        if (res.ok) break;
+        if (res.ok) {
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const dataStr = line.slice(6);
+                if (dataStr.trim() === '') continue;
+                try {
+                  const dataObj = JSON.parse(dataStr);
+                  const textPart = dataObj.candidates?.[0]?.content?.parts?.[0]?.text;
+                  if (textPart) {
+                    fullText += textPart;
+                    const matchCount = (fullText.match(/"en"/g) || []).length;
+                    setGeneratingCount(Math.min(matchCount, count));
+                  }
+                } catch (e) {
+                  // 청크 분할로 인한 JSON 파싱 에러 무시
+                }
+              }
+            }
+          }
+          break;
+        }
         
         errData = await res.json().catch(() => ({}));
         
@@ -63,12 +96,8 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
         throw new Error((errData && errData.error && errData.error.message) || `HTTP ${res.status}`);
       }
 
-      const data = await res.json();
-      const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
-      const rawText = (parts && parts[0] && parts[0].text) || '';
-
       // JSON 추출 (마크다운 코드블록 제거 포함)
-      const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+      const jsonMatch = fullText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) throw new Error('응답에서 JSON 형식을 찾을 수 없습니다. 다시 시도해 주세요.');
 
       const parsed = JSON.parse(jsonMatch[0]);
@@ -165,7 +194,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                   </svg>
-                  Gemini가 생성 중...
+                  Gemini가 생성 중... ({generatingCount}/{count})
                 </>
               ) : (
                 <>
