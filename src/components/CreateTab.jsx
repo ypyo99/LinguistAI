@@ -9,7 +9,7 @@ export default function CreateTab({ apiKey, onGenerate }) {
   const [count, setCount] = usePersistentState('linguist-create-count', 5);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [preview, setPreview] = useState([]);
+  const [preview, setPreview] = usePersistentState('linguist-create-preview', []);
 
   const handleGenerate = async () => {
     if (!apiKey) {
