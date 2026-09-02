@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { usePersistentState } from '../hooks/usePersistentState';
 import { useTTS } from '../hooks/useTTS';
 
 // ── 유틸 ────────────────────────────────────────────
@@ -52,14 +53,14 @@ function RadioGroup({ name, options, value, onChange }) {
 
 // ── 메인 컴포넌트 ────────────────────────────────────
 export default function StudyTab({ sentences = [], apiKey }) {
-  const [showSettings, setShowSettings] = useState(true);
-  const [showList, setShowList] = useState(true);
+  const [showSettings, setShowSettings] = usePersistentState('linguist-study-settings', true);
+  const [showList, setShowList] = usePersistentState('linguist-study-list', true);
 
   // 재생 설정
-  const [speed, setSpeed]       = useState('normal');
-  const [mode, setMode]         = useState('sequential');
-  const [langOrder, setLangOrder] = useState('en-ko');
-  const [repeat, setRepeat]     = useState(1);
+  const [speed, setSpeed]       = usePersistentState('linguist-study-speed', 'normal');
+  const [mode, setMode]         = usePersistentState('linguist-study-mode', 'sequential');
+  const [langOrder, setLangOrder] = usePersistentState('linguist-study-lang', 'en-ko');
+  const [repeat, setRepeat]     = usePersistentState('linguist-study-repeat', 1);
 
   // 재생 상태
   const [isPlaying, setIsPlaying]     = useState(false);   // 전체 재생 중

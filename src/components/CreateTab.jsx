@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { usePersistentState } from '../hooks/usePersistentState';
 
 const DIFFICULTY_MAP = { '초급': 'beginner (A1-A2)', '중급': 'intermediate (B1-B2)', '고급': 'advanced (C1-C2)' };
 
 export default function CreateTab({ apiKey, onGenerate }) {
-  const [topic, setTopic] = useState('');
-  const [difficulty, setDifficulty] = useState('초급');
-  const [count, setCount] = useState(5);
+  const [topic, setTopic] = usePersistentState('linguist-create-topic', '');
+  const [difficulty, setDifficulty] = usePersistentState('linguist-create-difficulty', '초급');
+  const [count, setCount] = usePersistentState('linguist-create-count', 5);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState([]);

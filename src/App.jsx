@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePersistentState } from './hooks/usePersistentState';
 import Header from './components/Header';
 import TabNavigation from './components/TabNavigation';
 import SetupTab from './components/SetupTab';
@@ -7,7 +8,7 @@ import StudyTab from './components/StudyTab';
 import Footer from './components/Footer';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('study');
+  const [activeTab, setActiveTab] = usePersistentState('linguist-active-tab', 'study');
 
   // ── 공유 상태 ──────────────────────────────
   const [apiKey, setApiKey] = useState(() => {
@@ -18,7 +19,7 @@ function App() {
     try { return localStorage.getItem('linguist-tts-key') || ''; }
     catch (e) { return ''; }
   });
-  const [sentences, setSentences] = useState([
+  const [sentences, setSentences] = usePersistentState('linguist-sentences', [
     { en: 'Excuse me, where is the nearest train station?', ko: '실례합니다, 가장 가까운 기차역이 어디에 있나요?' },
     { en: 'I would like to book a table for two at 7 PM.', ko: '오후 7시에 두 명 자리를 예약하고 싶습니다.' },
     { en: 'Could you please speak a little slower?', ko: '조금만 더 천천히 말씀해 주시겠어요?' },
