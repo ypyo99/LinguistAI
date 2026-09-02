@@ -37,20 +37,20 @@ export default function SetupTab({ apiKey, onSave, ttsApiKey, onSaveTts }) {
   const [ttsError, setTtsError] = useState('');
 
   const handleSave = () => {
-    onSave(input.trim());
+    onSave(input?.trim() || '');
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
 
   const handleSaveTts = () => {
-    onSaveTts(ttsInput.trim());
+    onSaveTts(ttsInput?.trim() || '');
     setTtsSaved(true);
     setTtsStatus(null);
     setTimeout(() => setTtsSaved(false), 2000);
   };
 
   const handleTestTTS = useCallback(async () => {
-    if (!ttsInput.trim()) return;
+    if (!ttsInput?.trim()) return;
     setTtsStatus('testing');
     setTtsError('');
     try {
@@ -103,7 +103,7 @@ export default function SetupTab({ apiKey, onSave, ttsApiKey, onSaveTts }) {
           </div>
 
           <div className="flex gap-2">
-            <button onClick={handleSave} disabled={!input.trim()}
+            <button onClick={handleSave} disabled={!input?.trim()}
               className={`flex-1 h-10 sm:h-11 px-4 rounded-lg text-sm sm:text-label-md font-medium active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2
                 ${saved ? 'bg-green-500 text-white' : 'bg-primary-container text-on-primary hover:bg-primary disabled:opacity-40 disabled:cursor-not-allowed'}`}>
               <span className="material-symbols-outlined text-base">{saved ? 'check_circle' : 'save'}</span>
@@ -168,7 +168,7 @@ export default function SetupTab({ apiKey, onSave, ttsApiKey, onSaveTts }) {
           </div>
 
           <div className="flex gap-2">
-            <button onClick={handleSaveTts} disabled={!ttsInput.trim()}
+            <button onClick={handleSaveTts} disabled={!ttsInput?.trim()}
               className={`flex-1 h-10 sm:h-11 px-4 rounded-lg text-sm sm:text-label-md font-medium active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2
                 ${ttsSaved ? 'bg-green-500 text-white' : 'bg-primary-container text-on-primary hover:bg-primary disabled:opacity-40 disabled:cursor-not-allowed'}`}>
               <span className="material-symbols-outlined text-base">{ttsSaved ? 'check_circle' : 'save'}</span>
@@ -202,7 +202,7 @@ export default function SetupTab({ apiKey, onSave, ttsApiKey, onSaveTts }) {
 
         {/* 버튼 */}
         <div className="flex flex-col gap-2 sm:gap-sm mb-3">
-          <button onClick={handleTestTTS} disabled={!ttsInput.trim() || ttsStatus === 'testing'}
+          <button onClick={handleTestTTS} disabled={!ttsInput?.trim() || ttsStatus === 'testing'}
             className="w-full h-10 rounded-lg text-sm font-medium border border-primary dark:border-inverse-primary text-primary dark:text-inverse-primary hover:bg-primary-fixed/30 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-40">
             {ttsStatus === 'testing' ? (
               <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
