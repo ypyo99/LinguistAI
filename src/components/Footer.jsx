@@ -17,7 +17,7 @@ export default function Footer() {
           ))}
         </div>
         <div className="text-xs sm:text-label-sm text-primary dark:text-inverse-primary opacity-80">
-          © 2024 LinguistAI. 모든 권리 보유.
+          © 2026 LinguistAI. All rights reserved.
         </div>
       </div>
     </footer>
