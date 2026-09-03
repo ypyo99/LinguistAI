@@ -266,11 +266,12 @@ body{
   max-height: 0; overflow: hidden; transition: max-height .25s ease;
 }
 .settings-container.open .settings-panel {
-  max-height: 180px;
+  max-height: 300px;
 }
 .settings-panel-inner {
   padding: 0 14px 14px 14px;
-  font-size: 15px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 12px;
+  font-size: 14px; color: var(--ink-soft); 
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px;
   border-top: 1px solid var(--amber-tint);
   padding-top: 14px;
 }
