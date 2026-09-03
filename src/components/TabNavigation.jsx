@@ -1,13 +1,14 @@
 const TABS = [
-  { id: 'study',  label: '학습',  icon: 'headphones' },
-  { id: 'create', label: '생성',  icon: 'edit_document' },
-  { id: 'setup',  label: '설정',  icon: 'settings' },
+  { id: 'study', label: '학습', icon: 'headphones' },
+  { id: 'store', label: '스토어', icon: 'storefront' },
+  { id: 'create', label: '생성', icon: 'note_add' },
+  { id: 'setup', label: '설정', icon: 'settings' }
 ];
 
-export default function TabNavigation({ activeTab, setActiveTab }) {
+export default function TabNavigation({ activeTab, setActiveTab, user }) {
   return (
     <div className="tabs">
-      {TABS.map(({ id, label, icon }) => {
+      {TABS.filter(t => t.id !== 'store' || user).map(({ id, label, icon }) => {
         const isActive = activeTab === id;
         return (
           <button

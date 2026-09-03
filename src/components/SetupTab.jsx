@@ -30,7 +30,7 @@ export default function SetupTab({ apiKey, onSave }) {
                 Google AI Studio API 키
               </label>
               <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer"
-                className="text-xs sm:text-label-sm font-medium text-primary dark:text-inverse-primary hover:underline">
+                className="text-xs sm:text-label-sm font-medium text-orange hover:underline">
                 Gemini 키 발급받기 ↗
               </a>
             </div>
@@ -55,7 +55,7 @@ export default function SetupTab({ apiKey, onSave }) {
           <div className="flex gap-2">
             <button onClick={handleSave} disabled={!input || !input.trim()}
               className={`flex-1 h-10 sm:h-11 px-4 rounded-lg text-sm sm:text-label-md font-medium active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2
-                ${saved ? 'bg-green-500 text-white' : 'bg-primary-container text-on-primary hover:bg-primary disabled:opacity-40 disabled:cursor-not-allowed'}`}>
+                ${saved ? 'bg-green-500 text-white' : 'btn-orange disabled:opacity-40 disabled:cursor-not-allowed'}`}>
               <span className="material-symbols-outlined text-base">{saved ? 'check_circle' : 'save'}</span>
               {saved ? '저장되었습니다!' : '키 저장'}
             </button>

@@ -163,13 +163,13 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
             <div className="flex bg-surface-variant/30 dark:bg-dark-surface-bright/30 p-1 rounded-lg shrink-0">
               <button
                 onClick={() => setInputMode('api')}
-                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'api' ? 'bg-surface dark:bg-dark-surface shadow-sm text-primary dark:text-inverse-primary' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
+                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'api' ? 'bg-surface dark:bg-dark-surface shadow-sm text-orange' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
               >
                 API 자동 생성
               </button>
               <button
                 onClick={() => setInputMode('manual')}
-                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'manual' ? 'bg-surface dark:bg-dark-surface shadow-sm text-primary dark:text-inverse-primary' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
+                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'manual' ? 'bg-surface dark:bg-dark-surface shadow-sm text-orange' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
               >
                 직접 붙여넣기
               </button>
@@ -259,7 +259,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                 <button
                   onClick={handleGenerate}
                   disabled={loading}
-                  className="w-full h-11 bg-primary-container text-on-primary rounded-xl text-sm sm:text-label-md font-medium hover:bg-primary active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="btn-orange w-full h-11 rounded-xl text-sm sm:text-label-md font-medium active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
@@ -291,7 +291,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                       />
                       <button
                         onClick={() => navigator.clipboard.writeText(generatedPrompt)}
-                        className="absolute right-2 top-2 p-1.5 rounded-md bg-primary-container text-on-primary hover:bg-primary hover:text-white transition-colors"
+                        className="absolute right-2 top-2 p-1.5 rounded-md btn-orange hover:opacity-90 transition-opacity"
                         title="프롬프트 복사"
                       >
                         <span className="material-symbols-outlined text-sm">content_copy</span>
@@ -322,7 +322,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                 <button
                   onClick={handleParseManual}
                   disabled={!manualText.trim()}
-                  className="w-full h-11 bg-primary-container text-on-primary rounded-xl text-sm sm:text-label-md font-medium hover:bg-primary active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="btn-orange w-full h-11 rounded-xl text-sm sm:text-label-md font-medium active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <span className="material-symbols-outlined text-xl">data_object</span>
                   붙여넣은 텍스트 파싱하기
@@ -350,7 +350,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
             </div>
             <button
               onClick={handleApply}
-              className="w-full h-11 bg-primary text-on-primary rounded-xl text-sm sm:text-label-md font-medium hover:bg-primary/90 active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+              className="btn-orange w-full h-11 rounded-xl text-sm sm:text-label-md font-medium active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-xl">playlist_add_check</span>
               학습 목록에 적용하고 학습 시작

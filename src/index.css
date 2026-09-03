@@ -64,15 +64,14 @@ body{
   margin:0;
   background:#EAE3DC;
   font-family:'Pretendard', -apple-system, sans-serif;
-  display:flex;
-  justify-content:center;
+  display:block;
   padding:32px 12px;
 }
 .dark body, [data-mode="dark"] body{ background:#100B08; }
 
 .frame{
   width:100%;
-  max-width:430px;
+  max-width:900px;
   background:var(--bg);
   color:var(--ink);
   border-radius:28px;
@@ -82,12 +81,34 @@ body{
   margin: 0 auto;
 }
 
+/* Responsive adjustments for mobile */
+@media (max-width: 640px) {
+  body {
+    padding: 0 !important;
+    background: var(--bg) !important;
+    display: block !important;
+  }
+  .dark body, [data-mode="dark"] body {
+    background: var(--bg) !important;
+  }
+  .frame {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    min-height: 100dvh !important;
+    margin: 0 !important;
+  }
+}
+
 /* header */
 .topbar{
   background:var(--teal-deep);
   padding:20px 20px 22px;
   color:#fff;
 }
+.dark .topbar, [data-mode="dark"] .topbar { color: var(--surface); }
+
 .topbar-row{
   display:flex; align-items:center; justify-content:space-between;
 }
@@ -96,6 +117,8 @@ body{
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
   color:var(--teal-deep);
 }
+.dark .brand-badge, [data-mode="dark"] .brand-badge { background: var(--surface); }
+
 .brand-badge svg{ width:24px; height:24px; display:block; }
 .wordmark{
   display:flex; align-items:center; gap:9px;
@@ -108,11 +131,15 @@ body{
   display:flex;align-items:center;justify-content:center;
   color:#fff; font-size:16px; border:none; cursor:pointer;
 }
+.dark .icon-btn, [data-mode="dark"] .icon-btn { color: var(--surface); background: rgba(36,26,21,0.15); }
+
 .topbar-sub{
   margin-top:16px;
   font-size:13px;
   color:rgba(255,255,255,0.75);
 }
+.dark .topbar-sub, [data-mode="dark"] .topbar-sub { color: rgba(36,26,21,0.75); }
+
 .topbar-title{
   font-size:21px; font-weight:700; margin-top:4px;
 }
@@ -120,11 +147,67 @@ body{
   margin-top:14px; height:5px; border-radius:3px;
   background:rgba(255,255,255,0.18); overflow:hidden;
 }
+.dark .progress-track, [data-mode="dark"] .progress-track { background: rgba(36,26,21,0.15); }
+
 .progress-fill{
   height:100%; width:15%; background:var(--amber); border-radius:3px;
 }
 .progress-label{
   margin-top:6px; font-size:11.5px; color:rgba(255,255,255,0.68);
+}
+.dark .progress-label, [data-mode="dark"] .progress-label { color: rgba(36,26,21,0.75); }
+
+/* user profile dropdown */
+.user-dropdown-wrapper {
+  position: relative;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%; object-fit: cover;
+  cursor: pointer; border: 2px solid rgba(255,255,255,0.2);
+  background: var(--teal-tint);
+}
+.dark .user-avatar, [data-mode="dark"] .user-avatar { border-color: rgba(36,26,21,0.2); }
+
+.user-dropdown {
+  position: absolute;
+  top: 46px; right: 0;
+  background: var(--surface);
+  color: var(--ink);
+  border: 0.5px solid var(--line);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  border-radius: 16px;
+  width: 240px;
+  padding: 16px;
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+.dark .user-dropdown, [data-mode="dark"] .user-dropdown {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.user-dropdown-header {
+  display: flex; gap: 12px; align-items: center; margin-bottom: 16px;
+}
+.user-dropdown-avatar {
+  width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+  background: var(--teal-tint);
+}
+.user-dropdown-info {
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.user-dropdown-name {
+  font-size: 15px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+}
+.user-dropdown-email {
+  font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+}
+.user-dropdown-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 0; border-radius: 10px; border: 1px solid var(--line);
+  background: transparent; color: var(--ink); font-size: 13.5px; font-weight: 600;
+  cursor: pointer; transition: background 0.2s;
+}
+.user-dropdown-btn:hover {
+  background: var(--bg);
 }
 
 /* tabs */
@@ -202,7 +285,23 @@ body{
   font-size:15.5px; font-weight:700; display:flex; align-items:center;
   justify-content:center; gap:9px; cursor:pointer;
 }
+.dark .cta, [data-mode="dark"] .cta { color: var(--surface); }
+
 .cta i{ font-size:17px; }
+
+.btn-orange {
+  background: var(--teal) !important;
+  color: #fff !important;
+}
+.dark .btn-orange, [data-mode="dark"] .btn-orange {
+  color: var(--surface) !important;
+}
+.btn-orange:hover:not(:disabled) {
+  background: var(--teal-deep) !important;
+}
+.text-orange {
+  color: var(--teal-deep) !important;
+}
 
 /* now playing box */
 .now-playing {
@@ -215,6 +314,7 @@ body{
   animation: fadeIn 0.3s ease;
 }
 .dark .now-playing, [data-mode="dark"] .now-playing {
+  color: var(--surface);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 .now-playing-header {
@@ -280,4 +380,44 @@ body{
 
 .fade-more{
   text-align:center; padding:14px 0 4px; font-size:12.5px; color:var(--ink-soft);
+}
+
+/* Desktop / Tablet scaling */
+@media (min-width: 768px) {
+  /* Settings Grid */
+  .settings-panel-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 24px;
+  }
+  .settings-panel-inner .row {
+    margin-bottom: 0;
+  }
+
+  /* Typography scale up */
+  .topbar-title { font-size: 26px; margin-top: 8px; }
+  .topbar-sub { font-size: 15px; }
+  .wordmark { font-size: 22px; }
+  
+  .list-title span.n { font-size: 20px; }
+  .list-title span.c { font-size: 14px; }
+  
+  .turn-en { font-size: 18px; }
+  .turn-ko { font-size: 15px; }
+  
+  /* Icon & Button scale up */
+  .turn-play { width: 44px; height: 44px; }
+  .turn-play i { font-size: 24px !important; }
+  .turn-index { width: 28px; height: 28px; font-size: 13px; }
+  
+  .icon-btn { width: 40px; height: 40px; }
+  .icon-btn i { font-size: 24px !important; }
+  
+  .cta { font-size: 18px; padding: 18px 0; }
+  .cta i { font-size: 24px !important; }
+  
+  /* Paddings */
+  .content { padding: 32px 32px 48px; }
+  .topbar { padding: 32px 32px 34px; }
+  .turn { padding: 24px 20px; }
 }

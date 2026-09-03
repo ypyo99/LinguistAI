@@ -52,7 +52,7 @@ function RadioGroup({ name, options, value, onChange }) {
 }
 
 // ── 메인 컴포넌트 ────────────────────────────────────
-export default function StudyTab({ sentences = [], apiKey }) {
+export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, studiedIndices }) {
   const [showSettings, setShowSettings] = usePersistentState('linguist-study-settings', true);
   const [showList, setShowList] = usePersistentState('linguist-study-list', true);
 
@@ -121,6 +121,10 @@ export default function StudyTab({ sentences = [], apiKey }) {
       if (!singleStop.current && r < repeat - 1) await delay(300);
     }
 
+    if (!singleStop.current && setStudiedIndices) {
+      setStudiedIndices(prev => prev.includes(idx) ? prev : [...prev, idx]);
+    }
+
     setSingleIdx(null);
   }, [singleIdx, speed, repeat, sentences, speakSentence]);
 
@@ -156,6 +160,10 @@ export default function StudyTab({ sentences = [], apiKey }) {
         if (shouldStop.current) break;
         await speakSentence(list[i], rate, shouldStop, r);
         if (!shouldStop.current && r < repeat - 1) await delay(300);
+      }
+
+      if (!shouldStop.current && setStudiedIndices) {
+        setStudiedIndices(prev => prev.includes(origIndices[i]) ? prev : [...prev, origIndices[i]]);
       }
 
       if (!shouldStop.current && i < list.length - 1) await delay(600);
@@ -253,8 +261,24 @@ export default function StudyTab({ sentences = [], apiKey }) {
               const isThis = currentIdx === idx || singleIdx === idx;
               const isThisSingle = singleIdx === idx;
               return (
-                <div className="turn" key={idx}>
-                  <div className="turn-index">{idx + 1}</div>
+                <div 
+                  className="turn" 
+                  key={idx} 
+                  onClick={() => handlePlayOne(idx)}
+                  style={{ cursor: 'pointer', transition: 'background-color 0.2s', backgroundColor: isThis ? 'var(--teal-tint)' : 'transparent' }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginTop: '2px' }}>
+                    <div 
+                      className="turn-index" 
+                      style={
+                        studiedIndices && studiedIndices.includes(idx)
+                          ? { background: 'var(--teal)', color: '#fff' }
+                          : { marginTop: 0 }
+                      }
+                    >
+                      {idx + 1}
+                    </div>
+                  </div>
                   <div className="turn-body">
                     <div className="turn-en" style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
                       {s.en}
@@ -264,12 +288,6 @@ export default function StudyTab({ sentences = [], apiKey }) {
                       <div className="turn-ko">{s.ko}</div>
                     </div>
                   </div>
-                  <button
-                    className={`turn-play ${isThis ? 'active' : ''}`}
-                    onClick={() => handlePlayOne(idx)}
-                  >
-                    <i className="material-symbols-outlined" style={{ fontSize: '20px' }}>{isThisSingle ? "stop" : "play_arrow"}</i>
-                  </button>
                 </div>
               );
             })
