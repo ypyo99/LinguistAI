@@ -62,6 +62,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
   const [repeat, setRepeat]     = usePersistentState('linguist-study-repeat', 1);
 
   const settingsRef = useRef({ speed, mode, repeat, langOrder });
+  const prevSettingsRef = useRef({ speed, mode, repeat, langOrder });
   useEffect(() => {
     settingsRef.current = { speed, mode, repeat, langOrder };
   }, [speed, mode, repeat, langOrder]);
@@ -74,6 +75,8 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
 
   const shouldStop = useRef(false);
   const singleStop = useRef(false);
+  const currentListRef = useRef(null);
+  const playRunId = useRef(0);
 
   const { speak: ttsSpeak, stop: ttsStop } = useTTS(apiKey);
 
@@ -82,10 +85,10 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
     return () => { ttsStop(); };
   }, [ttsStop]);
 
-  // ── TTS 헬퍼 (useTTS 훅 위임) ────────────────────────
 
+  // ── TTS 헬퍼 (useTTS 훅 위임) ────────────────────────
   const speakSentence = useCallback(async (sentence, rate, stopRef, repeatIndex = 0) => {
-    let pairs = langOrder === 'en-ko'
+    let pairs = settingsRef.current.langOrder === 'en-ko'
       ? [{ text: sentence.en, lang: 'en-US' }, { text: sentence.ko, lang: 'ko-KR' }]
       : [{ text: sentence.ko, lang: 'ko-KR' }, { text: sentence.en, lang: 'en-US' }];
 
@@ -100,10 +103,85 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
       if (stopRef.current) return;
       await delay(350);
     }
-  }, [langOrder, ttsSpeak]);
+  }, [ttsSpeak]);
+
+
+  // ── 전체 재생 ──────────────────────────────────────
+  const handlePlayAll = useCallback(async (startFromIdx = null) => {
+    const isJump = typeof startFromIdx === 'number';
+
+    // 재생 중인데 버튼을 눌렀다면 정지
+    if (isPlaying && !isJump) {
+      shouldStop.current = true;
+      playRunId.current++;
+      ttsStop();
+      setIsPlaying(false);
+      setCurrentIdx(null);
+      return;
+    }
+    if (sentences.length === 0) return;
+
+    // 개별 재생 중이면 중단
+    singleStop.current = true;
+    ttsStop();
+    setSingleIdx(null);
+    await delay(50);
+
+    shouldStop.current = false;
+    const currentRun = ++playRunId.current;
+    const isCancelled = () => playRunId.current !== currentRun || shouldStop.current;
+    const localStopRef = { get current() { return isCancelled(); } };
+
+    setIsPlaying(true);
+
+    let list, origIndices;
+    if (isJump && currentListRef.current && currentListRef.current.mode === mode) {
+      list = currentListRef.current.list;
+      origIndices = currentListRef.current.origIndices;
+    } else {
+      list = mode === 'random' ? shuffle(sentences) : [...sentences];
+      origIndices = list.map(s => sentences.indexOf(s));
+      currentListRef.current = { list, origIndices, mode };
+    }
+
+    let startIndex = 0;
+    if (isJump) {
+      startIndex = origIndices.indexOf(startFromIdx);
+      if (startIndex === -1) startIndex = 0;
+    }
+
+    for (let i = startIndex; i < list.length; i++) {
+      if (isCancelled()) break;
+      setCurrentIdx(origIndices[i]);
+
+      for (let r = 0; r < settingsRef.current.repeat; r++) {
+        if (isCancelled()) break;
+        setCurrentRepeat(r + 1);
+        const rate = SPEED_MAP[settingsRef.current.speed];
+        await speakSentence(list[i], rate, localStopRef, r);
+        if (!isCancelled() && r < settingsRef.current.repeat - 1) await delay(300);
+      }
+
+      if (!isCancelled() && setStudiedIndices) {
+        setStudiedIndices(prev => prev.includes(origIndices[i]) ? prev : [...prev, origIndices[i]]);
+      }
+
+      if (!isCancelled() && i < list.length - 1) await delay(600);
+    }
+
+    if (!isCancelled()) {
+      setIsPlaying(false);
+      setCurrentIdx(null);
+    }
+  }, [isPlaying, sentences, mode, speakSentence, setStudiedIndices]);
 
   // ── 개별 재생 ──────────────────────────────────────
   const handlePlayOne = useCallback(async (idx) => {
+    if (isPlaying) {
+      handlePlayAll(idx);
+      return;
+    }
+
     // 이미 재생 중인 항목 클릭 → 정지
     if (singleIdx === idx) {
       singleStop.current = true;
@@ -114,7 +192,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
     // 이전 재생 중단
     singleStop.current = true;
     ttsStop();
-    await delay(100);
+    await delay(50);
     singleStop.current = false;
 
     setSingleIdx(idx);
@@ -132,54 +210,27 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
     }
 
     setSingleIdx(null);
-  }, [singleIdx, speed, repeat, sentences, speakSentence]);
+  }, [singleIdx, sentences, speakSentence, isPlaying, handlePlayAll, setStudiedIndices]);
 
-  // ── 전체 재생 ──────────────────────────────────────
-  const handlePlayAll = useCallback(async () => {
-    // 재생 중이면 정지
-    if (isPlaying) {
-      shouldStop.current = true;
-      ttsStop();
-      setIsPlaying(false);
-      setCurrentIdx(null);
-      return;
-    }
-    if (sentences.length === 0) return;
-
-    // 개별 재생 중이면 중단
-    singleStop.current = true;
-    ttsStop();
-    setSingleIdx(null);
-    await delay(100);
-
-    shouldStop.current = false;
-    setIsPlaying(true);
-    const list = mode === 'random' ? shuffle(sentences) : [...sentences];
-    const origIndices = list.map(s => sentences.indexOf(s));
-
-    for (let i = 0; i < list.length; i++) {
-      if (shouldStop.current) break;
-      setCurrentIdx(origIndices[i]);
-
-      for (let r = 0; r < settingsRef.current.repeat; r++) {
-        if (shouldStop.current) break;
-        setCurrentRepeat(r + 1);
-        const rate = SPEED_MAP[settingsRef.current.speed];
-        await speakSentence(list[i], rate, shouldStop, r);
-        if (!shouldStop.current && r < settingsRef.current.repeat - 1) await delay(300);
+  // ── 설정 변경 시 즉시 반영 ──────────────────────────
+  useEffect(() => {
+    const prev = prevSettingsRef.current;
+    if (
+      prev.speed !== speed ||
+      prev.mode !== mode ||
+      prev.repeat !== repeat ||
+      prev.langOrder !== langOrder
+    ) {
+      prevSettingsRef.current = { speed, mode, repeat, langOrder };
+      
+      // 설정이 바뀌면 현재 읽고 있는 위치에서 즉시 재시작하여 새 설정 적용
+      if (isPlaying && currentIdx !== null) {
+        handlePlayAll(currentIdx);
+      } else if (singleIdx !== null) {
+        handlePlayOne(singleIdx);
       }
-
-      if (!shouldStop.current && setStudiedIndices) {
-        setStudiedIndices(prev => prev.includes(origIndices[i]) ? prev : [...prev, origIndices[i]]);
-      }
-
-      if (!shouldStop.current && i < list.length - 1) await delay(600);
     }
-
-    setIsPlaying(false);
-    setCurrentIdx(null);
-    shouldStop.current = false;
-  }, [isPlaying, sentences, speed, mode, repeat, speakSentence]);
+  }, [speed, mode, repeat, langOrder, isPlaying, currentIdx, singleIdx, handlePlayAll, handlePlayOne]);
 
   const activeIdx = currentIdx !== null ? currentIdx : singleIdx;
   const activeSentence = activeIdx !== null ? sentences[activeIdx] : null;
@@ -196,6 +247,17 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
         </div>
         <div className="settings-panel">
           <div className="settings-panel-inner">
+          <div className="row">
+            <span>재생 언어</span>
+            <select
+              value={langOrder}
+              onChange={e => setLangOrder(e.target.value)}
+              className="bg-transparent border-none text-right outline-none text-ink-soft"
+            >
+              <option value="en-ko">영어 ➔ 한국어</option>
+              <option value="ko-en">한국어 ➔ 영어</option>
+            </select>
+          </div>
           <div className="row">
             <span>반복 횟수</span>
             <select
