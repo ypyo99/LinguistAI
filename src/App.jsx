@@ -10,7 +10,7 @@ import Footer from './components/Footer';
 
 function App() {
   const [activeTab, setActiveTab] = usePersistentState('linguist-active-tab', 'study');
-  const [user] = usePersistentState('linguist-user', null);
+  const [user, setUser] = usePersistentState('linguist-user', null);
   const prevUserRef = useRef(user);
 
   useEffect(() => {
@@ -60,7 +60,7 @@ function App() {
           <StudyTab sentences={sentences} apiKey={apiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} />
         </div>
         <div style={{ display: activeTab === 'store' ? 'block' : 'none' }}>
-          <DataTab setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} />
+          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} />
         </div>
         <div style={{ display: activeTab === 'create' ? 'block' : 'none' }}>
           <CreateTab

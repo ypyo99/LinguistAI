@@ -3,7 +3,7 @@ import { usePersistentState } from '../hooks/usePersistentState';
 
 const FOLDER_ID = '1q1aY9ht38J3JYYaiSq0nMTmn_zug2Wvq';
 
-export default function DataTab({ setSentences, setPackTitle, setStudiedIndices }) {
+export default function DataTab({ setUser: appSetUser, setSentences, setPackTitle, setStudiedIndices }) {
   const [user, setUser] = usePersistentState('linguist-user', null);
   const [downloaded, setDownloaded] = useState({});
   const [packs, setPacks] = useState([]);
@@ -20,6 +20,12 @@ export default function DataTab({ setSentences, setPackTitle, setStudiedIndices 
             `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+trashed=false&orderBy=name&fields=files(id,name,description)`,
             { headers: { Authorization: `Bearer ${user.accessToken}` } }
           );
+          if (res.status === 401) {
+            setUser(null);
+            if (appSetUser) appSetUser(null);
+            alert('구글 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+            return;
+          }
           const data = await res.json();
           if (data.error) throw new Error(data.error.message);
           setPacks(data.files || []);
@@ -39,6 +45,12 @@ export default function DataTab({ setSentences, setPackTitle, setStudiedIndices 
       const res = await fetch(`https://www.googleapis.com/drive/v3/files/${pack.id}?alt=media`, {
         headers: { Authorization: `Bearer ${user.accessToken}` }
       });
+      if (res.status === 401) {
+        setUser(null);
+        if (appSetUser) appSetUser(null);
+        alert('구글 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+        return;
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
       const parsed = JSON.parse(text);
