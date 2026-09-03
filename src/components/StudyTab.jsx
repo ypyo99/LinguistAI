@@ -252,7 +252,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
             <select
               value={langOrder}
               onChange={e => setLangOrder(e.target.value)}
-              className="bg-transparent border-none text-right outline-none text-ink-soft"
+              className="settings-select"
             >
               <option value="en-ko">영어 ➔ 한국어</option>
               <option value="ko-en">한국어 ➔ 영어</option>
@@ -263,7 +263,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
             <select
               value={repeat}
               onChange={e => setRepeat(Number(e.target.value))}
-              className="bg-transparent border-none text-right outline-none text-ink-soft"
+              className="settings-select"
             >
               {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}회</option>)}
             </select>
@@ -273,7 +273,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
             <select
               value={speed}
               onChange={e => setSpeed(e.target.value)}
-              className="bg-transparent border-none text-right outline-none text-ink-soft"
+              className="settings-select"
             >
               <option value="slow">느림</option>
               <option value="normal">보통</option>
@@ -285,7 +285,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
             <select
               value={mode}
               onChange={e => setMode(e.target.value)}
-              className="bg-transparent border-none text-right outline-none text-ink-soft"
+              className="settings-select"
             >
               <option value="sequential">순차</option>
               <option value="random">랜덤</option>
