@@ -39,7 +39,8 @@ function App() {
   ]);
   
   const [packTitle, setPackTitle] = usePersistentState('linguist-pack-title', '');
-  const displayTitle = packTitle || (sentences.length === 3 ? '기본 학습 데이터' : `저장된 학습 데이터 ${sentences.length}개`);
+  const actualPackTitle = packTitle === '기본 학습 데이터 3개' ? '' : packTitle;
+  const displayTitle = actualPackTitle || (sentences.length === 3 ? '기본 학습 데이터' : `저장된 학습 데이터 ${sentences.length}개`);
   const [studiedIndices, setStudiedIndices] = usePersistentState('linguist-studied-indices', []);
 
   const handleSaveKey = (key) => {
