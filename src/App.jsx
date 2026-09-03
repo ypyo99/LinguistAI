@@ -30,11 +30,11 @@ function App() {
   };
 
   return (
-    <div className="bg-background dark:bg-dark-bg text-on-background dark:text-on-dark-surface min-h-screen flex flex-col font-body-md transition-colors duration-200">
-      <Header />
-      <main className="flex-grow w-full max-w-[1200px] mx-auto px-3 sm:px-gutter md:px-lg py-4 sm:py-lg">
-        <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
-        {activeTab === 'study'  && <StudyTab sentences={sentences} />}
+    <div className="frame" id="frame">
+      <Header total={sentences.length} progress={Math.min(3, sentences.length)} />
+      <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      <div className="content">
+        {activeTab === 'study'  && <StudyTab sentences={sentences} apiKey={apiKey} />}
         {activeTab === 'create' && (
           <CreateTab
             apiKey={apiKey}
@@ -47,8 +47,7 @@ function App() {
             onSave={handleSaveKey}
           />
         )}
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 }

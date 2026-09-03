@@ -79,11 +79,15 @@ export default function StudyTab({ sentences = [], apiKey }) {
 
   // ── TTS 헬퍼 (useTTS 훅 위임) ────────────────────────
 
-  // 한 문장을 (언어 순서 + 속도) 에 맞게 재생
-  const speakSentence = useCallback(async (sentence, rate, stopRef) => {
-    const pairs = langOrder === 'en-ko'
+  const speakSentence = useCallback(async (sentence, rate, stopRef, repeatIndex = 0) => {
+    let pairs = langOrder === 'en-ko'
       ? [{ text: sentence.en, lang: 'en-US' }, { text: sentence.ko, lang: 'ko-KR' }]
       : [{ text: sentence.ko, lang: 'ko-KR' }, { text: sentence.en, lang: 'en-US' }];
+
+    // 한국어 문장은 첫 번째 재생(repeatIndex === 0)에서만 재생하고 이후 반복에서는 제외
+    if (repeatIndex > 0) {
+      pairs = pairs.filter(p => p.lang !== 'ko-KR');
+    }
 
     for (const { text, lang } of pairs) {
       if (stopRef.current) return;
@@ -111,9 +115,14 @@ export default function StudyTab({ sentences = [], apiKey }) {
     setSingleIdx(idx);
     const rate = SPEED_MAP[speed];
 
-    await speakSentence(sentences[idx], rate, singleStop);
+    for (let r = 0; r < repeat; r++) {
+      if (singleStop.current) break;
+      await speakSentence(sentences[idx], rate, singleStop, r);
+      if (!singleStop.current && r < repeat - 1) await delay(300);
+    }
+
     setSingleIdx(null);
-  }, [singleIdx, speed, sentences, speakSentence]);
+  }, [singleIdx, speed, repeat, sentences, speakSentence]);
 
   // ── 전체 재생 ──────────────────────────────────────
   const handlePlayAll = useCallback(async () => {
@@ -145,7 +154,7 @@ export default function StudyTab({ sentences = [], apiKey }) {
 
       for (let r = 0; r < repeat; r++) {
         if (shouldStop.current) break;
-        await speakSentence(list[i], rate, shouldStop);
+        await speakSentence(list[i], rate, shouldStop, r);
         if (!shouldStop.current && r < repeat - 1) await delay(300);
       }
 
@@ -157,226 +166,116 @@ export default function StudyTab({ sentences = [], apiKey }) {
     shouldStop.current = false;
   }, [isPlaying, sentences, speed, mode, repeat, speakSentence]);
 
-  // ── 렌더 ──────────────────────────────────────────
+  const activeIdx = currentIdx !== null ? currentIdx : singleIdx;
+  const activeSentence = activeIdx !== null ? sentences[activeIdx] : null;
+
   return (
     <div className="tab-fade-in">
-      <div className="flex flex-col md:grid md:grid-cols-12 gap-4 sm:gap-lg">
-
-        {/* ── 재생 설정 ── */}
-        <div className="md:col-span-4 flex flex-col gap-4 sm:gap-lg">
-          <section className="bg-surface-container-lowest dark:bg-dark-surface rounded-xl shadow-sm border border-outline-variant dark:border-outline p-4 sm:p-lg transition-colors duration-200">
-            <button
-              className="w-full flex justify-between items-center text-on-surface dark:text-on-dark-surface mb-3 sm:mb-md"
-              onClick={() => setShowSettings(v => !v)}
-              aria-expanded={showSettings}
-            >
-              <div className="flex items-center gap-2 text-base sm:text-title-md font-semibold">
-                <span className="material-symbols-outlined text-xl">tune</span>
-                재생 설정
-              </div>
-              <span
-                className="material-symbols-outlined transition-transform duration-200"
-                style={{ transform: showSettings ? 'rotate(180deg)' : 'rotate(0deg)' }}
-              >
-                expand_more
-              </span>
-            </button>
-
-            {showSettings && (
-              <div className="space-y-3 sm:space-y-md">
-                {/* 반복 횟수 */}
-                <div className="flex items-center gap-4">
-                  <label className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20" htmlFor="repeat">
-                    반복 횟수
-                  </label>
-                  <select
-                    className="w-56 sm:w-72 h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
-                    id="repeat"
-                    value={repeat}
-                    onChange={e => setRepeat(Number(e.target.value))}
-                  >
-                    {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}회</option>)}
-                  </select>
-                </div>
-
-                {/* 재생 속도 */}
-                <div className="flex items-center gap-4">
-                  <span className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20">재생 속도</span>
-                  <div className="w-56 sm:w-72">
-                    <RadioGroup
-                      name="speed"
-                      value={speed}
-                      onChange={setSpeed}
-                      options={[
-                        { val: 'slow',   label: '느림' },
-                        { val: 'normal', label: '보통' },
-                        { val: 'fast',   label: '빠름' },
-                      ]}
-                    />
-                  </div>
-                </div>
-
-                {/* 재생 모드 */}
-                <div className="flex items-center gap-4">
-                  <span className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20">재생 모드</span>
-                  <div className="w-56 sm:w-72">
-                    <RadioGroup
-                      name="mode"
-                      value={mode}
-                      onChange={setMode}
-                      options={[
-                        { val: 'sequential', label: '순차', icon: 'format_list_numbered' },
-                        { val: 'random',     label: '랜덤', icon: 'shuffle' },
-                      ]}
-                    />
-                  </div>
-                </div>
-
-                {/* 언어 순서 */}
-                <div className="flex items-center gap-4">
-                  <span className="text-sm sm:text-base font-medium text-on-surface-variant dark:text-on-dark-surface-variant shrink-0 w-20">언어 순서</span>
-                  <select
-                    className="w-56 sm:w-72 h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base"
-                    value={langOrder}
-                    onChange={e => setLangOrder(e.target.value)}
-                  >
-                    <option value="en-ko">영어 → 한국어</option>
-                    <option value="ko-en">한국어 → 영어</option>
-                  </select>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* 전체 재생 버튼 */}
-          <button
-            onClick={handlePlayAll}
-            disabled={sentences.length === 0}
-            className={`w-full h-12 rounded-xl font-medium text-sm sm:text-label-md active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed
-              ${isPlaying
-                ? 'bg-error text-on-error hover:bg-error/90'
-                : 'bg-primary-container text-on-primary hover:bg-primary'}`}
-          >
-            <span className="material-symbols-outlined text-xl">
-              {isPlaying ? 'stop_circle' : 'play_circle'}
-            </span>
-            {isPlaying ? '재생 중지' : '전체 재생'}
-          </button>
-
-          {/* 현재 재생 중인 문장 표시 */}
-          {(isPlaying || singleIdx !== null) && (currentIdx !== null || singleIdx !== null) && (
-            <div className="mt-2 p-4 sm:p-md rounded-xl bg-primary-container text-on-primary-container shadow-sm border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="text-xs sm:text-sm font-bold mb-1 sm:mb-2 opacity-80 flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm sm:text-base animate-pulse">volume_up</span>
-                현재 재생 중
-              </div>
-              <p className="text-base sm:text-lg font-semibold leading-snug mb-1">
-                {sentences[currentIdx !== null ? currentIdx : singleIdx]?.en}
-              </p>
-              <p className="text-sm sm:text-base opacity-90 leading-snug">
-                {sentences[currentIdx !== null ? currentIdx : singleIdx]?.ko}
-              </p>
-            </div>
-          )}
+      <div className={`settings-container ${showSettings ? 'open' : ''}`}>
+        <div className="settings-header" onClick={() => setShowSettings(!showSettings)}>
+          <div className="settings-left">
+            <div className="settings-ic"><i className="material-symbols-outlined" style={{ fontSize: '20px' }}>settings</i></div>
+            <div className="settings-label">재생 설정</div>
+          </div>
+          <i className="material-symbols-outlined chev">expand_more</i>
         </div>
-
-        {/* ── 재생 목록 ── */}
-        <div className="md:col-span-8 flex flex-col gap-4 sm:gap-lg">
-          <section className="bg-surface-container-lowest dark:bg-dark-surface rounded-xl shadow-sm border border-outline-variant dark:border-outline p-4 sm:p-lg transition-colors duration-200">
-            <button
-              className="w-full flex justify-between items-center text-on-surface dark:text-on-dark-surface mb-3 sm:mb-md"
-              onClick={() => setShowList(v => !v)}
-              aria-expanded={showList}
+        <div className="settings-panel">
+          <div className="settings-panel-inner">
+          <div className="row">
+            <span>반복 횟수</span>
+            <select
+              value={repeat}
+              onChange={e => setRepeat(Number(e.target.value))}
+              className="bg-transparent border-none text-right outline-none text-ink-soft"
             >
-              <div className="flex items-center gap-2 text-base sm:text-title-md font-semibold">
-                <span className="material-symbols-outlined text-xl">playlist_play</span>
-                재생 목록 <span className="text-xs sm:text-label-sm font-normal opacity-60">({sentences.length}개)</span>
-              </div>
-              <span
-                className="material-symbols-outlined transition-transform duration-200"
-                style={{ transform: showList ? 'rotate(180deg)' : 'rotate(0deg)' }}
-              >
-                expand_more
-              </span>
-            </button>
-
-            {showList && (
-              <>
-                {sentences.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 text-on-surface-variant dark:text-on-dark-surface-variant gap-2">
-                    <span className="material-symbols-outlined text-4xl opacity-30">playlist_add</span>
-                    <p className="text-sm opacity-60">생성 탭에서 문장을 만들어보세요.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2 sm:space-y-sm">
-                    {sentences.map((s, idx) => {
-                      const isThis = currentIdx === idx || singleIdx === idx;
-                      const isThisSingle = singleIdx === idx;
-                      return (
-                        <div
-                          key={idx}
-                          className={`group rounded-xl p-3 sm:p-md flex items-start gap-3 sm:gap-md transition-all border
-                            ${isThis
-                              ? 'border-primary dark:border-inverse-primary bg-primary-fixed/40 dark:bg-primary/20'
-                              : 'border-outline-variant dark:border-outline hover:border-secondary dark:hover:border-inverse-primary hover:bg-surface-variant dark:hover:bg-dark-surface-bright'}`}
-                        >
-                          <button
-                            onClick={() => handlePlayOne(idx)}
-                            className={`shrink-0 mt-0.5 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all touch-target
-                              ${isThis
-                                ? 'bg-primary text-on-primary scale-110'
-                                : 'bg-surface-container-high dark:bg-dark-surface-bright text-primary dark:text-inverse-primary group-hover:bg-primary-fixed dark:group-hover:bg-primary'}`}
-                            aria-label={isThisSingle ? '재생 중지' : '재생'}
-                          >
-                            <span className="material-symbols-outlined text-base sm:text-xl">
-                              {isThisSingle ? 'stop' : 'play_arrow'}
-                            </span>
-                          </button>
-                          <div className="flex-grow space-y-1 sm:space-y-xs min-w-0">
-                            <p className={`text-sm sm:text-body-lg font-medium leading-snug break-words ${isThis ? 'text-primary dark:text-inverse-primary' : 'text-on-surface dark:text-on-dark-surface'}`}>
-                              {s.en}
-                            </p>
-                            <p className="text-xs sm:text-body-md text-on-surface-variant dark:text-on-dark-surface-variant leading-snug break-words">
-                              {s.ko}
-                            </p>
-                          </div>
-                          {/* 재생 중 인디케이터 */}
-                          {isThis && (
-                            <div className="shrink-0 flex items-center gap-0.5 mt-1">
-                              {[1,2,3].map(i => (
-                                <div
-                                  key={i}
-                                  className="w-0.5 bg-primary dark:bg-inverse-primary rounded-full animate-bounce"
-                                  style={{ height: '12px', animationDelay: `${i * 0.15}s` }}
-                                />
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
-            )}
-          </section>
-
-          {/* 하단 전체 재생 버튼 (목록 아래) */}
-          <button
-            onClick={handlePlayAll}
-            disabled={sentences.length === 0}
-            className={`w-full h-12 rounded-xl font-medium text-sm sm:text-label-md active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed
-              ${isPlaying
-                ? 'bg-error text-on-error hover:bg-error/90'
-                : 'bg-primary-container text-on-primary hover:bg-primary'}`}
-          >
-            <span className="material-symbols-outlined text-xl">
-              {isPlaying ? 'stop_circle' : 'play_circle'}
-            </span>
-            {isPlaying ? '재생 중지' : '전체 재생'}
-          </button>
+              {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}회</option>)}
+            </select>
+          </div>
+          <div className="row">
+            <span>재생 속도</span>
+            <select
+              value={speed}
+              onChange={e => setSpeed(e.target.value)}
+              className="bg-transparent border-none text-right outline-none text-ink-soft"
+            >
+              <option value="slow">느림</option>
+              <option value="normal">보통</option>
+              <option value="fast">빠름</option>
+            </select>
+          </div>
+          <div className="row">
+            <span>재생 모드</span>
+            <select
+              value={mode}
+              onChange={e => setMode(e.target.value)}
+              className="bg-transparent border-none text-right outline-none text-ink-soft"
+            >
+              <option value="sequential">순차</option>
+              <option value="random">랜덤</option>
+            </select>
+          </div>
+          </div>
         </div>
       </div>
+
+      <button className="cta" onClick={handlePlayAll} disabled={sentences.length === 0}>
+        <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isPlaying ? "stop_circle" : "play_circle"}</i>
+        {isPlaying ? '재생 중지' : '전체 재생'}
+      </button>
+
+      {activeSentence && (
+        <div className="now-playing">
+          <div className="now-playing-header">
+            <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>volume_up</i>
+            현재 재생 중
+          </div>
+          <div className="now-playing-en">{activeSentence.en}</div>
+          <div className="now-playing-ko">{activeSentence.ko}</div>
+        </div>
+      )}
+
+      <div className="list-header" onClick={() => setShowList(!showList)} style={{ cursor: 'pointer' }}>
+        <div className="list-title">
+          <span className="n">재생 목록</span>
+          <span className="c">{sentences.length}개 문장</span>
+        </div>
+        <i className="material-symbols-outlined">{showList ? 'expand_less' : 'expand_more'}</i>
+      </div>
+
+      {showList && (
+        <div className="transcript">
+          {sentences.length === 0 ? (
+            <div style={{ padding: '20px', textAlign: 'center', fontSize: '14px', color: 'var(--ink-soft)' }}>
+              생성 탭에서 문장을 만들어보세요.
+            </div>
+          ) : (
+            sentences.map((s, idx) => {
+              const isThis = currentIdx === idx || singleIdx === idx;
+              const isThisSingle = singleIdx === idx;
+              return (
+                <div className="turn" key={idx}>
+                  <div className="turn-index">{idx + 1}</div>
+                  <div className="turn-body">
+                    <div className="turn-en" style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
+                      {s.en}
+                    </div>
+                    <div className="turn-ko-row">
+                      <div className="turn-ko-bar"></div>
+                      <div className="turn-ko">{s.ko}</div>
+                    </div>
+                  </div>
+                  <button
+                    className={`turn-play ${isThis ? 'active' : ''}`}
+                    onClick={() => handlePlayOne(idx)}
+                  >
+                    <i className="material-symbols-outlined" style={{ fontSize: '20px' }}>{isThisSingle ? "stop" : "play_arrow"}</i>
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
     </div>
   );
 }
