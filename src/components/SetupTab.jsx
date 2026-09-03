@@ -16,7 +16,10 @@ export default function SetupTab({ apiKey, onSave }) {
     <div className="tab-fade-in flex flex-col gap-4 sm:gap-lg max-w-2xl mx-auto">
 
       {/* ── 1. Gemini API 키 (문장 생성용) ── */}
-      <section className="bg-surface-container-lowest dark:bg-dark-surface rounded-xl shadow-sm border border-outline-variant dark:border-outline p-4 sm:p-lg transition-colors duration-200">
+      <section 
+        className="rounded-xl shadow-sm border border-outline-variant dark:border-outline p-4 sm:p-lg transition-colors duration-200"
+        style={{ background: 'var(--surface)' }}
+      >
         <h2 className="text-base sm:text-title-md font-semibold mb-4 sm:mb-md flex items-center gap-2 text-on-surface dark:text-on-dark-surface">
           <span className="material-symbols-outlined text-xl">auto_awesome</span>
           Gemini API 키

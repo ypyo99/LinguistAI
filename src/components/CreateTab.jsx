@@ -154,8 +154,10 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
   return (
     <div className="tab-fade-in">
       <div className="max-w-2xl mx-auto flex flex-col gap-4 sm:gap-lg">
-        {/* 입력 패널 */}
-        <section className="bg-surface-container-lowest dark:bg-dark-surface rounded-xl shadow-sm border border-outline-variant dark:border-outline p-4 sm:p-lg transition-colors duration-200">
+        <section 
+          className="rounded-xl shadow-sm border border-outline-variant dark:border-outline p-4 sm:p-lg transition-colors duration-200"
+          style={{ background: 'var(--surface)' }}
+        >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-md gap-3">
             <h2 className="text-base sm:text-title-md font-semibold text-on-surface dark:text-on-dark-surface">
               학습 문장 만들기
@@ -332,9 +334,11 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
           </div>
         </section>
 
-        {/* 미리보기 패널 */}
         {preview.length > 0 && (
-          <section className="bg-surface-container-lowest dark:bg-dark-surface rounded-xl shadow-sm border border-outline-variant dark:border-outline p-4 sm:p-lg transition-colors duration-200">
+          <section 
+            className="rounded-xl shadow-sm border border-outline-variant dark:border-outline p-4 sm:p-lg transition-colors duration-200"
+            style={{ background: 'var(--surface)' }}
+          >
             <div className="flex items-center justify-between mb-3 sm:mb-md">
               <h3 className="text-base sm:text-title-md font-semibold text-on-surface dark:text-on-dark-surface">
                 생성된 문장 미리보기 ({preview.length}개)
