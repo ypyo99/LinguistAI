@@ -6,7 +6,7 @@ const DIFFICULTY_MAP = { '초급': 'beginner (A1-A2)', '중급': 'intermediate (
 export default function CreateTab({ apiKey, onGenerate }) {
   const [topic, setTopic] = usePersistentState('linguist-create-topic', '');
   const [difficulty, setDifficulty] = usePersistentState('linguist-create-difficulty', '초급');
-  const [count, setCount] = usePersistentState('linguist-create-count', 5);
+  const [count, setCount] = usePersistentState('linguist-create-count', 10);
   const [model, setModel] = usePersistentState('linguist-create-model', 'gemini-3.6-flash');
   const [inputMode, setInputMode] = usePersistentState('linguist-create-input-mode', 'api');
   const [manualText, setManualText] = useState('');
@@ -220,7 +220,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                   value={count}
                   onChange={e => setCount(Number(e.target.value))}
                 >
-                  {Array.from({length: 20}, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}개</option>)}
+                  {[10, 20, 30, 40, 50].map(n => <option key={n} value={n}>{n}개</option>)}
                 </select>
               </div>
             </div>

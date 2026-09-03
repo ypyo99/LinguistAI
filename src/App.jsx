@@ -53,9 +53,13 @@ function App() {
       <Header title={packTitle} total={sentences.length} progress={studiedIndices.length} />
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="content">
-        {activeTab === 'study'  && <StudyTab sentences={sentences} apiKey={apiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} />}
-        {activeTab === 'store'  && <DataTab setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} />}
-        {activeTab === 'create' && (
+        <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>
+          <StudyTab sentences={sentences} apiKey={apiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} />
+        </div>
+        <div style={{ display: activeTab === 'store' ? 'block' : 'none' }}>
+          <DataTab setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} />
+        </div>
+        <div style={{ display: activeTab === 'create' ? 'block' : 'none' }}>
           <CreateTab
             apiKey={apiKey}
             onGenerate={(s) => { 
@@ -65,13 +69,13 @@ function App() {
               setActiveTab('study'); 
             }}
           />
-        )}
-        {activeTab === 'setup' && (
+        </div>
+        <div style={{ display: activeTab === 'setup' ? 'block' : 'none' }}>
           <SetupTab
             apiKey={apiKey}
             onSave={handleSaveKey}
           />
-        )}
+        </div>
       </div>
     </div>
   );

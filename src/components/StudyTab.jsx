@@ -56,16 +56,21 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
   const [showSettings, setShowSettings] = usePersistentState('linguist-study-settings', true);
   const [showList, setShowList] = usePersistentState('linguist-study-list', true);
 
-  // 재생 설정
   const [speed, setSpeed]       = usePersistentState('linguist-study-speed', 'normal');
   const [mode, setMode]         = usePersistentState('linguist-study-mode', 'sequential');
   const [langOrder, setLangOrder] = usePersistentState('linguist-study-lang', 'en-ko');
   const [repeat, setRepeat]     = usePersistentState('linguist-study-repeat', 1);
 
+  const settingsRef = useRef({ speed, mode, repeat, langOrder });
+  useEffect(() => {
+    settingsRef.current = { speed, mode, repeat, langOrder };
+  }, [speed, mode, repeat, langOrder]);
+
   // 재생 상태
   const [isPlaying, setIsPlaying]     = useState(false);   // 전체 재생 중
   const [currentIdx, setCurrentIdx]   = useState(null);    // 전체 재생 중 현재 인덱스
   const [singleIdx, setSingleIdx]     = useState(null);    // 개별 재생 중 인덱스
+  const [currentRepeat, setCurrentRepeat] = useState(0);   // 현재 반복 회차
 
   const shouldStop = useRef(false);
   const singleStop = useRef(false);
@@ -113,12 +118,13 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
     singleStop.current = false;
 
     setSingleIdx(idx);
-    const rate = SPEED_MAP[speed];
 
-    for (let r = 0; r < repeat; r++) {
+    for (let r = 0; r < settingsRef.current.repeat; r++) {
       if (singleStop.current) break;
+      setCurrentRepeat(r + 1);
+      const rate = SPEED_MAP[settingsRef.current.speed];
       await speakSentence(sentences[idx], rate, singleStop, r);
-      if (!singleStop.current && r < repeat - 1) await delay(300);
+      if (!singleStop.current && r < settingsRef.current.repeat - 1) await delay(300);
     }
 
     if (!singleStop.current && setStudiedIndices) {
@@ -148,7 +154,6 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
 
     shouldStop.current = false;
     setIsPlaying(true);
-    const rate = SPEED_MAP[speed];
     const list = mode === 'random' ? shuffle(sentences) : [...sentences];
     const origIndices = list.map(s => sentences.indexOf(s));
 
@@ -156,10 +161,12 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
       if (shouldStop.current) break;
       setCurrentIdx(origIndices[i]);
 
-      for (let r = 0; r < repeat; r++) {
+      for (let r = 0; r < settingsRef.current.repeat; r++) {
         if (shouldStop.current) break;
+        setCurrentRepeat(r + 1);
+        const rate = SPEED_MAP[settingsRef.current.speed];
         await speakSentence(list[i], rate, shouldStop, r);
-        if (!shouldStop.current && r < repeat - 1) await delay(300);
+        if (!shouldStop.current && r < settingsRef.current.repeat - 1) await delay(300);
       }
 
       if (!shouldStop.current && setStudiedIndices) {
@@ -236,6 +243,11 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
           <div className="now-playing-header">
             <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>volume_up</i>
             현재 재생 중
+            {settingsRef.current.repeat > 1 && (
+              <span style={{ marginLeft: '6px', opacity: 0.9, fontSize: '12px', background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '4px' }}>
+                {currentRepeat} / {settingsRef.current.repeat}회
+              </span>
+            )}
           </div>
           <div className="now-playing-en">{activeSentence.en}</div>
           <div className="now-playing-ko">{activeSentence.ko}</div>
