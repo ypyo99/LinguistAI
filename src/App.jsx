@@ -37,7 +37,9 @@ function App() {
     { en: 'I would like to book a table for two at 7 PM.', ko: '오후 7시에 두 명 자리를 예약하고 싶습니다.' },
     { en: 'Could you please speak a little slower?', ko: '조금만 더 천천히 말씀해 주시겠어요?' },
   ]);
-  const [packTitle, setPackTitle] = usePersistentState('linguist-pack-title', '기본 학습 데이터 3개');
+  
+  const [packTitle, setPackTitle] = usePersistentState('linguist-pack-title', '');
+  const displayTitle = packTitle || (sentences.length === 3 ? '기본 학습 데이터' : `저장된 학습 데이터 ${sentences.length}개`);
   const [studiedIndices, setStudiedIndices] = usePersistentState('linguist-studied-indices', []);
 
   const handleSaveKey = (key) => {
@@ -50,7 +52,7 @@ function App() {
 
   return (
     <div className="frame" id="frame">
-      <Header title={packTitle} total={sentences.length} progress={studiedIndices.length} />
+      <Header title={displayTitle} total={sentences.length} progress={studiedIndices.length} />
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="content">
         <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>

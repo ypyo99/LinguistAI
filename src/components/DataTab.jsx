@@ -87,7 +87,7 @@ export default function DataTab({ setSentences, setPackTitle, setStudiedIndices 
         <img src={user.picture} alt="profile" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
         <div>
           <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--teal-deep)' }}>{user.name}님 환영합니다!</div>
-          <div style={{ fontSize: '13px', color: 'var(--ink)' }}>구글 드라이브 프리미엄 데이터를 무료로 다운로드하세요.</div>
+          <div style={{ fontSize: '13px', color: 'var(--ink)' }}>프리미엄 학습 데이터를 무료로 다운로드하세요.</div>
         </div>
       </div>
 
