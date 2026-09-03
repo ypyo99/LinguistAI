@@ -248,7 +248,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
         <div className="settings-panel">
           <div className="settings-panel-inner">
           <div className="row">
-            <span>재생 언어</span>
+            <span>언어</span>
             <select
               value={langOrder}
               onChange={e => setLangOrder(e.target.value)}
@@ -259,7 +259,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
             </select>
           </div>
           <div className="row">
-            <span>반복 횟수</span>
+            <span>반복</span>
             <select
               value={repeat}
               onChange={e => setRepeat(Number(e.target.value))}
@@ -269,7 +269,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
             </select>
           </div>
           <div className="row">
-            <span>재생 속도</span>
+            <span>속도</span>
             <select
               value={speed}
               onChange={e => setSpeed(e.target.value)}
@@ -281,7 +281,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
             </select>
           </div>
           <div className="row">
-            <span>재생 모드</span>
+            <span>모드</span>
             <select
               value={mode}
               onChange={e => setMode(e.target.value)}

@@ -275,8 +275,8 @@ body{
   border-top: 1px solid var(--amber-tint);
   padding-top: 14px;
 }
-.settings-panel-inner .row { display: flex; justify-content: space-between; align-items: center; }
-.settings-panel-inner span { font-weight: 600; }
+.settings-panel-inner .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.settings-panel-inner span { font-weight: 600; white-space: nowrap; flex-shrink: 0; }
 .settings-panel-inner select { font-size: 15px; font-weight: 600; }
 
 /* CTA */
