@@ -94,6 +94,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const [currentIdx, setCurrentIdx]   = useState(null);    // 전체 재생 중 현재 인덱스
   const [singleIdx, setSingleIdx]     = useState(null);    // 개별 재생 중 인덱스
   const [currentRepeat, setCurrentRepeat] = useState(0);   // 현재 반복 회차
+  const [isWaiting, setIsWaiting]     = useState(false);   // 따라 말하기 인터벌 대기 중 여부
 
   const shouldStop = useRef(false);
   const singleStop = useRef(false);
@@ -140,6 +141,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       ttsStop();
       setIsPlaying(false);
       setCurrentIdx(null);
+      setIsWaiting(false);
       return;
     }
     if (sentences.length === 0) return;
@@ -148,6 +150,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     singleStop.current = true;
     ttsStop();
     setSingleIdx(null);
+    setIsWaiting(false);
     await delay(50);
 
     shouldStop.current = false;
@@ -207,12 +210,17 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
       // 다음 문장으로 넘어가기 전, 사용자가 방금 들은 문장을 따라 말해볼 수 있도록 문장 길이에 비례하는 인터벌 부여
       const practiceDelay = Math.max(1500, (sentences[nextIdx]?.en?.length || 20) * 80);
-      if (!isCancelled()) await delay(practiceDelay);
+      if (!isCancelled()) {
+        setIsWaiting(true);
+        await delay(practiceDelay);
+        setIsWaiting(false);
+      }
     }
 
     if (!isCancelled()) {
       setIsPlaying(false);
       setCurrentIdx(null);
+      setIsWaiting(false);
     }
   }, [isPlaying, sentences, mode, speakSentence, setStudiedIndices, favorites]);
 
@@ -432,9 +440,18 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       {activeSentence && (
         <div className="now-playing">
           <div className="now-playing-header">
-            <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>volume_up</i>
-            현재 재생 중
-            {settingsRef.current.repeat > 1 && (
+            {isWaiting ? (
+              <>
+                <i className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--amber)' }}>record_voice_over</i>
+                <span style={{ color: 'var(--amber)', fontWeight: 'bold' }}>따라 말해보세요!</span>
+              </>
+            ) : (
+              <>
+                <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>volume_up</i>
+                현재 재생 중
+              </>
+            )}
+            {settingsRef.current.repeat > 1 && !isWaiting && (
               <span style={{ marginLeft: '6px', opacity: 0.9, fontSize: '12px', background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '4px' }}>
                 {currentRepeat} / {settingsRef.current.repeat}회
               </span>
