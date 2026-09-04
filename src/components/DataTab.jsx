@@ -59,14 +59,9 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
       // 메모리에 저장되어 있던 학습데이터 대체
       setSentences(parsed);
       
-      // 파일명 기반으로 타이틀 업데이트 (ex: 여행영어-초급-50.txt -> 여행영어-초급 50개)
+      // 파일명 기반으로 타이틀 업데이트
       let titleName = pack.name.replace(/\.json$/, '').replace(/\.txt$/, '');
-      const match = titleName.match(/^(.*?)-(\d+)$/);
-      if (match) {
-        setPackTitle(`${match[1]} ${match[2]}개`);
-      } else {
-        setPackTitle(`${titleName} ${parsed.length}개`);
-      }
+      setPackTitle(titleName);
       
       // 학습 현황 초기화
       setStudiedIndices([]);

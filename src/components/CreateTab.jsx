@@ -151,7 +151,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
   const handleApply = () => {
     if (preview.length > 0) {
       const baseTitle = packTitle.trim() || topic.trim() || '일상 회화';
-      const generatedTitle = `${baseTitle}-${difficulty}-${preview.length}개`;
+      const generatedTitle = `${baseTitle}-${difficulty}-${preview.length}`;
       onGenerate(preview, generatedTitle);
       setPreview([]); // 적용 후 미리보기 박스 숨기기
     }
