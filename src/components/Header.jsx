@@ -140,7 +140,7 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '16px' }}>
-        <div>
+        <div style={{ minWidth: 0, paddingRight: '16px' }}>
           <div className="topbar-sub" style={{ marginTop: 0 }}>{sub}</div>
           <div className="topbar-title" style={{ marginTop: '4px' }}>{title}</div>
         </div>

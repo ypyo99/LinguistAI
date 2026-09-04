@@ -144,6 +144,14 @@ body{
 
 .topbar-title{
   font-size:21px; font-weight:700; margin-top:4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 480px) {
+  .topbar-title {
+    font-size: 18px;
+  }
 }
 .progress-track{
   margin-top:14px; height:5px; border-radius:3px;
