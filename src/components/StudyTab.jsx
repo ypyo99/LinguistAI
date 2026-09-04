@@ -4,7 +4,7 @@ import { useTTS, GOOGLE_VOICES } from '../hooks/useTTS';
 import { useWakeLock } from '../hooks/useWakeLock';
 
 // ── 유틸 ────────────────────────────────────────────
-const SPEED_MAP = { slow: 0.6, normal: 1.0, fast: 1.5 };
+const SPEED_MAP = { slow: 0.6, normal: 1.0, slightly_fast: 1.25, fast: 1.5 };
 
 function shuffle(arr) {
   const a = [...arr];
@@ -350,6 +350,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
             <select value={speed} onChange={e => setSpeed(e.target.value)} className="settings-select">
               <option value="slow">느림</option>
               <option value="normal">보통</option>
+              <option value="slightly_fast">약간 빠름</option>
               <option value="fast">빠름</option>
             </select>
           </div>
