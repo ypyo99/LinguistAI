@@ -73,14 +73,14 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     settingsRef.current = { speed, mode, repeat, langOrder };
   }, [speed, mode, repeat, langOrder]);
 
-  // 재생 설정 패널 자동 닫기 (5초, 드롭다운 선택 중에는 중단)
+  // 재생 설정 패널 자동 닫기 (30초, 드롭다운 선택 중에는 중단)
   const [isFocusedInSettings, setIsFocusedInSettings] = useState(false);
   useEffect(() => {
     let timer;
     if (showSettings && !isFocusedInSettings) {
       timer = setTimeout(() => {
         setShowSettings(false);
-      }, 5000);
+      }, 30000);
     }
     return () => {
       if (timer) clearTimeout(timer);
