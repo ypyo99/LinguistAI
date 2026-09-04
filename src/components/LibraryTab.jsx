@@ -47,9 +47,9 @@ export default function LibraryTab({
                 <button 
                   onClick={() => handleLoadPack(pack)}
                   className="btn-orange"
-                  style={{ padding: '8px 12px', borderRadius: '10px', border: 'none', background: 'var(--teal)', color: '#fff', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                  style={{ padding: '8px 12px', borderRadius: '10px', border: 'none', background: 'var(--teal)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                 >
-                  <i className="material-symbols-outlined" style={{ fontSize: '16px' }}>play_arrow</i> 불러오기
+                  <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>play_arrow</i>
                 </button>
                 <button 
                   onClick={() => handleDeletePack(pack.id)}
