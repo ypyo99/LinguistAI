@@ -457,8 +457,17 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               </span>
             )}
           </div>
-          <div className="now-playing-en">{activeSentence.en}</div>
-          <div className="now-playing-ko">{activeSentence.ko}</div>
+          {langOrder === 'ko-en' ? (
+            <>
+              <div className="now-playing-en">{activeSentence.ko}</div>
+              <div className="now-playing-ko">{activeSentence.en}</div>
+            </>
+          ) : (
+            <>
+              <div className="now-playing-en">{activeSentence.en}</div>
+              <div className="now-playing-ko">{activeSentence.ko}</div>
+            </>
+          )}
         </div>
       )}
 
@@ -503,13 +512,27 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                     )}
                   </div>
                   <div className="turn-body" onClick={() => handlePlayOne(idx)} style={{ cursor: 'pointer' }}>
-                    <div className="turn-en" style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
-                      {s.en}
-                    </div>
-                    <div className="turn-ko-row">
-                      <div className="turn-ko-bar"></div>
-                      <div className="turn-ko">{s.ko}</div>
-                    </div>
+                    {langOrder === 'ko-en' ? (
+                      <>
+                        <div className="turn-en" style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
+                          {s.ko}
+                        </div>
+                        <div className="turn-ko-row">
+                          <div className="turn-ko-bar"></div>
+                          <div className="turn-ko">{s.en}</div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="turn-en" style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
+                          {s.en}
+                        </div>
+                        <div className="turn-ko-row">
+                          <div className="turn-ko-bar"></div>
+                          <div className="turn-ko">{s.ko}</div>
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', justifyContent: 'center', paddingLeft: '8px' }}>
                     <button onClick={toggleFavorite} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isFavorite ? 'var(--teal)' : 'var(--amber)' }}>
@@ -554,10 +577,17 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
           </div>
           <div className="commute-content" style={{ filter: `brightness(${commuteBrightness})` }}>
             {activeSentence ? (
-              <>
-                <div className="commute-text-en">{activeSentence.en}</div>
-                <div className="commute-text-ko">{activeSentence.ko}</div>
-              </>
+              langOrder === 'ko-en' ? (
+                <>
+                  <div className="commute-text-en">{activeSentence.ko}</div>
+                  <div className="commute-text-ko">{activeSentence.en}</div>
+                </>
+              ) : (
+                <>
+                  <div className="commute-text-en">{activeSentence.en}</div>
+                  <div className="commute-text-ko">{activeSentence.ko}</div>
+                </>
+              )
             ) : (
               <div className="commute-text-ko" style={{ color: '#888' }}>재생 대기 중...</div>
             )}
