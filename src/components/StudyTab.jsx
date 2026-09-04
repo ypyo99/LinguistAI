@@ -57,6 +57,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
   const [showSettings, setShowSettings] = usePersistentState('linguist-study-settings', true);
   const [showList, setShowList] = usePersistentState('linguist-study-list', true);
   const [isCommuteMode, setIsCommuteMode] = useState(false);
+  const [commuteBrightness, setCommuteBrightness] = usePersistentState('linguist-commute-brightness', 1.0);
 
   const [speed, setSpeed]       = usePersistentState('linguist-study-speed', 'normal');
   const [mode, setMode]         = usePersistentState('linguist-study-mode', 'sequential');
@@ -356,8 +357,8 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
           {isPlaying ? '재생 중지' : '전체 재생'}
         </button>
         <button className="cta btn-orange" style={{ margin: 0, flex: 1 }} onClick={() => setIsCommuteMode(true)}>
-          <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>directions_car</i>
-          운전 모드
+          <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>podcasts</i>
+          팟캐스트
         </button>
       </div>
 
@@ -433,11 +434,23 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
       {isCommuteMode && (
         <div className="commute-mode-overlay">
           <div className="commute-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, paddingRight: '20px' }}>
+              <i className="material-symbols-outlined" style={{ fontSize: '20px', color: '#888' }}>light_mode</i>
+              <input 
+                type="range" 
+                min="0.1" 
+                max="1.0" 
+                step="0.05" 
+                value={commuteBrightness} 
+                onChange={e => setCommuteBrightness(Number(e.target.value))} 
+                style={{ flex: 1, accentColor: 'var(--teal)' }}
+              />
+            </div>
             <button className="commute-close-btn" onClick={() => setIsCommuteMode(false)}>
               <i className="material-symbols-outlined">close</i>
             </button>
           </div>
-          <div className="commute-content">
+          <div className="commute-content" style={{ filter: `brightness(${commuteBrightness})` }}>
             {activeSentence ? (
               <>
                 <div className="commute-text-en">{activeSentence.en}</div>
@@ -447,7 +460,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
               <div className="commute-text-ko" style={{ color: '#888' }}>재생 대기 중...</div>
             )}
           </div>
-          <div className="commute-controls">
+          <div className="commute-controls" style={{ filter: `brightness(${commuteBrightness})` }}>
             <button className="commute-btn" onClick={handlePrev}>
               <i className="material-symbols-outlined">skip_previous</i>
             </button>
