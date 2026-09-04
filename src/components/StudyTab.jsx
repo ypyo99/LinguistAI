@@ -177,23 +177,28 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       if (startIndex === -1) startIndex = 0;
     }
 
-    for (let i = startIndex; i < list.length; i++) {
-      if (isCancelled()) break;
-      setCurrentIdx(origIndices[i]);
-
-      for (let r = 0; r < settingsRef.current.repeat; r++) {
+    while (!isCancelled()) {
+      for (let i = startIndex; i < list.length; i++) {
         if (isCancelled()) break;
-        setCurrentRepeat(r + 1);
-        const rate = SPEED_MAP[settingsRef.current.speed];
-        await speakSentence(list[i], rate, localStopRef, r);
-        if (!isCancelled() && r < settingsRef.current.repeat - 1) await delay(300);
-      }
+        setCurrentIdx(origIndices[i]);
 
-      if (!isCancelled() && setStudiedIndices) {
-        setStudiedIndices(prev => prev.includes(origIndices[i]) ? prev : [...prev, origIndices[i]]);
-      }
+        for (let r = 0; r < settingsRef.current.repeat; r++) {
+          if (isCancelled()) break;
+          setCurrentRepeat(r + 1);
+          const rate = SPEED_MAP[settingsRef.current.speed];
+          await speakSentence(list[i], rate, localStopRef, r);
+          if (!isCancelled() && r < settingsRef.current.repeat - 1) await delay(300);
+        }
 
-      if (!isCancelled() && i < list.length - 1) await delay(600);
+        if (!isCancelled() && setStudiedIndices) {
+          setStudiedIndices(prev => prev.includes(origIndices[i]) ? prev : [...prev, origIndices[i]]);
+        }
+
+        if (!isCancelled()) await delay(600);
+      }
+      
+      // 다음 반복부터는 무조건 처음부터 시작
+      startIndex = 0;
     }
 
     if (!isCancelled()) {
