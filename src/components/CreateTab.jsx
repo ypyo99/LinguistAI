@@ -15,6 +15,7 @@ export default function CreateTab({ apiKey, onGenerate }) {
   const [generatingCount, setGeneratingCount] = useState(0);
   const [error, setError] = useState('');
   const [preview, setPreview] = usePersistentState('linguist-create-preview', []);
+  const [packTitle, setPackTitle] = usePersistentState('linguist-create-packtitle', '');
 
   const generatedPrompt = `Generate exactly ${count} English learning sentences for a Korean learner.
 Topic: "${topic || '일상 회화'}"
@@ -149,7 +150,8 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
 
   const handleApply = () => {
     if (preview.length > 0) {
-      const generatedTitle = `${topic || '일상 회화'}-${difficulty}-${preview.length}개`;
+      const baseTitle = packTitle.trim() || topic.trim() || '일상 회화';
+      const generatedTitle = `${baseTitle}-${difficulty}-${preview.length}개`;
       onGenerate(preview, generatedTitle);
       setPreview([]); // 적용 후 미리보기 박스 숨기기
     }
@@ -183,10 +185,25 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
           </div>
 
           <div className="space-y-3 sm:space-y-md">
-            {/* 주제 */}
+            {/* 제목 */}
+            <div className="flex flex-col gap-1 sm:gap-base">
+              <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="packTitle">
+                제목 <span className="opacity-60">(비워두면 프롬프트 기반 자동 생성)</span>
+              </label>
+              <input
+                className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring placeholder:text-outline-variant dark:placeholder:text-on-dark-surface-variant transition-colors duration-200 text-sm sm:text-base"
+                id="packTitle"
+                placeholder="예: 비즈니스 미팅, 식당 예약..."
+                type="text"
+                value={packTitle}
+                onChange={e => setPackTitle(e.target.value)}
+              />
+            </div>
+
+            {/* 프롬프트 */}
             <div className="flex flex-col gap-1 sm:gap-base">
               <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="topic">
-                주제 <span className="opacity-60">(비워두면 일상 회화)</span>
+                프롬프트 <span className="opacity-60">(비워두면 일상 회화)</span>
               </label>
               <input
                 className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring placeholder:text-outline-variant dark:placeholder:text-on-dark-surface-variant transition-colors duration-200 text-sm sm:text-base"
