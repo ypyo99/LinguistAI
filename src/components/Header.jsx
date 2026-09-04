@@ -104,7 +104,12 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
           </div>
           LinguistAI
         </div>
-        <div className="topbar-actions" style={{ position: 'relative' }}>
+        <div className="topbar-actions" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          {user && (
+            <div style={{ fontSize: '14px', fontWeight: '600', marginRight: '4px', opacity: 0.9 }}>
+              {user.name}
+            </div>
+          )}
           <button className="icon-btn" onClick={toggleTheme}>
             <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isDark ? "light_mode" : "dark_mode"}</i>
           </button>
