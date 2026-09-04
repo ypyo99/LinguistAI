@@ -19,7 +19,7 @@ export default function TabNavigation({ activeTab, setActiveTab, user }) {
             aria-selected={isActive}
             role="tab"
           >
-            <i className="material-symbols-outlined" style={{ fontSize: '24px' }}>{icon}</i>
+            <i className="material-symbols-outlined">{icon}</i>
             {label}
           </button>
         );

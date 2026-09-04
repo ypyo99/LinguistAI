@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 
 const DIFFICULTY_MAP = { '초급': 'beginner (A1-A2)', '중급': 'intermediate (B1-B2)', '고급': 'advanced (C1-C2)' };
@@ -126,27 +126,22 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
     }
   };
 
-  const handleParseManual = () => {
+  useEffect(() => {
+    if (!manualText.trim()) return;
+    
     try {
-      setError('');
-      setPreview([]);
-      if (!manualText.trim()) throw new Error('텍스트를 입력해주세요.');
-      
       const jsonMatch = manualText.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) throw new Error('텍스트에서 JSON 배열([ ... ]) 형식을 찾을 수 없습니다.');
+      if (!jsonMatch) return;
       
       const parsed = JSON.parse(jsonMatch[0]);
-      if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('유효한 문장 데이터를 찾지 못했습니다.');
-      
-      if (!parsed[0].en || !parsed[0].ko) {
-         throw new Error('데이터에 "en" 또는 "ko" 속성이 누락되었습니다.');
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].en && parsed[0].ko) {
+        setPreview(parsed);
+        setError('');
       }
-      
-      setPreview(parsed);
     } catch (e) {
-      setError(`오류: ${e.message}`);
+      // 입력 중이거나 유효하지 않은 JSON일 때는 무시
     }
-  };
+  }, [manualText]);
 
   const handleApply = () => {
     if (preview.length > 0) {
@@ -154,6 +149,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
       const generatedTitle = `${baseTitle}-${difficulty}-${preview.length}`;
       onGenerate(preview, generatedTitle);
       setPreview([]); // 적용 후 미리보기 박스 숨기기
+      setManualText(''); // 적용 후 텍스트 박스 초기화
     }
   };
 
@@ -334,7 +330,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                             console.error('Failed to read clipboard contents: ', err);
                           }
                         }}
-                        className="flex items-center gap-1 text-xs px-2 py-1 bg-surface-variant dark:bg-dark-surface-bright text-on-surface-variant dark:text-on-dark-surface-variant rounded hover:bg-outline-variant transition-colors"
+                        className="flex items-center gap-1 text-xs px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-900 dark:text-orange-100 rounded hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
                         title="클립보드 내용 붙여넣기"
                       >
                         <span className="material-symbols-outlined text-[16px]">content_paste</span>
@@ -343,7 +339,6 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                     </div>
                     <textarea
                       className="w-full h-32 p-3 rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring font-mono text-sm sm:text-base resize-y"
-                      placeholder={`[\n  {"en": "Hello", "ko": "안녕하세요"}\n]`}
                       value={manualText}
                       onChange={e => setManualText(e.target.value)}
                     />
@@ -358,15 +353,10 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                   </div>
                 )}
 
-                {/* 적용 버튼 */}
-                <button
-                  onClick={handleParseManual}
-                  disabled={!manualText.trim()}
-                  className="btn-orange w-full h-11 rounded-xl text-sm sm:text-label-md font-medium active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <span className="material-symbols-outlined text-xl">data_object</span>
-                  붙여넣은 텍스트 파싱하기
-                </button>
+                {/* 자동 파싱 안내 메시지 */}
+                <div className="text-center text-xs text-on-surface-variant dark:text-on-dark-surface-variant">
+                  유효한 JSON 형식이 입력되면 아래에 미리보기가 표시됩니다.
+                </div>
               </>
             )}
           </div>
