@@ -3,19 +3,16 @@ import { usePersistentState } from '../hooks/usePersistentState';
 import { useGoogleLogin } from '@react-oauth/google';
 
 const LANDMARKS = [
-  "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1000&h=400&auto=format&fit=crop", // NY
-  "https://images.unsplash.com/photo-1529655683826-aba9b3e77383?q=80&w=1000&h=400&auto=format&fit=crop", // Big Ben
-  "https://images.unsplash.com/photo-1570196236319-33dddb02534f?q=80&w=1000&h=400&auto=format&fit=crop", // Gyeongbokgung
-  "https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?q=80&w=1000&h=400&auto=format&fit=crop", // Statue of liberty
-  "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1000&h=400&auto=format&fit=crop", // Tower Bridge
-  "https://images.unsplash.com/photo-1517154421773-0529f29ea451?q=80&w=1000&h=400&auto=format&fit=crop", // N Seoul Tower
-  "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?q=80&w=1000&h=400&auto=format&fit=crop", // Golden Gate
-  "https://images.unsplash.com/photo-1508711018029-79a0e6988824?q=80&w=1000&h=400&auto=format&fit=crop", // London Eye
-  "https://images.unsplash.com/photo-1520689917380-60b7692fc3f4?q=80&w=1000&h=400&auto=format&fit=crop", // Bukchon
-  "https://images.unsplash.com/photo-1616421458872-886ec59f2a74?q=80&w=1000&h=400&auto=format&fit=crop", // Gyeongju
-  "https://images.unsplash.com/photo-1590802778648-9f37c35bd28b?q=80&w=1000&h=400&auto=format&fit=crop", // Seoraksan / Ulsanbawi
-  "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?q=80&w=1000&h=400&auto=format&fit=crop", // East Sea
-  "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1000&h=400&auto=format&fit=crop", // BTS / Concert vibe
+  "/images/landmarks/img0.jpg",
+  "/images/landmarks/img1.jpg",
+  "/images/landmarks/img2.jpg",
+  "/images/landmarks/img3.jpg",
+  "/images/landmarks/img4.jpg",
+  "/images/landmarks/img5.jpg",
+  "/images/landmarks/img6.jpg",
+  "/images/landmarks/img7.jpg",
+  "/images/landmarks/img8.jpg",
+  "/images/landmarks/img9.jpg"
 ];
 
 export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0, onResetProgress }) {
@@ -103,36 +100,9 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
   const pct = total > 0 ? (progress / total) * 100 : 0;
 
   const [bgIndex, setBgIndex] = useState(0);
-  const [useImages, setUseImages] = useState(true);
 
   useEffect(() => {
-    const checkConnection = () => {
-      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      if (conn) {
-        if (conn.type === 'cellular' || conn.saveData) {
-          setUseImages(false);
-        } else {
-          setUseImages(true);
-        }
-      }
-    };
-    
-    checkConnection();
-    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    if (conn && conn.addEventListener) {
-      conn.addEventListener('change', checkConnection);
-    }
-    return () => {
-      if (conn && conn.removeEventListener) {
-        conn.removeEventListener('change', checkConnection);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!useImages) return;
-
-    // Preload images in the background so they display instantly without network delay
+    // Preload local images so they are ready in cache
     LANDMARKS.forEach(src => {
       const img = new Image();
       img.src = src;
@@ -143,13 +113,11 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
       setBgIndex(prev => (prev + 1) % LANDMARKS.length);
     }, 20000);
     return () => clearInterval(timer);
-  }, [useImages]);
+  }, []);
 
   const headerStyle = {
-    background: useImages 
-      ? `linear-gradient(135deg, rgba(204, 85, 0, 0.85), rgba(255, 111, 97, 0.85)), url('${LANDMARKS[bgIndex]}')`
-      : undefined,
-    backgroundSize: useImages ? 'cover' : undefined,
+    background: `linear-gradient(135deg, rgba(204, 85, 0, 0.85), rgba(255, 111, 97, 0.85)), url('${LANDMARKS[bgIndex]}')`,
+    backgroundSize: 'cover',
     transition: 'background 1s ease-in-out'
   };
 
