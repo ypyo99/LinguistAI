@@ -305,7 +305,24 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                   </div>
                   
                   <div className="flex flex-col gap-1 sm:gap-base">
-                    <label className="font-medium text-on-surface dark:text-on-dark-surface">2. 답변(JSON)을 아래에 붙여넣어 주세요.</label>
+                    <div className="flex items-center justify-between">
+                      <label className="font-medium text-on-surface dark:text-on-dark-surface">2. 답변(JSON)을 아래에 붙여넣어 주세요.</label>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const text = await navigator.clipboard.readText();
+                            setManualText(text);
+                          } catch (err) {
+                            console.error('Failed to read clipboard contents: ', err);
+                          }
+                        }}
+                        className="flex items-center gap-1 text-xs px-2 py-1 bg-surface-variant dark:bg-dark-surface-bright text-on-surface-variant dark:text-on-dark-surface-variant rounded hover:bg-outline-variant transition-colors"
+                        title="클립보드 내용 붙여넣기"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">content_paste</span>
+                        붙여넣기
+                      </button>
+                    </div>
                     <textarea
                       className="w-full h-32 p-3 rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring font-mono text-sm sm:text-base resize-y"
                       placeholder={`[\n  {"en": "Hello", "ko": "안녕하세요"}\n]`}
