@@ -83,9 +83,9 @@ function App() {
         <div style={{ display: activeTab === 'create' ? 'block' : 'none' }}>
           <CreateTab
             apiKey={apiKey}
-            onGenerate={(s) => { 
+            onGenerate={(s, title) => { 
               setSentences(s); 
-              setPackTitle(`AI 생성 학습 데이터 ${s.length}개`);
+              setPackTitle(title || `AI 생성 학습 데이터 ${s.length}개`);
               setStudiedIndices([]);
               setActiveTab('study'); 
             }}

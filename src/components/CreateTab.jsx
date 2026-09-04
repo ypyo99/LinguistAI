@@ -149,7 +149,8 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
 
   const handleApply = () => {
     if (preview.length > 0) {
-      onGenerate(preview);
+      const generatedTitle = `${topic || '일상 회화'}-${difficulty}-${preview.length}개`;
+      onGenerate(preview, generatedTitle);
       setPreview([]); // 적용 후 미리보기 박스 숨기기
     }
   };
