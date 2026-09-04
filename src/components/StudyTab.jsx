@@ -57,6 +57,8 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const [showSettings, setShowSettings] = usePersistentState('linguist-study-settings', false);
   const [showList, setShowList] = usePersistentState('linguist-study-list', true);
   const [favorites, setFavorites] = usePersistentState('linguist-study-favorites', []);
+  const favoritesRef = useRef(favorites);
+  useEffect(() => { favoritesRef.current = favorites; }, [favorites]);
   const [isCommuteMode, setIsCommuteMode] = useState(false);
   const [commuteBrightness, setCommuteBrightness] = usePersistentState('linguist-commute-brightness', 1.0);
 
@@ -155,50 +157,56 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
     setIsPlaying(true);
 
-    let list, origIndices;
-    if (isJump && currentListRef.current && currentListRef.current.mode === mode) {
-      list = currentListRef.current.list;
-      origIndices = currentListRef.current.origIndices;
-    } else {
-      let srcIndices = sentences.map((_, i) => i);
-      if (onlyFavorites) {
-        srcIndices = srcIndices.filter(i => favorites && favorites.includes(i));
-      }
-      if (mode === 'random') srcIndices = shuffle(srcIndices);
-      
-      list = srcIndices.map(i => sentences[i]);
-      origIndices = srcIndices;
-      currentListRef.current = { list, origIndices, mode };
-    }
-
-    let startIndex = 0;
-    if (isJump) {
-      startIndex = origIndices.indexOf(startFromIdx);
-      if (startIndex === -1) startIndex = 0;
-    }
+    let playedInCycle = new Set();
+    let isJump = typeof startFromIdx === 'number';
 
     while (!isCancelled()) {
-      for (let i = startIndex; i < list.length; i++) {
-        if (isCancelled()) break;
-        setCurrentIdx(origIndices[i]);
+      let validIndices = onlyFavorites 
+        ? (favoritesRef.current || [])
+        : sentences.map((_, i) => i);
 
-        for (let r = 0; r < settingsRef.current.repeat; r++) {
-          if (isCancelled()) break;
-          setCurrentRepeat(r + 1);
-          const rate = SPEED_MAP[settingsRef.current.speed];
-          await speakSentence(list[i], rate, localStopRef, r);
-          if (!isCancelled() && r < settingsRef.current.repeat - 1) await delay(300);
-        }
+      if (validIndices.length === 0) break;
 
-        if (!isCancelled() && setStudiedIndices) {
-          setStudiedIndices(prev => prev.includes(origIndices[i]) ? prev : [...prev, origIndices[i]]);
-        }
-
-        if (!isCancelled()) await delay(600);
-      }
+      let unplayed = validIndices.filter(idx => !playedInCycle.has(idx));
       
-      // 다음 반복부터는 무조건 처음부터 시작
-      startIndex = 0;
+      if (unplayed.length === 0) {
+        playedInCycle.clear();
+        unplayed = [...validIndices];
+      }
+
+      let nextIdx;
+      if (settingsRef.current.mode === 'random') {
+        nextIdx = unplayed[Math.floor(Math.random() * unplayed.length)];
+      } else {
+        unplayed.sort((a, b) => a - b);
+        nextIdx = unplayed[0];
+      }
+
+      if (isJump) {
+        if (validIndices.includes(startFromIdx)) {
+          nextIdx = startFromIdx;
+        }
+        isJump = false;
+      }
+
+      if (isCancelled()) break;
+      setCurrentIdx(nextIdx);
+
+      for (let r = 0; r < settingsRef.current.repeat; r++) {
+        if (isCancelled()) break;
+        setCurrentRepeat(r + 1);
+        const rate = SPEED_MAP[settingsRef.current.speed];
+        await speakSentence(sentences[nextIdx], rate, localStopRef, r);
+        if (!isCancelled() && r < settingsRef.current.repeat - 1) await delay(300);
+      }
+
+      if (!isCancelled() && setStudiedIndices) {
+        setStudiedIndices(prev => prev.includes(nextIdx) ? prev : [...prev, nextIdx]);
+      }
+
+      playedInCycle.add(nextIdx);
+
+      if (!isCancelled()) await delay(600);
     }
 
     if (!isCancelled()) {
