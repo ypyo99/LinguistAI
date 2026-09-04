@@ -6,6 +6,7 @@ import SetupTab from './components/SetupTab';
 import CreateTab from './components/CreateTab';
 import StudyTab from './components/StudyTab';
 import DataTab from './components/DataTab';
+import LibraryTab from './components/LibraryTab';
 import Footer from './components/Footer';
 
 function App() {
@@ -93,8 +94,11 @@ function App() {
         <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>
           <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} favorites={favorites} setFavorites={setFavorites} onSavePack={handleSavePack} />
         </div>
+        <div style={{ display: activeTab === 'library' ? 'block' : 'none' }}>
+          <LibraryTab savedPacks={savedPacks} setSavedPacks={setSavedPacks} setSentences={setSentences} setPackTitle={setPackTitle} setFavorites={setFavorites} setStudiedIndices={setStudiedIndices} setActiveTab={setActiveTab} />
+        </div>
         <div style={{ display: activeTab === 'store' ? 'block' : 'none' }}>
-          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} setFavorites={setFavorites} setActiveTab={setActiveTab} savedPacks={savedPacks} setSavedPacks={setSavedPacks} />
+          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} />
         </div>
         <div style={{ display: activeTab === 'create' ? 'block' : 'none' }}>
           <CreateTab
