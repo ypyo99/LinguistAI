@@ -409,11 +409,12 @@ body{
 }
 .turn{
   display:flex; gap:12px; padding:16px 14px;
-  border-bottom:0.5px solid var(--line);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   background-color: #F7F7F8;
 }
 .dark .turn, [data-mode="dark"] .turn {
   background-color: #2A211C;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .turn:last-child{ border-bottom:none; }
 .turn-index{
