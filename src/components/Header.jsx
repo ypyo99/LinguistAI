@@ -3,19 +3,19 @@ import { usePersistentState } from '../hooks/usePersistentState';
 import { useGoogleLogin } from '@react-oauth/google';
 
 const LANDMARKS = [
-  "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1000&auto=format&fit=crop", // NY
-  "https://images.unsplash.com/photo-1529655683826-aba9b3e77383?q=80&w=1000&auto=format&fit=crop", // Big Ben
-  "https://images.unsplash.com/photo-1570196236319-33dddb02534f?q=80&w=1000&auto=format&fit=crop", // Gyeongbokgung
-  "https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?q=80&w=1000&auto=format&fit=crop", // Statue of liberty
-  "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1000&auto=format&fit=crop", // Tower Bridge
-  "https://images.unsplash.com/photo-1517154421773-0529f29ea451?q=80&w=1000&auto=format&fit=crop", // N Seoul Tower
-  "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?q=80&w=1000&auto=format&fit=crop", // Golden Gate
-  "https://images.unsplash.com/photo-1508711018029-79a0e6988824?q=80&w=1000&auto=format&fit=crop", // London Eye
-  "https://images.unsplash.com/photo-1520689917380-60b7692fc3f4?q=80&w=1000&auto=format&fit=crop", // Bukchon
-  "https://images.unsplash.com/photo-1616421458872-886ec59f2a74?q=80&w=1000&auto=format&fit=crop", // Gyeongju
-  "https://images.unsplash.com/photo-1590802778648-9f37c35bd28b?q=80&w=1000&auto=format&fit=crop", // Seoraksan / Ulsanbawi
-  "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?q=80&w=1000&auto=format&fit=crop", // East Sea
-  "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1000&auto=format&fit=crop", // BTS / Concert vibe
+  "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1000&h=400&auto=format&fit=crop", // NY
+  "https://images.unsplash.com/photo-1529655683826-aba9b3e77383?q=80&w=1000&h=400&auto=format&fit=crop", // Big Ben
+  "https://images.unsplash.com/photo-1570196236319-33dddb02534f?q=80&w=1000&h=400&auto=format&fit=crop", // Gyeongbokgung
+  "https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?q=80&w=1000&h=400&auto=format&fit=crop", // Statue of liberty
+  "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1000&h=400&auto=format&fit=crop", // Tower Bridge
+  "https://images.unsplash.com/photo-1517154421773-0529f29ea451?q=80&w=1000&h=400&auto=format&fit=crop", // N Seoul Tower
+  "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?q=80&w=1000&h=400&auto=format&fit=crop", // Golden Gate
+  "https://images.unsplash.com/photo-1508711018029-79a0e6988824?q=80&w=1000&h=400&auto=format&fit=crop", // London Eye
+  "https://images.unsplash.com/photo-1520689917380-60b7692fc3f4?q=80&w=1000&h=400&auto=format&fit=crop", // Bukchon
+  "https://images.unsplash.com/photo-1616421458872-886ec59f2a74?q=80&w=1000&h=400&auto=format&fit=crop", // Gyeongju
+  "https://images.unsplash.com/photo-1590802778648-9f37c35bd28b?q=80&w=1000&h=400&auto=format&fit=crop", // Seoraksan / Ulsanbawi
+  "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?q=80&w=1000&h=400&auto=format&fit=crop", // East Sea
+  "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1000&h=400&auto=format&fit=crop", // BTS / Concert vibe
 ];
 
 export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0, onResetProgress }) {
