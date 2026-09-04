@@ -39,8 +39,10 @@ export default function LibraryTab({
             <div key={pack.id} style={{ background: 'var(--surface)', border: '0.5px solid var(--line)', padding: '16px 20px', borderRadius: '16px', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pack.title}</h3>
-                <p style={{ fontSize: '13px', color: 'var(--ink-soft)', margin: '4px 0 0 0' }}>
-                  {new Date(pack.createdAt).toLocaleDateString()} • {pack.sentences.length}문장 • 즐겨찾기 {pack.favorites?.length || 0}개
+                <p style={{ display: 'flex', alignItems: 'center', fontSize: '13px', color: 'var(--ink-soft)', margin: '4px 0 0 0' }}>
+                  {new Date(pack.createdAt).toLocaleDateString()}
+                  <i className="material-symbols-outlined" style={{ fontSize: '15px', color: 'var(--amber)', marginLeft: '8px', marginRight: '4px' }}>star</i>
+                  {pack.favorites?.length || 0}
                 </p>
               </div>
               <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
