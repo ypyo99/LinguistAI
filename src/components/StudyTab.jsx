@@ -100,7 +100,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const currentListRef = useRef(null);
   const playRunId = useRef(0);
 
-  const { speak: ttsSpeak, stop: ttsStop } = useTTS(ttsApiKey, voiceEn, voiceKo);
+  const { speak: ttsSpeak, stop: ttsStop, ttsStatus } = useTTS(ttsApiKey, voiceEn, voiceKo);
   useWakeLock(isPlaying || singleIdx !== null || isCommuteMode);
 
   // 언마운트 시 TTS 정리
@@ -448,6 +448,21 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               <>
                 <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>volume_up</i>
                 현재 재생 중
+                {ttsStatus === 'api' && (
+                  <span style={{ marginLeft: '8px', fontSize: '11px', background: 'var(--amber)', color: '#fff', padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                    <i className="material-symbols-outlined" style={{ fontSize: '12px' }}>cloud_download</i> API 호출
+                  </span>
+                )}
+                {ttsStatus === 'cache' && (
+                  <span style={{ marginLeft: '8px', fontSize: '11px', background: 'var(--teal)', color: '#fff', padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                    <i className="material-symbols-outlined" style={{ fontSize: '12px' }}>bolt</i> 캐시 재생
+                  </span>
+                )}
+                {ttsStatus === 'fallback' && (
+                  <span style={{ marginLeft: '8px', fontSize: '11px', background: 'var(--ink-soft)', color: '#fff', padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                    <i className="material-symbols-outlined" style={{ fontSize: '12px' }}>robot_2</i> 기본 음성
+                  </span>
+                )}
               </>
             )}
             {settingsRef.current.repeat > 1 && !isWaiting && (

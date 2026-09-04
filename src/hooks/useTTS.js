@@ -1,4 +1,5 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
+import { getCachedAudio, saveCachedAudio } from '../utils/idb';
 
 // ── Google Cloud TTS 음성 목록 ────────────────────────────────────
 export const GOOGLE_VOICES = {
@@ -17,29 +18,43 @@ export const GOOGLE_VOICES = {
 };
 
 // ── Google Cloud TTS API 호출 ─────────────────────────────────────
-async function googleTTSSpeak(text, lang, rate, ttsApiKey, voiceName, audioCtxRef, currentSourceRef) {
-  const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${ttsApiKey}`;
-  const body = {
-    input: { text },
-    voice: { languageCode: lang, name: voiceName },
-    audioConfig: { audioEncoding: 'MP3', speakingRate: rate },
-  };
+async function googleTTSSpeak(text, lang, rate, ttsApiKey, voiceName, audioCtxRef, currentSourceRef, setTtsStatus) {
+  const cacheKey = `${lang}_${voiceName}_${rate}_${text}`;
+  let bytes;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  const cachedBuffer = await getCachedAudio(cacheKey);
+  if (cachedBuffer) {
+    setTtsStatus('cache');
+    bytes = new Uint8Array(cachedBuffer);
+  } else {
+    setTtsStatus('api');
+    const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${ttsApiKey}`;
+    const body = {
+      input: { text },
+      voice: { languageCode: lang, name: voiceName },
+      audioConfig: { audioEncoding: 'MP3', speakingRate: rate },
+    };
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(`Google TTS API 오류: ${res.status} - ${err?.error?.message || res.statusText}`);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(`Google TTS API 오류: ${res.status} - ${err?.error?.message || res.statusText}`);
+    }
+
+    const data = await res.json();
+    const binary = atob(data.audioContent);
+    bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    
+    // ArrayBuffer is neutered/detached by decodeAudioData, so we must clone it before saving
+    const bufferToSave = bytes.buffer.slice(0);
+    saveCachedAudio(cacheKey, bufferToSave).catch(console.error);
   }
-
-  const data = await res.json();
-  const binary = atob(data.audioContent);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
 
   if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
     audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -86,8 +101,9 @@ function pickVoice(lang) {
   return cands[0] || null;
 }
 
-function webSpeechSpeak(text, lang, rate, voiceCache) {
+function webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus) {
   return new Promise(resolve => {
+    setTtsStatus('fallback');
     const utt = new SpeechSynthesisUtterance(text);
     utt.lang = lang;
     utt.rate = rate;
@@ -108,6 +124,7 @@ function webSpeechSpeak(text, lang, rate, voiceCache) {
  * @param {string} voiceKo   - 한국어 음성 이름 (예: 'ko-KR-Neural2-A')
  */
 export function useTTS(ttsApiKey = '', voiceEn = 'en-US-Neural2-C', voiceKo = 'ko-KR-Neural2-A') {
+  const [ttsStatus, setTtsStatus] = useState(null);
   const voiceCache = useRef({});
   const audioCtxRef = useRef(null);
   const currentSourceRef = useRef(null);
@@ -142,16 +159,16 @@ export function useTTS(ttsApiKey = '', voiceEn = 'en-US-Neural2-C', voiceKo = 'k
       if (ttsApiKey) {
         const voiceName = lang === 'ko-KR' ? voiceKo : voiceEn;
         try {
-          await googleTTSSpeak(text, lang, rate, ttsApiKey, voiceName, audioCtxRef, currentSourceRef);
+          await googleTTSSpeak(text, lang, rate, ttsApiKey, voiceName, audioCtxRef, currentSourceRef, setTtsStatus);
           return;
         } catch (e) {
           console.warn('[TTS] Google Cloud TTS 실패, Web Speech API로 폴백:', e.message);
         }
       }
-      return webSpeechSpeak(text, lang, rate, voiceCache);
+      return webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus);
     },
     [stop, ttsApiKey, voiceEn, voiceKo]
   );
 
-  return { speak, stop };
+  return { speak, stop, ttsStatus };
 }
