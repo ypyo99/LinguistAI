@@ -198,8 +198,8 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
           }}
           onTouchEnd={() => clearTimeout(pressTimer.current)}
         >
-          <svg width="56" height="56" viewBox="0 0 56 56">
-            <circle cx="28" cy="28" r="24" stroke="rgba(255,255,255,0.2)" strokeWidth="4" fill="none" />
+          <svg width="56" height="56" viewBox="0 0 56 56" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}>
+            <circle cx="28" cy="28" r="24" stroke="rgba(255,255,255,0.25)" strokeWidth="4" fill="rgba(255,255,255,0.1)" />
             <circle 
               cx="28" cy="28" r="24" 
               stroke="#FFF" 
@@ -212,7 +212,7 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
               strokeLinecap="round"
             />
           </svg>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '700' }}>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '700', textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>
             {progress}/{total}
           </div>
         </div>
