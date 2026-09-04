@@ -2,6 +2,18 @@ import { useEffect, useState, useRef } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useGoogleLogin } from '@react-oauth/google';
 
+const LANDMARKS = [
+  "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=1000&auto=format&fit=crop", // NY
+  "https://images.unsplash.com/photo-1529655683826-aba9b3e77383?q=80&w=1000&auto=format&fit=crop", // Big Ben
+  "https://images.unsplash.com/photo-1570196236319-33dddb02534f?q=80&w=1000&auto=format&fit=crop", // Gyeongbokgung
+  "https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?q=80&w=1000&auto=format&fit=crop", // Statue of liberty
+  "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1000&auto=format&fit=crop", // Tower Bridge
+  "https://images.unsplash.com/photo-1517154421773-0529f29ea451?q=80&w=1000&auto=format&fit=crop", // N Seoul Tower
+  "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?q=80&w=1000&auto=format&fit=crop", // Golden Gate
+  "https://images.unsplash.com/photo-1508711018029-79a0e6988824?q=80&w=1000&auto=format&fit=crop", // London Eye
+  "https://images.unsplash.com/photo-1520689917380-60b7692fc3f4?q=80&w=1000&auto=format&fit=crop", // Bukchon
+];
+
 export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0, onResetProgress }) {
   const [isDark, setIsDark] = useState(false);
   const pressTimer = useRef(null);
@@ -86,8 +98,25 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
 
   const pct = total > 0 ? (progress / total) * 100 : 0;
 
+  const [bgIndex, setBgIndex] = useState(0);
+
+  useEffect(() => {
+    setBgIndex(Math.floor(Math.random() * LANDMARKS.length));
+    const timer = setInterval(() => {
+      setBgIndex(prev => (prev + 1) % LANDMARKS.length);
+    }, 20000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const headerStyle = {
+    background: `linear-gradient(135deg, rgba(204, 85, 0, 0.85), rgba(255, 111, 97, 0.85)), url('${LANDMARKS[bgIndex]}')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    transition: 'background 1s ease-in-out'
+  };
+
   return (
-    <div className="topbar">
+    <div className="topbar" style={headerStyle}>
       <div className="topbar-row">
         <div className="wordmark">
           <div className="brand-badge">
