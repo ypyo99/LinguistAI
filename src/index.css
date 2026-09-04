@@ -116,7 +116,7 @@ body{
   color:#fff;
   position: relative;
   transition: background-image 1s ease-in-out;
-  animation: panImage 40s ease-in-out infinite;
+  animation: panImage 15s ease-in-out infinite;
 }
 .dark .topbar, [data-mode="dark"] .topbar { color: var(--surface); }
 
