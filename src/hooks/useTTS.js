@@ -11,8 +11,8 @@ export const GOOGLE_VOICES = {
   'ko-KR': [
     { name: 'ko-KR-Neural2-A', label: '여성 A (Neural2)', gender: 'female' },
     { name: 'ko-KR-Neural2-B', label: '여성 B (Neural2)', gender: 'female' },
+    { name: 'ko-KR-Neural2-D', label: '여성 D (Neural2)', gender: 'female' },
     { name: 'ko-KR-Neural2-C', label: '남성 C (Neural2)', gender: 'male' },
-    { name: 'ko-KR-Neural2-D', label: '남성 D (Neural2)', gender: 'male' },
   ],
 };
 
