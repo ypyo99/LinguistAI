@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
-import { useTTS } from '../hooks/useTTS';
+import { useTTS, getAvailableVoices } from '../hooks/useTTS';
 import { useWakeLock } from '../hooks/useWakeLock';
 
 // ── 유틸 ────────────────────────────────────────────
@@ -95,7 +95,27 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
   const currentListRef = useRef(null);
   const playRunId = useRef(0);
 
-  const { speak: ttsSpeak, stop: ttsStop } = useTTS(apiKey);
+  const [voicePrefEn, setVoicePrefEn] = usePersistentState('linguist-voice-en', '');
+  const [voicePrefKo, setVoicePrefKo] = usePersistentState('linguist-voice-ko', '');
+  const [availableVoices, setAvailableVoices] = useState({ en: [], ko: [] });
+
+  // 기기 음성 목록 로드
+  useEffect(() => {
+    const load = () => setAvailableVoices(getAvailableVoices());
+    load();
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = load;
+      return () => { window.speechSynthesis.onvoiceschanged = null; };
+    }
+    return () => {};
+  }, []);
+
+  const voiceOverrides = {
+    'en-US': voicePrefEn || undefined,
+    'ko-KR': voicePrefKo || undefined,
+  };
+
+  const { speak: ttsSpeak, stop: ttsStop } = useTTS(voiceOverrides);
   useWakeLock(isPlaying || singleIdx !== null || isCommuteMode);
 
   // 언마운트 시 TTS 정리
@@ -359,6 +379,34 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
             >
               <option value="sequential">순차</option>
               <option value="random">랜덤</option>
+            </select>
+          </div>
+          <div className="row" style={{ gridColumn: '1 / -1' }}>
+            <span>영어 음성</span>
+            <select
+              value={voicePrefEn}
+              onChange={e => setVoicePrefEn(e.target.value)}
+              className="settings-select"
+              style={{ maxWidth: '55%' }}
+            >
+              <option value="">자동 선택</option>
+              {availableVoices.en.map(v => (
+                <option key={v.name} value={v.name}>{v.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="row" style={{ gridColumn: '1 / -1' }}>
+            <span>한국어 음성</span>
+            <select
+              value={voicePrefKo}
+              onChange={e => setVoicePrefKo(e.target.value)}
+              className="settings-select"
+              style={{ maxWidth: '55%' }}
+            >
+              <option value="">자동 선택</option>
+              {availableVoices.ko.map(v => (
+                <option key={v.name} value={v.name}>{v.name}</option>
+              ))}
             </select>
           </div>
           </div>

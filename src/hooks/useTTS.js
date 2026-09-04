@@ -17,9 +17,13 @@ const VOICE_PRIORITY = {
   ],
 };
 
-function pickVoice(lang) {
+function pickVoice(lang, overrideName = null) {
   if (!window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices();
+  if (overrideName) {
+    const match = voices.find(v => v.name === overrideName);
+    if (match) return match;
+  }
   const cands  = voices.filter(v => v.lang.startsWith(lang.split('-')[0]));
   const priorityList = VOICE_PRIORITY[lang] || [() => true];
   for (const pred of priorityList) {
@@ -51,18 +55,27 @@ function webSpeechSpeak(text, lang, rate, voiceCache) {
 
 // ── 메인 훅 ──────────────────────────────────────────────────────
 /**
- * useTTS()
- * 기기 내장 Web Speech API 전용
+ * useTTS(voiceOverrides)
+ * @param {{ 'en-US'?: string, 'ko-KR'?: string }} voiceOverrides - 사용자 선택 음성 이름
  */
-export function useTTS() {
+export function useTTS(voiceOverrides = {}) {
   const voiceCache = useRef({});
+  const overridesRef = useRef(voiceOverrides);
+
+  useEffect(() => {
+    overridesRef.current = voiceOverrides;
+    // 오버라이드 변경 시 캐시 초기화
+    voiceCache.current = {};
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceOverrides['en-US'], voiceOverrides['ko-KR']]);
 
   // voices 비동기 로드 대응
   useEffect(() => {
     const cache = () => {
       voiceCache.current = {};
       ['ko-KR', 'en-US'].forEach(lang => {
-        const v = pickVoice(lang);
+        const override = overridesRef.current?.[lang];
+        const v = pickVoice(lang, override);
         if (v) {
           voiceCache.current[lang] = v;
           console.info(`[TTS] 준비 완료: ${lang} → "${v.name}"`);
@@ -86,10 +99,24 @@ export function useTTS() {
   const speak = useCallback(
     async (text, lang, rate = 1.0) => {
       stop();
+      // 매번 최신 오버라이드로 캐시 업데이트
+      const override = overridesRef.current?.[lang];
+      const v = pickVoice(lang, override);
+      if (v) voiceCache.current[lang] = v;
       return webSpeechSpeak(text, lang, rate, voiceCache);
     },
     [stop]
   );
 
   return { speak, stop };
+}
+
+// ── 유틸: 기기에서 사용 가능한 음성 목록 반환 ──────────────────────
+export function getAvailableVoices() {
+  if (!window.speechSynthesis) return { en: [], ko: [] };
+  const voices = window.speechSynthesis.getVoices();
+  return {
+    en: voices.filter(v => v.lang.startsWith('en')),
+    ko: voices.filter(v => v.lang.startsWith('ko')),
+  };
 }
