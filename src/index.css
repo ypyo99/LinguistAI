@@ -287,7 +287,7 @@ body{
   max-height: 0; overflow: hidden; transition: max-height .25s ease;
 }
 .settings-container.open .settings-panel {
-  max-height: 500px;
+  max-height: 300px;
 }
 .settings-panel-inner {
   padding: 0 14px 14px 14px;
@@ -297,7 +297,6 @@ body{
   padding-top: 14px;
 }
 .settings-panel-inner .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.settings-panel-inner .row[style*="1 / -1"] { grid-column: 1 / -1; }
 .settings-panel-inner span { font-weight: 600; white-space: nowrap; flex-shrink: 0; }
 .settings-select {
   font-size: 14.5px;
