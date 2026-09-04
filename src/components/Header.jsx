@@ -147,7 +147,10 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
         </div>
         
         <div 
-          style={{ position: 'relative', width: '56px', height: '56px', flexShrink: 0, cursor: 'pointer' }}
+          style={{ 
+            position: 'relative', width: '56px', height: '56px', flexShrink: 0, cursor: 'pointer',
+            WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none'
+          }}
           onMouseDown={() => {
             pressTimer.current = setTimeout(() => {
               if (window.confirm("진도를 초기화하시겠습니까?")) {
