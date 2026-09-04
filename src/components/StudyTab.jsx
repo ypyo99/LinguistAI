@@ -205,7 +205,9 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
       playedInCycle.add(nextIdx);
 
-      if (!isCancelled()) await delay(600);
+      // 다음 문장으로 넘어가기 전, 사용자가 방금 들은 문장을 따라 말해볼 수 있도록 문장 길이에 비례하는 인터벌 부여
+      const practiceDelay = Math.max(1500, (sentences[nextIdx]?.en?.length || 20) * 80);
+      if (!isCancelled()) await delay(practiceDelay);
     }
 
     if (!isCancelled()) {
