@@ -55,6 +55,7 @@ function RadioGroup({ name, options, value, onChange }) {
 export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, studiedIndices }) {
   const [showSettings, setShowSettings] = usePersistentState('linguist-study-settings', true);
   const [showList, setShowList] = usePersistentState('linguist-study-list', true);
+  const [isCommuteMode, setIsCommuteMode] = useState(false);
 
   const [speed, setSpeed]       = usePersistentState('linguist-study-speed', 'normal');
   const [mode, setMode]         = usePersistentState('linguist-study-mode', 'sequential');
@@ -235,6 +236,58 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
   const activeIdx = currentIdx !== null ? currentIdx : singleIdx;
   const activeSentence = activeIdx !== null ? sentences[activeIdx] : null;
 
+  // ── 출퇴근 모드 컨트롤 ─────────────────────────────────
+  const handleNext = useCallback(() => {
+    if (!currentListRef.current) return;
+    const { list, origIndices } = currentListRef.current;
+    if (!list || list.length === 0) return;
+    const currentListIdx = origIndices.indexOf(activeIdx);
+    
+    if (!isPlaying && singleIdx === null) {
+       handlePlayAll(origIndices[0]);
+       return;
+    }
+
+    if (currentListIdx !== -1 && currentListIdx < list.length - 1) {
+      handlePlayAll(origIndices[currentListIdx + 1]);
+    } else {
+      shouldStop.current = true;
+      playRunId.current++;
+      ttsStop();
+      setIsPlaying(false);
+      setCurrentIdx(null);
+    }
+  }, [activeIdx, isPlaying, singleIdx, handlePlayAll, ttsStop]);
+
+  const handlePrev = useCallback(() => {
+    if (!currentListRef.current) return;
+    const { list, origIndices } = currentListRef.current;
+    if (!list || list.length === 0) return;
+    const currentListIdx = origIndices.indexOf(activeIdx);
+    
+    if (currentListIdx > 0) {
+      handlePlayAll(origIndices[currentListIdx - 1]);
+    } else if (currentListIdx === 0) {
+      handlePlayAll(origIndices[0]);
+    }
+  }, [activeIdx, handlePlayAll]);
+
+  const handleTogglePlay = useCallback(() => {
+    if (isPlaying) {
+      shouldStop.current = true;
+      playRunId.current++;
+      ttsStop();
+      setIsPlaying(false);
+      setCurrentIdx(null);
+    } else {
+      if (activeIdx !== null) {
+        handlePlayAll(activeIdx);
+      } else {
+        handlePlayAll();
+      }
+    }
+  }, [isPlaying, activeIdx, handlePlayAll, ttsStop]);
+
   return (
     <div className="tab-fade-in">
       <div className={`settings-container ${showSettings ? 'open' : ''}`}>
@@ -295,10 +348,16 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
         </div>
       </div>
 
-      <button className="cta" onClick={handlePlayAll} disabled={sentences.length === 0}>
-        <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isPlaying ? "stop_circle" : "play_circle"}</i>
-        {isPlaying ? '재생 중지' : '전체 재생'}
-      </button>
+      <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
+        <button className="cta" style={{ margin: 0, flex: 2 }} onClick={handlePlayAll} disabled={sentences.length === 0}>
+          <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isPlaying ? "stop_circle" : "play_circle"}</i>
+          {isPlaying ? '재생 중지' : '전체 재생'}
+        </button>
+        <button className="cta btn-orange" style={{ margin: 0, flex: 1 }} onClick={() => setIsCommuteMode(true)}>
+          <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>directions_car</i>
+          운전 모드
+        </button>
+      </div>
 
       {activeSentence && (
         <div className="now-playing">
@@ -368,6 +427,40 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
           )}
         </div>
       )}
+
+      {isCommuteMode && (
+        <div className="commute-mode-overlay">
+          <div className="commute-header">
+            <button className="commute-close-btn" onClick={() => setIsCommuteMode(false)}>
+              <i className="material-symbols-outlined">close</i>
+            </button>
+          </div>
+          <div className="commute-content">
+            {activeSentence ? (
+              <>
+                <div className="commute-text-en">{activeSentence.en}</div>
+                <div className="commute-text-ko">{activeSentence.ko}</div>
+              </>
+            ) : (
+              <div className="commute-text-ko" style={{ color: '#888' }}>재생 대기 중...</div>
+            )}
+          </div>
+          <div className="commute-controls">
+            <button className="commute-btn" onClick={handlePrev}>
+              <i className="material-symbols-outlined">skip_previous</i>
+            </button>
+            <button className="commute-btn" onClick={handleTogglePlay}>
+              <i className="material-symbols-outlined">
+                {isPlaying ? "pause_circle" : "play_circle"}
+              </i>
+            </button>
+            <button className="commute-btn" onClick={handleNext}>
+              <i className="material-symbols-outlined">skip_next</i>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

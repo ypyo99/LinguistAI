@@ -440,3 +440,80 @@ body{
   .topbar { padding: 32px 32px 34px; }
   .turn { padding: 24px 20px; }
 }
+
+/* Commute Mode Overlay */
+.commute-mode-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: #000000;
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+}
+.commute-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 24px;
+}
+.commute-close-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  cursor: pointer;
+  font-size: 24px;
+}
+.commute-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 24px;
+  text-align: center;
+  gap: 24px;
+}
+.commute-text-en {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #FFFFFF;
+}
+.commute-text-ko {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #CCCCCC;
+}
+.commute-controls {
+  height: 40vh;
+  display: flex;
+  border-top: 1px solid #333;
+}
+.commute-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-right: 1px solid #333;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.commute-btn:last-child {
+  border-right: none;
+}
+.commute-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+.commute-btn i {
+  font-size: 64px !important;
+}
