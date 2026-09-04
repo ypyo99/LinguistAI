@@ -77,7 +77,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
     if (showSettings) {
       timer = setTimeout(() => {
         setShowSettings(false);
-      }, 5000);
+      }, 10000);
     }
     return () => {
       if (timer) clearTimeout(timer);
