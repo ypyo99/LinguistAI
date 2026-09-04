@@ -105,7 +105,7 @@ body{
 
 /* header */
 .topbar{
-  background:var(--teal-deep);
+  background: linear-gradient(135deg, var(--teal-deep), #FF6F61);
   padding:20px 20px 22px;
   color:#fff;
 }
@@ -227,7 +227,18 @@ body{
   background:transparent;
 }
 .tab i{ font-size:18px; }
-.tab.active{ background:var(--teal-tint); color:var(--teal-deep); }
+.tab.active{ 
+  color:var(--teal-deep); 
+  position: relative;
+}
+.tab.active::before {
+  content: '';
+  position: absolute;
+  top: -6px; left: 20%; right: 20%;
+  height: 3px;
+  background: var(--teal-deep);
+  border-radius: 0 0 3px 3px;
+}
 .dark .tab.active, [data-mode="dark"] .tab.active{ color:var(--teal-deep); }
 
 .content{ padding:18px 16px 28px; flex: 1; display: flex; flex-direction: column; }
@@ -373,6 +384,10 @@ body{
 .turn{
   display:flex; gap:12px; padding:16px 14px;
   border-bottom:0.5px solid var(--line);
+  background-color: #F7F7F8;
+}
+.dark .turn, [data-mode="dark"] .turn {
+  background-color: #2A211C;
 }
 .turn:last-child{ border-bottom:none; }
 .turn-index{

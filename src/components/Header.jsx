@@ -106,7 +106,7 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
         </div>
         <div className="topbar-actions" style={{ position: 'relative' }}>
           <button className="icon-btn" onClick={toggleTheme}>
-            <i className="material-symbols-outlined" style={{ fontSize: '20px' }}>{isDark ? "light_mode" : "dark_mode"}</i>
+            <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isDark ? "light_mode" : "dark_mode"}</i>
           </button>
           
           <button className={user ? "user-avatar" : "icon-btn"} onClick={handleUserClick} style={{ padding: 0, overflow: 'hidden' }}>
@@ -134,10 +134,32 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
           )}
         </div>
       </div>
-      <div className="topbar-sub">{sub}</div>
-      <div className="topbar-title">{title}</div>
-      <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }}></div></div>
-      <div className="progress-label">{progress} / {total} 문장 학습 완료</div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '16px' }}>
+        <div>
+          <div className="topbar-sub" style={{ marginTop: 0 }}>{sub}</div>
+          <div className="topbar-title" style={{ marginTop: '4px' }}>{title}</div>
+        </div>
+        
+        <div style={{ position: 'relative', width: '56px', height: '56px', flexShrink: 0 }}>
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="24" stroke="rgba(255,255,255,0.2)" strokeWidth="4" fill="none" />
+            <circle 
+              cx="28" cy="28" r="24" 
+              stroke="#FFF" 
+              strokeWidth="4" 
+              fill="none" 
+              strokeDasharray={2 * Math.PI * 24} 
+              strokeDashoffset={(2 * Math.PI * 24) - (pct / 100) * (2 * Math.PI * 24)} 
+              style={{ transition: 'stroke-dashoffset 0.8s ease-out' }} 
+              transform="rotate(-90 28 28)" 
+              strokeLinecap="round"
+            />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '700' }}>
+            {progress}/{total}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
