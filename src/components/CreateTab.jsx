@@ -148,7 +148,10 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
   };
 
   const handleApply = () => {
-    if (preview.length > 0) onGenerate(preview);
+    if (preview.length > 0) {
+      onGenerate(preview);
+      setPreview([]); // 적용 후 미리보기 박스 숨기기
+    }
   };
 
   return (
