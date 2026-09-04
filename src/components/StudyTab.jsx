@@ -442,8 +442,8 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
           <div className="now-playing-header">
             {isWaiting ? (
               <>
-                <i className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--amber)' }}>record_voice_over</i>
-                <span style={{ color: 'var(--amber)', fontWeight: 'bold' }}>따라 말해보세요!</span>
+                <i className="material-symbols-outlined" style={{ fontSize: '18px', color: '#FFE033' }}>record_voice_over</i>
+                <span style={{ color: '#FFE033', fontWeight: 'bold' }}>따라 말해보세요!</span>
               </>
             ) : (
               <>
