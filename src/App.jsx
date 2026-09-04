@@ -41,7 +41,11 @@ function App() {
   
   const [packTitle, setPackTitle] = usePersistentState('linguist-pack-title', '');
   const actualPackTitle = packTitle === '기본 학습 데이터 3개' ? '' : packTitle;
-  const displayTitle = actualPackTitle || (sentences.length === 3 ? '기본 학습 데이터' : `저장된 학습 데이터 ${sentences.length}개`);
+  
+  // 기존에 잘못 저장된 "-50개 50개" 와 같은 중복 개수 표기 제거
+  const cleanedTitle = actualPackTitle.replace(/(-\d+개?) \d+개$/, '$1');
+  
+  const displayTitle = cleanedTitle || (sentences.length === 3 ? '기본 학습 데이터' : `저장된 학습 데이터 ${sentences.length}개`);
   const [studiedIndices, setStudiedIndices] = usePersistentState('linguist-studied-indices', []);
   const [favorites, setFavorites] = usePersistentState('linguist-study-favorites', []);
   const [savedPacks, setSavedPacks] = usePersistentState('linguist-saved-packs', []);
