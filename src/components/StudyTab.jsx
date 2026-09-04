@@ -71,6 +71,19 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
     settingsRef.current = { speed, mode, repeat, langOrder };
   }, [speed, mode, repeat, langOrder]);
 
+  // 재생 설정 패널 자동 닫기 (5초)
+  useEffect(() => {
+    let timer;
+    if (showSettings) {
+      timer = setTimeout(() => {
+        setShowSettings(false);
+      }, 5000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [showSettings, setShowSettings]);
+
   // 재생 상태
   const [isPlaying, setIsPlaying]     = useState(false);   // 전체 재생 중
   const [currentIdx, setCurrentIdx]   = useState(null);    // 전체 재생 중 현재 인덱스
