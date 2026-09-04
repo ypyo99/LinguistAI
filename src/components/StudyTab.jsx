@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useTTS } from '../hooks/useTTS';
+import { useWakeLock } from '../hooks/useWakeLock';
 
 // ── 유틸 ────────────────────────────────────────────
 const SPEED_MAP = { slow: 0.6, normal: 1.0, fast: 1.5 };
@@ -80,6 +81,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
   const playRunId = useRef(0);
 
   const { speak: ttsSpeak, stop: ttsStop } = useTTS(apiKey);
+  useWakeLock(isPlaying || singleIdx !== null || isCommuteMode);
 
   // 언마운트 시 TTS 정리
   useEffect(() => {
