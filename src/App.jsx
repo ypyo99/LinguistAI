@@ -66,7 +66,12 @@ function App() {
 
   return (
     <div className="frame" id="frame">
-      <Header title={displayTitle} total={sentences.length} progress={studiedIndices.length} />
+      <Header 
+        title={displayTitle} 
+        total={sentences.length} 
+        progress={studiedIndices.length} 
+        onResetProgress={() => setStudiedIndices([])}
+      />
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="content">
         <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>

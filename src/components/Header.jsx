@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useGoogleLogin } from '@react-oauth/google';
 
-export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0 }) {
+export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0, onResetProgress }) {
   const [isDark, setIsDark] = useState(false);
+  const pressTimer = useRef(null);
   
   // 구글 사용자 상태 관리 (기본값 null)
   const [user, setUser] = usePersistentState('linguist-user', null);
@@ -145,7 +146,26 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
           <div className="topbar-title" style={{ marginTop: '4px' }}>{title}</div>
         </div>
         
-        <div style={{ position: 'relative', width: '56px', height: '56px', flexShrink: 0 }}>
+        <div 
+          style={{ position: 'relative', width: '56px', height: '56px', flexShrink: 0, cursor: 'pointer' }}
+          onMouseDown={() => {
+            pressTimer.current = setTimeout(() => {
+              if (window.confirm("진도를 초기화하시겠습니까?")) {
+                onResetProgress?.();
+              }
+            }, 800);
+          }}
+          onMouseUp={() => clearTimeout(pressTimer.current)}
+          onMouseLeave={() => clearTimeout(pressTimer.current)}
+          onTouchStart={() => {
+            pressTimer.current = setTimeout(() => {
+              if (window.confirm("진도를 초기화하시겠습니까?")) {
+                onResetProgress?.();
+              }
+            }, 800);
+          }}
+          onTouchEnd={() => clearTimeout(pressTimer.current)}
+        >
           <svg width="56" height="56" viewBox="0 0 56 56">
             <circle cx="28" cy="28" r="24" stroke="rgba(255,255,255,0.2)" strokeWidth="4" fill="none" />
             <circle 
