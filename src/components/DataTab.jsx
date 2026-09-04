@@ -66,7 +66,6 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
       // 학습 현황 초기화
       setStudiedIndices([]);
       
-      setDownloaded(prev => ({ ...prev, [pack.id]: true }));
       alert(`"${pack.name}" 패키지가 적용되었습니다!`);
     } catch (err) {
       console.error(err);
@@ -131,21 +130,20 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
               </div>
               <button 
                 onClick={() => handleDownload(pack)}
-                disabled={downloaded[pack.id]}
-                className={downloaded[pack.id] ? "" : "btn-orange"}
+                className="btn-orange"
                 style={{
                   flexShrink: 0,
                   padding: '10px 16px', borderRadius: '10px', border: 'none',
-                  background: downloaded[pack.id] ? 'var(--line)' : 'var(--teal)',
-                  color: downloaded[pack.id] ? 'var(--ink-soft)' : '#fff',
-                  fontSize: '13.5px', fontWeight: '700', cursor: downloaded[pack.id] ? 'not-allowed' : 'pointer',
+                  background: 'var(--teal)',
+                  color: '#fff',
+                  fontSize: '13.5px', fontWeight: '700', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: '4px'
                 }}
               >
                 <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                  {downloaded[pack.id] ? "check_circle" : "download"}
+                  download
                 </i>
-                {downloaded[pack.id] ? '완료' : '다운로드'}
+                다운로드
               </button>
             </div>
           ))}
