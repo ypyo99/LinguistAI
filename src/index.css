@@ -422,12 +422,12 @@ body{
   display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;
 }
 .turn-body{ flex:1; min-width:0; }
-.turn-en{ font-size:17px; font-weight:600; line-height:1.45; }
+.turn-en{ font-size:16px; font-weight:600; line-height:1.45; }
 .turn-ko-row{
   display:flex; align-items:center; gap:8px; margin-top:6px;
 }
 .turn-ko-bar{ width:3px; align-self:stretch; background:var(--amber); border-radius:2px; }
-.turn-ko{ font-size:15.5px; color:var(--teal-deep); line-height:1.5; font-weight: 500; }
+.turn-ko{ font-size:16px; color:var(--teal-deep); line-height:1.5; font-weight: 500; }
 .turn-play{
   width:34px;height:34px;border-radius:50%; flex-shrink:0;
   background:var(--teal-tint); color:var(--teal-deep);
