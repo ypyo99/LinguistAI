@@ -470,17 +470,16 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
         </div>
       )}
 
-      <div className="list-header" style={{ cursor: 'pointer' }}>
-        <div className="list-title" onClick={() => setShowList(!showList)} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <div className="list-header">
+        <div className="list-title" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span className="n">재생 목록</span>
           <span className="c">{sentences.length}개 문장</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={(e) => { e.stopPropagation(); onSavePack?.(); }} style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px', border: 'none', background: 'var(--teal)', color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button onClick={(e) => { e.stopPropagation(); onSavePack?.(); }} style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px', border: 'none', background: 'var(--teal)', color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
             <i className="material-symbols-outlined" style={{ fontSize: '16px' }}>save</i>
             보관함에 저장
           </button>
-          <i className="material-symbols-outlined" onClick={() => setShowList(!showList)} style={{ color: 'var(--ink-soft)', fontSize: '18px' }}>{showList ? 'expand_less' : 'expand_more'}</i>
         </div>
       </div>
 
