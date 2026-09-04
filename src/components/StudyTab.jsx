@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
-import { useTTS } from '../hooks/useTTS';
+import { useTTS, GOOGLE_VOICES } from '../hooks/useTTS';
 import { useWakeLock } from '../hooks/useWakeLock';
 
 // ── 유틸 ────────────────────────────────────────────
@@ -53,7 +53,7 @@ function RadioGroup({ name, options, value, onChange }) {
 }
 
 // ── 메인 컴포넌트 ────────────────────────────────────
-export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, studiedIndices }) {
+export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setStudiedIndices, studiedIndices }) {
   const [showSettings, setShowSettings] = usePersistentState('linguist-study-settings', false);
   const [showList, setShowList] = usePersistentState('linguist-study-list', true);
   const [favorites, setFavorites] = usePersistentState('linguist-study-favorites', []);
@@ -64,6 +64,8 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
   const [mode, setMode]         = usePersistentState('linguist-study-mode', 'sequential');
   const [langOrder, setLangOrder] = usePersistentState('linguist-study-lang', 'en-ko');
   const [repeat, setRepeat]     = usePersistentState('linguist-study-repeat', 1);
+  const [voiceEn, setVoiceEn]   = usePersistentState('linguist-voice-en', 'en-US-Neural2-C');
+  const [voiceKo, setVoiceKo]   = usePersistentState('linguist-voice-ko', 'ko-KR-Neural2-A');
 
   const settingsRef = useRef({ speed, mode, repeat, langOrder });
   const prevSettingsRef = useRef({ speed, mode, repeat, langOrder });
@@ -95,7 +97,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
   const currentListRef = useRef(null);
   const playRunId = useRef(0);
 
-  const { speak: ttsSpeak, stop: ttsStop } = useTTS(apiKey);
+  const { speak: ttsSpeak, stop: ttsStop } = useTTS(ttsApiKey, voiceEn, voiceKo);
   useWakeLock(isPlaying || singleIdx !== null || isCommuteMode);
 
   // 언마운트 시 TTS 정리
@@ -340,11 +342,7 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
           </div>
           <div className="row">
             <span>속도</span>
-            <select
-              value={speed}
-              onChange={e => setSpeed(e.target.value)}
-              className="settings-select"
-            >
+            <select value={speed} onChange={e => setSpeed(e.target.value)} className="settings-select">
               <option value="slow">느림</option>
               <option value="normal">보통</option>
               <option value="fast">빠름</option>
@@ -352,15 +350,31 @@ export default function StudyTab({ sentences = [], apiKey, setStudiedIndices, st
           </div>
           <div className="row">
             <span>모드</span>
-            <select
-              value={mode}
-              onChange={e => setMode(e.target.value)}
-              className="settings-select"
-            >
+            <select value={mode} onChange={e => setMode(e.target.value)} className="settings-select">
               <option value="sequential">순차</option>
               <option value="random">랜덤</option>
             </select>
           </div>
+          {ttsApiKey && (
+            <>
+              <div className="row" style={{ gridColumn: '1 / -1' }}>
+                <span>영어 목소리</span>
+                <select value={voiceEn} onChange={e => setVoiceEn(e.target.value)} className="settings-select" style={{ maxWidth: '60%' }}>
+                  {GOOGLE_VOICES['en-US'].map(v => (
+                    <option key={v.name} value={v.name}>{v.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="row" style={{ gridColumn: '1 / -1' }}>
+                <span>한국어 목소리</span>
+                <select value={voiceKo} onChange={e => setVoiceKo(e.target.value)} className="settings-select" style={{ maxWidth: '60%' }}>
+                  {GOOGLE_VOICES['ko-KR'].map(v => (
+                    <option key={v.name} value={v.name}>{v.label}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
           </div>
         </div>
       </div>

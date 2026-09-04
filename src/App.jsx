@@ -51,13 +51,26 @@ function App() {
     setApiKey(key);
   };
 
+  const [ttsApiKey, setTtsApiKey] = useState(() => {
+    try { return localStorage.getItem('linguist-tts-api-key') || ''; }
+    catch (e) { return ''; }
+  });
+
+  const handleSaveTtsKey = (key) => {
+    try {
+      if (key) localStorage.setItem('linguist-tts-api-key', key);
+      else localStorage.removeItem('linguist-tts-api-key');
+    } catch (e) { console.warn('localStorage 비활성화됨'); }
+    setTtsApiKey(key);
+  };
+
   return (
     <div className="frame" id="frame">
       <Header title={displayTitle} total={sentences.length} progress={studiedIndices.length} />
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="content">
         <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>
-          <StudyTab sentences={sentences} apiKey={apiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} />
+          <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} />
         </div>
         <div style={{ display: activeTab === 'store' ? 'block' : 'none' }}>
           <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} />
@@ -77,6 +90,8 @@ function App() {
           <SetupTab
             apiKey={apiKey}
             onSave={handleSaveKey}
+            ttsApiKey={ttsApiKey}
+            onSaveTtsKey={handleSaveTtsKey}
           />
         </div>
       </div>
