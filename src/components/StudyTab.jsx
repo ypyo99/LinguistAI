@@ -392,14 +392,23 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       </div>
 
       <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
-        <button className="cta" style={{ margin: 0, flex: 2 }} onClick={() => handlePlayAll(null, false)} disabled={sentences.length === 0}>
-          <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isPlaying ? "stop_circle" : "play_circle"}</i>
-          {isPlaying ? '중지' : '전체'}
-        </button>
-        <button className="cta" style={{ margin: 0, flex: 2 }} onClick={() => handlePlayAll(null, true)} disabled={!favorites || favorites.length === 0}>
-          <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>star</i>
-          선택
-        </button>
+        {isPlaying ? (
+          <button className="cta" style={{ margin: 0, flex: 4 }} onClick={() => handlePlayAll()}>
+            <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>stop_circle</i>
+            재생 중지
+          </button>
+        ) : (
+          <>
+            <button className="cta" style={{ margin: 0, flex: 2 }} onClick={() => handlePlayAll(null, false)} disabled={sentences.length === 0}>
+              <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>play_circle</i>
+              전체
+            </button>
+            <button className="cta" style={{ margin: 0, flex: 2 }} onClick={() => handlePlayAll(null, true)} disabled={!favorites || favorites.length === 0}>
+              <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>star</i>
+              선택
+            </button>
+          </>
+        )}
         <button className="cta btn-orange" style={{ margin: 0, flex: 2 }} onClick={() => setIsCommuteMode(true)}>
           <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>podcasts</i>
           팟캐스트
