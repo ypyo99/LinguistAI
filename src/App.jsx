@@ -42,6 +42,22 @@ function App() {
   const actualPackTitle = packTitle === '기본 학습 데이터 3개' ? '' : packTitle;
   const displayTitle = actualPackTitle || (sentences.length === 3 ? '기본 학습 데이터' : `저장된 학습 데이터 ${sentences.length}개`);
   const [studiedIndices, setStudiedIndices] = usePersistentState('linguist-studied-indices', []);
+  const [favorites, setFavorites] = usePersistentState('linguist-study-favorites', []);
+  const [savedPacks, setSavedPacks] = usePersistentState('linguist-saved-packs', []);
+
+  const handleSavePack = () => {
+    if (sentences.length === 0) return;
+    const newPack = {
+      id: Date.now().toString(),
+      title: displayTitle,
+      sentences,
+      favorites,
+      studiedIndices,
+      createdAt: new Date().toISOString()
+    };
+    setSavedPacks(prev => [newPack, ...prev]);
+    alert('보관함에 저장되었습니다!');
+  };
 
   const handleSaveKey = (key) => {
     try {
@@ -75,10 +91,10 @@ function App() {
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="content">
         <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>
-          <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} />
+          <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} favorites={favorites} setFavorites={setFavorites} onSavePack={handleSavePack} />
         </div>
         <div style={{ display: activeTab === 'store' ? 'block' : 'none' }}>
-          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} />
+          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} setFavorites={setFavorites} setActiveTab={setActiveTab} savedPacks={savedPacks} setSavedPacks={setSavedPacks} />
         </div>
         <div style={{ display: activeTab === 'create' ? 'block' : 'none' }}>
           <CreateTab
@@ -87,6 +103,7 @@ function App() {
               setSentences(s); 
               setPackTitle(title || `AI 생성 학습 데이터 ${s.length}개`);
               setStudiedIndices([]);
+              setFavorites([]);
               setActiveTab('study'); 
             }}
           />

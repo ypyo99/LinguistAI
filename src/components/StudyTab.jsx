@@ -53,10 +53,9 @@ function RadioGroup({ name, options, value, onChange }) {
 }
 
 // ── 메인 컴포넌트 ────────────────────────────────────
-export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setStudiedIndices, studiedIndices }) {
+export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setStudiedIndices, studiedIndices, favorites, setFavorites, onSavePack }) {
   const [showSettings, setShowSettings] = usePersistentState('linguist-study-settings', false);
   const [showList, setShowList] = usePersistentState('linguist-study-list', true);
-  const [favorites, setFavorites] = usePersistentState('linguist-study-favorites', []);
   const favoritesRef = useRef(favorites);
   useEffect(() => { favoritesRef.current = favorites; }, [favorites]);
   const [isCommuteMode, setIsCommuteMode] = useState(false);
@@ -471,12 +470,18 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
         </div>
       )}
 
-      <div className="list-header" onClick={() => setShowList(!showList)} style={{ cursor: 'pointer' }}>
-        <div className="list-title">
+      <div className="list-header" style={{ cursor: 'pointer' }}>
+        <div className="list-title" onClick={() => setShowList(!showList)} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span className="n">재생 목록</span>
           <span className="c">{sentences.length}개 문장</span>
         </div>
-        <i className="material-symbols-outlined">{showList ? 'expand_less' : 'expand_more'}</i>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={(e) => { e.stopPropagation(); onSavePack?.(); }} style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px', border: 'none', background: 'var(--teal)', color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <i className="material-symbols-outlined" style={{ fontSize: '16px' }}>save</i>
+            보관함에 저장
+          </button>
+          <i className="material-symbols-outlined" onClick={() => setShowList(!showList)} style={{ color: 'var(--ink-soft)', fontSize: '18px' }}>{showList ? 'expand_less' : 'expand_more'}</i>
+        </div>
       </div>
 
       {showList && (
