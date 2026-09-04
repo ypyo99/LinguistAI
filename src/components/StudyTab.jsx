@@ -362,17 +362,17 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
           </div>
           {ttsApiKey && (
             <>
-              <div className="row" style={{ gridColumn: '1 / -1' }}>
-                <span>영어 목소리</span>
-                <select value={voiceEn} onChange={e => setVoiceEn(e.target.value)} className="settings-select" style={{ maxWidth: '60%' }}>
+              <div className="row">
+                <span>영어</span>
+                <select value={voiceEn} onChange={e => setVoiceEn(e.target.value)} className="settings-select">
                   {GOOGLE_VOICES['en-US'].map(v => (
                     <option key={v.name} value={v.name}>{v.label}</option>
                   ))}
                 </select>
               </div>
-              <div className="row" style={{ gridColumn: '1 / -1' }}>
-                <span>한국어 목소리</span>
-                <select value={voiceKo} onChange={e => setVoiceKo(e.target.value)} className="settings-select" style={{ maxWidth: '60%' }}>
+              <div className="row">
+                <span>한국어</span>
+                <select value={voiceKo} onChange={e => setVoiceKo(e.target.value)} className="settings-select">
                   {GOOGLE_VOICES['ko-KR'].map(v => (
                     <option key={v.name} value={v.name}>{v.label}</option>
                   ))}

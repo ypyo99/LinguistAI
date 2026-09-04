@@ -3,16 +3,16 @@ import { useRef, useCallback, useEffect } from 'react';
 // ── Google Cloud TTS 음성 목록 ────────────────────────────────────
 export const GOOGLE_VOICES = {
   'en-US': [
-    { name: 'en-US-Neural2-C', label: '여성 C (Neural2)', gender: 'female' },
-    { name: 'en-US-Neural2-F', label: '여성 F (Neural2)', gender: 'female' },
-    { name: 'en-US-Neural2-A', label: '남성 A (Neural2)', gender: 'male' },
-    { name: 'en-US-Neural2-D', label: '남성 D (Neural2)', gender: 'male' },
+    { name: 'en-US-Neural2-C', label: '여성 C', gender: 'female' },
+    { name: 'en-US-Neural2-F', label: '여성 F', gender: 'female' },
+    { name: 'en-US-Neural2-A', label: '남성 A', gender: 'male' },
+    { name: 'en-US-Neural2-D', label: '남성 D', gender: 'male' },
   ],
   'ko-KR': [
-    { name: 'ko-KR-Neural2-A', label: '여성 A (Neural2)', gender: 'female' },
-    { name: 'ko-KR-Neural2-B', label: '여성 B (Neural2)', gender: 'female' },
-    { name: 'ko-KR-Neural2-D', label: '여성 D (Neural2)', gender: 'female' },
-    { name: 'ko-KR-Neural2-C', label: '남성 C (Neural2)', gender: 'male' },
+    { name: 'ko-KR-Neural2-A', label: '여성 A', gender: 'female' },
+    { name: 'ko-KR-Neural2-B', label: '여성 B', gender: 'female' },
+    { name: 'ko-KR-Neural2-D', label: '여성 D', gender: 'female' },
+    { name: 'ko-KR-Neural2-C', label: '남성 C', gender: 'male' },
   ],
 };
 
