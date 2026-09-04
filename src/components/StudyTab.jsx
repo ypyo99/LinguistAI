@@ -73,10 +73,11 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     settingsRef.current = { speed, mode, repeat, langOrder };
   }, [speed, mode, repeat, langOrder]);
 
-  // 재생 설정 패널 자동 닫기 (5초)
+  // 재생 설정 패널 자동 닫기 (5초, 드롭다운 선택 중에는 중단)
+  const [isFocusedInSettings, setIsFocusedInSettings] = useState(false);
   useEffect(() => {
     let timer;
-    if (showSettings) {
+    if (showSettings && !isFocusedInSettings) {
       timer = setTimeout(() => {
         setShowSettings(false);
       }, 5000);
@@ -84,7 +85,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [showSettings, setShowSettings]);
+  }, [showSettings, isFocusedInSettings, setShowSettings]);
 
   // 재생 상태
   const [isPlaying, setIsPlaying]     = useState(false);   // 전체 재생 중
@@ -309,7 +310,11 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
   return (
     <div className="tab-fade-in">
-      <div className={`settings-container ${showSettings ? 'open' : ''}`}>
+      <div
+        className={`settings-container ${showSettings ? 'open' : ''}`}
+        onFocus={() => setIsFocusedInSettings(true)}
+        onBlur={() => setIsFocusedInSettings(false)}
+      >
         <div className="settings-header" onClick={() => setShowSettings(!showSettings)}>
           <div className="settings-left">
             <div className="settings-ic"><i className="material-symbols-outlined" style={{ fontSize: '20px' }}>settings</i></div>
