@@ -128,7 +128,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
 
   // ── 전체 재생 ──────────────────────────────────────
-  const handlePlayAll = useCallback(async (startFromIdx = null) => {
+  const handlePlayAll = useCallback(async (startFromIdx = null, onlyFavorites = false) => {
     const isJump = typeof startFromIdx === 'number';
 
     // 재생 중인데 버튼을 눌렀다면 정지
@@ -160,8 +160,14 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       list = currentListRef.current.list;
       origIndices = currentListRef.current.origIndices;
     } else {
-      list = mode === 'random' ? shuffle(sentences) : [...sentences];
-      origIndices = list.map(s => sentences.indexOf(s));
+      let srcIndices = sentences.map((_, i) => i);
+      if (onlyFavorites) {
+        srcIndices = srcIndices.filter(i => favorites && favorites.includes(i));
+      }
+      if (mode === 'random') srcIndices = shuffle(srcIndices);
+      
+      list = srcIndices.map(i => sentences[i]);
+      origIndices = srcIndices;
       currentListRef.current = { list, origIndices, mode };
     }
 
@@ -194,7 +200,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       setIsPlaying(false);
       setCurrentIdx(null);
     }
-  }, [isPlaying, sentences, mode, speakSentence, setStudiedIndices]);
+  }, [isPlaying, sentences, mode, speakSentence, setStudiedIndices, favorites]);
 
   // ── 개별 재생 ──────────────────────────────────────
   const handlePlayOne = useCallback(async (idx) => {
@@ -386,11 +392,15 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       </div>
 
       <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
-        <button className="cta" style={{ margin: 0, flex: 2 }} onClick={handlePlayAll} disabled={sentences.length === 0}>
+        <button className="cta" style={{ margin: 0, flex: 2 }} onClick={() => handlePlayAll(null, false)} disabled={sentences.length === 0}>
           <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isPlaying ? "stop_circle" : "play_circle"}</i>
-          {isPlaying ? '재생 중지' : '전체 재생'}
+          {isPlaying ? '중지' : '전체'}
         </button>
-        <button className="cta btn-orange" style={{ margin: 0, flex: 1 }} onClick={() => setIsCommuteMode(true)}>
+        <button className="cta" style={{ margin: 0, flex: 2 }} onClick={() => handlePlayAll(null, true)} disabled={!favorites || favorites.length === 0}>
+          <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>star</i>
+          선택
+        </button>
+        <button className="cta btn-orange" style={{ margin: 0, flex: 2 }} onClick={() => setIsCommuteMode(true)}>
           <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>podcasts</i>
           팟캐스트
         </button>
