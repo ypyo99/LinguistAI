@@ -103,8 +103,35 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
   const pct = total > 0 ? (progress / total) * 100 : 0;
 
   const [bgIndex, setBgIndex] = useState(0);
+  const [useImages, setUseImages] = useState(true);
 
   useEffect(() => {
+    const checkConnection = () => {
+      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (conn) {
+        if (conn.type === 'cellular' || conn.saveData) {
+          setUseImages(false);
+        } else {
+          setUseImages(true);
+        }
+      }
+    };
+    
+    checkConnection();
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (conn && conn.addEventListener) {
+      conn.addEventListener('change', checkConnection);
+    }
+    return () => {
+      if (conn && conn.removeEventListener) {
+        conn.removeEventListener('change', checkConnection);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!useImages) return;
+
     // Preload images in the background so they display instantly without network delay
     LANDMARKS.forEach(src => {
       const img = new Image();
@@ -116,11 +143,13 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
       setBgIndex(prev => (prev + 1) % LANDMARKS.length);
     }, 20000);
     return () => clearInterval(timer);
-  }, []);
+  }, [useImages]);
 
   const headerStyle = {
-    background: `linear-gradient(135deg, rgba(204, 85, 0, 0.85), rgba(255, 111, 97, 0.85)), url('${LANDMARKS[bgIndex]}')`,
-    backgroundSize: 'cover',
+    background: useImages 
+      ? `linear-gradient(135deg, rgba(204, 85, 0, 0.85), rgba(255, 111, 97, 0.85)), url('${LANDMARKS[bgIndex]}')`
+      : undefined,
+    backgroundSize: useImages ? 'cover' : undefined,
     transition: 'background 1s ease-in-out'
   };
 
