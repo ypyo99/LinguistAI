@@ -105,6 +105,12 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
   const [bgIndex, setBgIndex] = useState(0);
 
   useEffect(() => {
+    // Preload images in the background so they display instantly without network delay
+    LANDMARKS.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+
     setBgIndex(Math.floor(Math.random() * LANDMARKS.length));
     const timer = setInterval(() => {
       setBgIndex(prev => (prev + 1) % LANDMARKS.length);
