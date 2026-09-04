@@ -131,7 +131,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
   // ── 전체 재생 ──────────────────────────────────────
   const handlePlayAll = useCallback(async (startFromIdx = null, onlyFavorites = false) => {
-    const isJump = typeof startFromIdx === 'number';
+    let isJump = typeof startFromIdx === 'number';
 
     // 재생 중인데 버튼을 눌렀다면 정지
     if (isPlaying && !isJump) {
@@ -158,7 +158,6 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     setIsPlaying(true);
 
     let playedInCycle = new Set();
-    let isJump = typeof startFromIdx === 'number';
 
     while (!isCancelled()) {
       let validIndices = onlyFavorites 
