@@ -111,7 +111,6 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
   const headerStyle = {
     background: `linear-gradient(135deg, rgba(204, 85, 0, 0.85), rgba(255, 111, 97, 0.85)), url('${LANDMARKS[bgIndex]}')`,
     backgroundSize: 'cover',
-    backgroundPosition: 'center',
     transition: 'background 1s ease-in-out'
   };
 
