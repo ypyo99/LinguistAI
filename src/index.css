@@ -287,7 +287,7 @@ body{
   max-height: 0; overflow: hidden; transition: max-height .25s ease;
 }
 .settings-container.open .settings-panel {
-  max-height: 520px;
+  max-height: 800px;
 }
 .settings-panel-inner {
   padding: 0 14px 14px 14px;
