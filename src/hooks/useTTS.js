@@ -156,8 +156,8 @@ export function useTTS(ttsApiKey = '', voiceEn = 'en-US-Neural2-C', voiceKo = 'k
   const speak = useCallback(
     async (text, lang, rate = 1.0) => {
       stop();
-      if (ttsApiKey) {
-        const voiceName = lang === 'ko-KR' ? voiceKo : voiceEn;
+      if (ttsApiKey && lang === 'ko-KR') {
+        const voiceName = voiceKo;
         try {
           await googleTTSSpeak(text, lang, rate, ttsApiKey, voiceName, audioCtxRef, currentSourceRef, setTtsStatus);
           return;
