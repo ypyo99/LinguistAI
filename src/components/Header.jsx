@@ -12,6 +12,10 @@ const LANDMARKS = [
   "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?q=80&w=1000&auto=format&fit=crop", // Golden Gate
   "https://images.unsplash.com/photo-1508711018029-79a0e6988824?q=80&w=1000&auto=format&fit=crop", // London Eye
   "https://images.unsplash.com/photo-1520689917380-60b7692fc3f4?q=80&w=1000&auto=format&fit=crop", // Bukchon
+  "https://images.unsplash.com/photo-1616421458872-886ec59f2a74?q=80&w=1000&auto=format&fit=crop", // Gyeongju
+  "https://images.unsplash.com/photo-1590802778648-9f37c35bd28b?q=80&w=1000&auto=format&fit=crop", // Seoraksan / Ulsanbawi
+  "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?q=80&w=1000&auto=format&fit=crop", // East Sea
+  "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1000&auto=format&fit=crop", // BTS / Concert vibe
 ];
 
 export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0, onResetProgress }) {
