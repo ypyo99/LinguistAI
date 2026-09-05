@@ -74,8 +74,8 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       if (!window.speechSynthesis) return;
       const voices = window.speechSynthesis.getVoices();
       setLocalVoices({
-        en: voices.filter(v => v.lang.startsWith('en')),
-        ko: voices.filter(v => v.lang.startsWith('ko'))
+        en: voices.filter(v => v.lang.startsWith('en-') || v.lang.startsWith('en_') || v.lang === 'en'),
+        ko: voices.filter(v => v.lang.startsWith('ko-') || v.lang.startsWith('ko_') || v.lang === 'ko')
       });
     };
     if (window.speechSynthesis) {
@@ -414,19 +414,20 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
             <select value={voiceEn} onChange={e => setVoiceEn(e.target.value)} className="settings-select">
               <option value="">(자동 선택)</option>
               {localVoices.en.map(v => {
-                const cleanName = v.name
+                let cleanName = v.name
                   .replace(/영어|English|한국어|Korean|Desktop/gi, '')
                   .replace(/\([^)]*\)/g, '') // 괄호 안 내용 삭제
-                  .replace(/United States|Republic of Korea/gi, '')
+                  .replace(/United States|Republic of Korea|United Kingdom|Australia|India/gi, '')
                   .replace(/ - | -|- /g, ' ')
                   .replace(/\s+/g, ' ')
                   .trim();
+                if (!cleanName) cleanName = v.name;
                 return <option key={v.name} value={v.name}>{cleanName}</option>;
               })}
             </select>
           </div>
           <div className="row">
-            <span>한국어 ({ttsApiKey ? 'AI' : '기기'})</span>
+            <span>{ttsApiKey ? '한국어 (AI)' : '한국어'}</span>
             <select value={voiceKo} onChange={e => setVoiceKo(e.target.value)} className="settings-select">
               {ttsApiKey ? (
                 // API 키가 있을 때는 고음질 구글 음성
@@ -438,13 +439,14 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                 <>
                   <option value="">(자동 선택)</option>
                   {localVoices.ko.map(v => {
-                    const cleanName = v.name
+                    let cleanName = v.name
                       .replace(/영어|English|한국어|Korean|Desktop/gi, '')
                       .replace(/\([^)]*\)/g, '')
-                      .replace(/United States|Republic of Korea/gi, '')
+                      .replace(/United States|Republic of Korea|United Kingdom|Australia|India/gi, '')
                       .replace(/ - | -|- /g, ' ')
                       .replace(/\s+/g, ' ')
                       .trim();
+                    if (!cleanName) cleanName = v.name;
                     return <option key={v.name} value={v.name}>{cleanName}</option>;
                   })}
                 </>

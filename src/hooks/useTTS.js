@@ -106,7 +106,8 @@ const VOICE_PRIORITY = {
 function pickVoice(lang) {
   if (!window.speechSynthesis) return null;
   const voices = allVoices.length > 0 ? allVoices : window.speechSynthesis.getVoices();
-  const cands = voices.filter(v => v.lang.startsWith(lang.split('-')[0]));
+  const langPrefix = lang.split('-')[0];
+  const cands = voices.filter(v => v.lang.startsWith(langPrefix + '-') || v.lang.startsWith(langPrefix + '_') || v.lang === langPrefix);
   const priorityList = VOICE_PRIORITY[lang] || [() => true];
   for (const pred of priorityList) {
     const v = cands.find(v => pred(v.name));

@@ -340,6 +340,7 @@ body{
 .settings-select {
   font-size: 14.5px;
   font-weight: 600;
+  text-align: center;
   background-color: var(--teal-tint);
   color: var(--teal-deep);
   padding: 6px 32px 6px 12px;
