@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useTTS, GOOGLE_VOICES } from '../hooks/useTTS';
 import { useWakeLock } from '../hooks/useWakeLock';
@@ -48,6 +48,25 @@ function RadioGroup({ name, options, value, onChange }) {
           </div>
         </label>
       ))}
+    </div>
+  );
+}
+
+function AutoWidthSelect({ value, onChange, children, className }) {
+  const [displayText, setDisplayText] = useState('');
+  const selectRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (selectRef.current && selectRef.current.selectedOptions.length > 0) {
+      setDisplayText(selectRef.current.selectedOptions[0].text);
+    }
+  }, [value, children]);
+
+  return (
+    <div className="auto-select-wrapper" data-value={displayText}>
+      <select ref={selectRef} value={value} onChange={onChange} className={className}>
+        {children}
+      </select>
     </div>
   );
 }
@@ -374,61 +393,63 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
           <div className="settings-panel-inner">
           <div className="row">
             <span>언어</span>
-            <select
+            <AutoWidthSelect
               value={langOrder}
               onChange={e => setLangOrder(e.target.value)}
               className="settings-select"
             >
               <option value="en-ko">영어 ➔ 한국어</option>
               <option value="ko-en">한국어 ➔ 영어</option>
-            </select>
+            </AutoWidthSelect>
           </div>
           <div className="row">
             <span>반복</span>
-            <select
+            <AutoWidthSelect
               value={repeat}
               onChange={e => setRepeat(Number(e.target.value))}
               className="settings-select"
             >
               {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}회</option>)}
-            </select>
+            </AutoWidthSelect>
           </div>
           <div className="row">
             <span>속도</span>
-            <select value={speed} onChange={e => setSpeed(e.target.value)} className="settings-select">
+            <AutoWidthSelect value={speed} onChange={e => setSpeed(e.target.value)} className="settings-select">
               <option value="slow">느림</option>
               <option value="normal">보통</option>
               <option value="slightly_fast">약간 빠름</option>
               <option value="fast">빠름</option>
-            </select>
+            </AutoWidthSelect>
           </div>
           <div className="row">
             <span>모드</span>
-            <select value={mode} onChange={e => setMode(e.target.value)} className="settings-select">
+            <AutoWidthSelect value={mode} onChange={e => setMode(e.target.value)} className="settings-select">
               <option value="sequential">순차</option>
               <option value="random">랜덤</option>
-            </select>
+            </AutoWidthSelect>
           </div>
           <div className="row">
             <span>영어</span>
-            <select value={voiceEn} onChange={e => setVoiceEn(e.target.value)} className="settings-select">
+            <AutoWidthSelect value={voiceEn} onChange={e => setVoiceEn(e.target.value)} className="settings-select">
               <option value="">(자동 선택)</option>
               {localVoices.en.map(v => {
                 let cleanName = v.name
                   .replace(/영어|English|한국어|Korean|Desktop/gi, '')
-                  .replace(/\([^)]*\)/g, '') // 괄호 안 내용 삭제
-                  .replace(/United States|Republic of Korea|United Kingdom|Australia|India/gi, '')
+                  .replace(/\(([^)]+)\)/g, ' $1 ') // 괄호 안 내용 유지, 괄호 제거
+                  .replace(/United States/gi, 'US')
+                  .replace(/United Kingdom/gi, 'UK')
+                  .replace(/Republic of Korea/gi, 'KR')
                   .replace(/ - | -|- /g, ' ')
                   .replace(/\s+/g, ' ')
                   .trim();
                 if (!cleanName) cleanName = v.name;
                 return <option key={v.name} value={v.name}>{cleanName}</option>;
               })}
-            </select>
+            </AutoWidthSelect>
           </div>
           <div className="row">
             <span>{ttsApiKey ? '한국어 (AI)' : '한국어'}</span>
-            <select value={voiceKo} onChange={e => setVoiceKo(e.target.value)} className="settings-select">
+            <AutoWidthSelect value={voiceKo} onChange={e => setVoiceKo(e.target.value)} className="settings-select">
               {ttsApiKey ? (
                 // API 키가 있을 때는 고음질 구글 음성
                 GOOGLE_VOICES['ko-KR'].map(v => (
@@ -441,8 +462,10 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                   {localVoices.ko.map(v => {
                     let cleanName = v.name
                       .replace(/영어|English|한국어|Korean|Desktop/gi, '')
-                      .replace(/\([^)]*\)/g, '')
-                      .replace(/United States|Republic of Korea|United Kingdom|Australia|India/gi, '')
+                      .replace(/\(([^)]+)\)/g, ' $1 ') // 괄호 안 내용 유지, 괄호 제거
+                      .replace(/United States/gi, 'US')
+                      .replace(/United Kingdom/gi, 'UK')
+                      .replace(/Republic of Korea/gi, 'KR')
                       .replace(/ - | -|- /g, ' ')
                       .replace(/\s+/g, ' ')
                       .trim();
@@ -451,7 +474,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                   })}
                 </>
               )}
-            </select>
+            </AutoWidthSelect>
           </div>
           </div>
         </div>
