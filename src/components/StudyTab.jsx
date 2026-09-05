@@ -517,17 +517,17 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                 <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>volume_up</i>
                 현재 재생 중
                 {ttsStatus === 'api' && (
-                  <span style={{ marginLeft: '8px', fontSize: '11px', background: 'var(--amber)', color: '#fff', padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                  <span style={{ marginLeft: '8px', fontSize: '11px', color: '#fff', opacity: 0.9, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
                     <i className="material-symbols-outlined" style={{ fontSize: '12px' }}>cloud_download</i> API 호출
                   </span>
                 )}
                 {ttsStatus === 'cache' && (
-                  <span style={{ marginLeft: '8px', fontSize: '11px', background: 'var(--teal)', color: '#fff', padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                  <span style={{ marginLeft: '8px', fontSize: '11px', color: '#fff', opacity: 0.9, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
                     <i className="material-symbols-outlined" style={{ fontSize: '12px' }}>bolt</i> 캐시 재생
                   </span>
                 )}
                 {ttsStatus === 'fallback' && (
-                  <span style={{ marginLeft: '8px', fontSize: '11px', background: 'var(--ink-soft)', color: '#fff', padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                  <span style={{ marginLeft: '8px', fontSize: '11px', color: '#fff', opacity: 0.9, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
                     <i className="material-symbols-outlined" style={{ fontSize: '12px' }}>robot_2</i> 기본 음성
                   </span>
                 )}
@@ -541,13 +541,19 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
           </div>
           {langOrder === 'ko-en' ? (
             <>
-              <div className="now-playing-en">{activeSentence.ko}</div>
-              <div className="now-playing-ko">{activeSentence.en}</div>
+              <div className="now-playing-en" style={isWaiting ? { opacity: 0.7 } : {}}>{activeSentence.ko}</div>
+              <div className="now-playing-ko" style={isWaiting ? { textShadow: '0 2px 5px rgba(0,0,0,0.4)', fontSize: '18px', fontWeight: '700', opacity: 1, color: '#fff', transition: 'all 0.3s' } : { transition: 'all 0.3s' }}>
+                {activeSentence.en}
+              </div>
             </>
           ) : (
             <>
-              <div className="now-playing-en">{activeSentence.en}</div>
-              <div className="now-playing-ko">{activeSentence.ko}</div>
+              <div className="now-playing-en" style={isWaiting ? { textShadow: '0 2px 5px rgba(0,0,0,0.4)', fontSize: '20px', fontWeight: '800', color: '#fff', transition: 'all 0.3s' } : { transition: 'all 0.3s' }}>
+                {activeSentence.en}
+              </div>
+              <div className="now-playing-ko" style={isWaiting ? { opacity: 0.7 } : {}}>
+                {activeSentence.ko}
+              </div>
             </>
           )}
         </div>
