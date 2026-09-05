@@ -3,7 +3,7 @@ import { usePersistentState } from '../hooks/usePersistentState';
 
 const FOLDER_ID = '1q1aY9ht38J3JYYaiSq0nMTmn_zug2Wvq';
 
-export default function DataTab({ setUser: appSetUser, setSentences, setPackTitle, setStudiedIndices }) {
+export default function DataTab({ setUser: appSetUser, setSentences, setPackTitle, setStudiedIndices, setCurrentPackId }) {
   const [user, setUser] = usePersistentState('linguist-user', null);
   const [downloaded, setDownloaded] = useState({});
   const [packs, setPacks] = useState([]);
@@ -65,6 +65,7 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
       
       // 학습 현황 초기화
       setStudiedIndices([]);
+      if (setCurrentPackId) setCurrentPackId(null);
       
       alert(`"${pack.name}" 패키지가 적용되었습니다!`);
     } catch (err) {

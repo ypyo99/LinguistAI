@@ -5,13 +5,15 @@ export default function LibraryTab({
   setPackTitle, 
   setFavorites, 
   setStudiedIndices, 
-  setActiveTab 
+  setActiveTab,
+  setCurrentPackId
 }) {
   const handleLoadPack = (pack) => {
     setSentences(pack.sentences || []);
     setPackTitle(pack.title || '');
     setFavorites(pack.favorites || []);
     setStudiedIndices(pack.studiedIndices || []);
+    if (setCurrentPackId) setCurrentPackId(pack.id);
     setActiveTab('study');
   };
 

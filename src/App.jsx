@@ -49,19 +49,53 @@ function App() {
   const [studiedIndices, setStudiedIndices] = usePersistentState('linguist-studied-indices', []);
   const [favorites, setFavorites] = usePersistentState('linguist-study-favorites', []);
   const [savedPacks, setSavedPacks] = usePersistentState('linguist-saved-packs', []);
+  const [currentPackId, setCurrentPackId] = usePersistentState('linguist-current-pack-id', null);
+
+  useEffect(() => {
+    if (currentPackId && savedPacks.length > 0) {
+      setSavedPacks(prev => {
+        const pack = prev.find(p => p.id === currentPackId);
+        if (!pack) return prev;
+        
+        const hasChanged = 
+          JSON.stringify(pack.favorites) !== JSON.stringify(favorites) ||
+          JSON.stringify(pack.studiedIndices) !== JSON.stringify(studiedIndices) ||
+          pack.title !== displayTitle ||
+          JSON.stringify(pack.sentences) !== JSON.stringify(sentences);
+          
+        if (!hasChanged) return prev;
+
+        return prev.map(p => 
+          p.id === currentPackId 
+            ? { ...p, favorites, studiedIndices, title: displayTitle, sentences } 
+            : p
+        );
+      });
+    }
+  }, [favorites, studiedIndices, displayTitle, sentences, currentPackId, setSavedPacks, savedPacks.length]);
 
   const handleSavePack = () => {
     if (sentences.length === 0) return;
-    const newPack = {
-      id: Date.now().toString(),
-      title: displayTitle,
-      sentences,
-      favorites,
-      studiedIndices,
-      createdAt: new Date().toISOString()
-    };
-    setSavedPacks(prev => [newPack, ...prev]);
-    alert('보관함에 저장되었습니다!');
+    if (currentPackId) {
+      setSavedPacks(prev => prev.map(p => 
+        p.id === currentPackId 
+          ? { ...p, title: displayTitle, sentences, favorites, studiedIndices } 
+          : p
+      ));
+      alert('현재 보관함에 덮어쓰기 저장되었습니다!');
+    } else {
+      const newPack = {
+        id: Date.now().toString(),
+        title: displayTitle,
+        sentences,
+        favorites,
+        studiedIndices,
+        createdAt: new Date().toISOString()
+      };
+      setSavedPacks(prev => [newPack, ...prev]);
+      setCurrentPackId(newPack.id);
+      alert('보관함에 저장되었습니다!');
+    }
   };
 
   const handleSaveKey = (key) => {
@@ -99,10 +133,10 @@ function App() {
           <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} favorites={favorites} setFavorites={setFavorites} onSavePack={handleSavePack} />
         </div>
         <div style={{ display: activeTab === 'library' ? 'block' : 'none' }}>
-          <LibraryTab savedPacks={savedPacks} setSavedPacks={setSavedPacks} setSentences={setSentences} setPackTitle={setPackTitle} setFavorites={setFavorites} setStudiedIndices={setStudiedIndices} setActiveTab={setActiveTab} />
+          <LibraryTab savedPacks={savedPacks} setSavedPacks={setSavedPacks} setSentences={setSentences} setPackTitle={setPackTitle} setFavorites={setFavorites} setStudiedIndices={setStudiedIndices} setActiveTab={setActiveTab} setCurrentPackId={setCurrentPackId} />
         </div>
         <div style={{ display: activeTab === 'store' ? 'block' : 'none' }}>
-          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} />
+          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} setCurrentPackId={setCurrentPackId} />
         </div>
         <div style={{ display: activeTab === 'create' ? 'block' : 'none' }}>
           <CreateTab
@@ -112,6 +146,7 @@ function App() {
               setPackTitle(title || `AI 생성 학습 데이터 ${s.length}개`);
               setStudiedIndices([]);
               setFavorites([]);
+              setCurrentPackId(null);
               setActiveTab('study'); 
             }}
           />
