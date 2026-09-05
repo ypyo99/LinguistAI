@@ -301,7 +301,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                 {/* 직접 붙여넣기 모드 */}
                 <div className="flex flex-col gap-3 sm:gap-md">
                   <div className="p-3 sm:p-4 rounded-lg bg-surface-variant/30 dark:bg-dark-surface-bright/30 border border-outline-variant/50 text-sm">
-                    <p className="mb-2 font-medium text-on-surface dark:text-on-dark-surface">1. 아래 프롬프트를 복사하여 ChatGPT나 Gemini에 물어보세요.</p>
+                    <p className="mb-2 font-medium text-on-surface dark:text-on-dark-surface text-xs sm:text-label-sm">1. 아래 프롬프트를 복사하여 ChatGPT나 Gemini에 물어보세요.</p>
                     <div className="relative">
                       <textarea
                         readOnly
@@ -323,7 +323,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                   
                   <div className="flex flex-col gap-1 sm:gap-base">
                     <div className="flex items-center justify-between">
-                      <label className="font-medium text-on-surface dark:text-on-dark-surface text-sm">2. AI 답변을 붙여넣어 주세요.</label>
+                      <label className="font-medium text-on-surface dark:text-on-dark-surface text-xs sm:text-label-sm">2. AI 답변을 붙여넣어 주세요.</label>
                       <button
                         onClick={async () => {
                           try {
