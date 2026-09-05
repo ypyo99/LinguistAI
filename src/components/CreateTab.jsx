@@ -323,7 +323,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                   
                   <div className="flex flex-col gap-1 sm:gap-base">
                     <div className="flex items-center justify-between">
-                      <label className="font-medium text-on-surface dark:text-on-dark-surface">2. AI 답변을 붙여넣어 주세요.</label>
+                      <label className="font-medium text-on-surface dark:text-on-dark-surface text-sm">2. AI 답변을 붙여넣어 주세요.</label>
                       <button
                         onClick={async () => {
                           try {
