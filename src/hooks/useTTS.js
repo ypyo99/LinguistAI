@@ -83,6 +83,12 @@ const VOICE_PRIORITY = {
     () => true,
   ],
   'en-US': [
+    n => n.includes('David'), // Windows male
+    n => n.includes('Mark'),  // Windows male
+    n => n.includes('Alex'),  // macOS male
+    n => n.includes('Daniel'), // macOS male (UK)
+    n => n.includes('Fred'),  // macOS male
+    n => n.toLowerCase().includes('male'), // Generic male
     n => n === 'Google US English',
     n => n.toLowerCase().includes('google') && n.toLowerCase().includes('us'),
     () => true,
@@ -101,14 +107,28 @@ function pickVoice(lang) {
   return cands[0] || null;
 }
 
-function webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus) {
+function webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus, targetVoiceName) {
   return new Promise(resolve => {
     setTtsStatus('fallback');
     const utt = new SpeechSynthesisUtterance(text);
     utt.lang = lang;
     utt.rate = rate;
-    const v = voiceCache.current[lang] || pickVoice(lang);
-    if (v) { utt.voice = v; if (!voiceCache.current[lang]) voiceCache.current[lang] = v; }
+
+    let v = null;
+    if (targetVoiceName && window.speechSynthesis) {
+      v = window.speechSynthesis.getVoices().find(voice => voice.name === targetVoiceName && voice.lang.startsWith(lang.split('-')[0]));
+    }
+    if (!v) {
+      v = voiceCache.current[lang] || pickVoice(lang);
+    }
+
+    if (v) { 
+      utt.voice = v; 
+      // Only cache the voice if we used the generic pickVoice, not the specific targetVoiceName
+      if (!targetVoiceName && !voiceCache.current[lang]) {
+        voiceCache.current[lang] = v;
+      }
+    }
     utt.onend = resolve;
     utt.onerror = resolve;
     if (window.speechSynthesis) window.speechSynthesis.speak(utt);
@@ -165,7 +185,7 @@ export function useTTS(ttsApiKey = '', voiceEn = 'en-US-Neural2-C', voiceKo = 'k
           console.warn('[TTS] Google Cloud TTS 실패, Web Speech API로 폴백:', e.message);
         }
       }
-      return webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus);
+      return webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus, lang === 'ko-KR' ? voiceKo : voiceEn);
     },
     [stop, ttsApiKey, voiceEn, voiceKo]
   );

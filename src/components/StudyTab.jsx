@@ -68,6 +68,25 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const [voiceEn, setVoiceEn]   = usePersistentState('linguist-voice-en', 'en-US-Neural2-C');
   const [voiceKo, setVoiceKo]   = usePersistentState('linguist-voice-ko', 'ko-KR-Neural2-A');
 
+  const [localVoices, setLocalVoices] = useState({ en: [], ko: [] });
+  useEffect(() => {
+    const updateVoices = () => {
+      if (!window.speechSynthesis) return;
+      const voices = window.speechSynthesis.getVoices();
+      setLocalVoices({
+        en: voices.filter(v => v.lang.startsWith('en')),
+        ko: voices.filter(v => v.lang.startsWith('ko'))
+      });
+    };
+    if (window.speechSynthesis) {
+      updateVoices();
+      window.speechSynthesis.addEventListener('voiceschanged', updateVoices);
+    }
+    return () => {
+      if (window.speechSynthesis) window.speechSynthesis.removeEventListener('voiceschanged', updateVoices);
+    };
+  }, []);
+
   const settingsRef = useRef({ speed, mode, repeat, langOrder });
   const prevSettingsRef = useRef({ speed, mode, repeat, langOrder });
   useEffect(() => {
@@ -388,18 +407,19 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               <option value="random">랜덤</option>
             </select>
           </div>
+          <div className="row">
+            <span>영어 (기기)</span>
+            <select value={voiceEn} onChange={e => setVoiceEn(e.target.value)} className="settings-select">
+              <option value="">(자동 선택)</option>
+              {localVoices.en.map(v => (
+                <option key={v.name} value={v.name}>{v.name}</option>
+              ))}
+            </select>
+          </div>
           {ttsApiKey && (
             <>
               <div className="row">
-                <span>영어</span>
-                <select value={voiceEn} onChange={e => setVoiceEn(e.target.value)} className="settings-select">
-                  {GOOGLE_VOICES['en-US'].map(v => (
-                    <option key={v.name} value={v.name}>{v.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="row">
-                <span>한국어</span>
+                <span>한국어 (AI)</span>
                 <select value={voiceKo} onChange={e => setVoiceKo(e.target.value)} className="settings-select">
                   {GOOGLE_VOICES['ko-KR'].map(v => (
                     <option key={v.name} value={v.name}>{v.label}</option>
