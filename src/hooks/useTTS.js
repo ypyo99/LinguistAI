@@ -1,6 +1,14 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { getCachedAudio, saveCachedAudio } from '../utils/idb';
 
+let allVoices = [];
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  allVoices = window.speechSynthesis.getVoices();
+  window.speechSynthesis.addEventListener('voiceschanged', () => {
+    allVoices = window.speechSynthesis.getVoices();
+  });
+}
+
 // ── Google Cloud TTS 음성 목록 ────────────────────────────────────
 export const GOOGLE_VOICES = {
   'en-US': [
@@ -97,7 +105,7 @@ const VOICE_PRIORITY = {
 
 function pickVoice(lang) {
   if (!window.speechSynthesis) return null;
-  const voices = window.speechSynthesis.getVoices();
+  const voices = allVoices.length > 0 ? allVoices : window.speechSynthesis.getVoices();
   const cands = voices.filter(v => v.lang.startsWith(lang.split('-')[0]));
   const priorityList = VOICE_PRIORITY[lang] || [() => true];
   for (const pred of priorityList) {
@@ -115,8 +123,10 @@ function webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus, targetVoiceN
     utt.rate = rate;
 
     let v = null;
-    if (targetVoiceName && window.speechSynthesis) {
-      v = window.speechSynthesis.getVoices().find(voice => voice.name === targetVoiceName && voice.lang.startsWith(lang.split('-')[0]));
+    const voices = allVoices.length > 0 ? allVoices : (window.speechSynthesis ? window.speechSynthesis.getVoices() : []);
+    
+    if (targetVoiceName) {
+      v = voices.find(voice => voice.name === targetVoiceName && voice.lang.startsWith(lang.split('-')[0]));
     }
     if (!v) {
       v = voiceCache.current[lang] || pickVoice(lang);
@@ -124,6 +134,8 @@ function webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus, targetVoiceN
 
     if (v) { 
       utt.voice = v; 
+      utt.lang = v.lang; // 모바일(특히 안드로이드)에서 선택한 음성을 강제하기 위해 필수
+      
       // Only cache the voice if we used the generic pickVoice, not the specific targetVoiceName
       if (!targetVoiceName && !voiceCache.current[lang]) {
         voiceCache.current[lang] = v;
