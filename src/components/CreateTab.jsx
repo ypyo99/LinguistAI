@@ -309,9 +309,12 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                         className="w-full h-24 p-3 rounded-md bg-surface-container-lowest dark:bg-dark-bg text-on-surface-variant dark:text-on-dark-surface-variant font-mono text-xs border border-outline-variant dark:border-outline focus:outline-none resize-none"
                       />
                       <button
-                        onClick={() => navigator.clipboard.writeText(generatedPrompt)}
+                        onClick={() => {
+                          navigator.clipboard.writeText(generatedPrompt);
+                          window.open('https://gemini.google.com/app', '_blank');
+                        }}
                         className="absolute right-2 top-2 p-1.5 rounded-md btn-orange hover:opacity-90 transition-opacity"
-                        title="프롬프트 복사"
+                        title="프롬프트 복사 및 Gemini 열기"
                       >
                         <span className="material-symbols-outlined text-sm">content_copy</span>
                       </button>

@@ -4,7 +4,7 @@ import { useTTS, GOOGLE_VOICES } from '../hooks/useTTS';
 import { useWakeLock } from '../hooks/useWakeLock';
 
 // ── 유틸 ────────────────────────────────────────────
-const SPEED_MAP = { slow: 0.6, normal: 1.0, slightly_fast: 1.25, fast: 1.5 };
+const SPEED_MAP = { slow: 0.6, normal: 1.0, slightly_fast: 1.25, fast: 1.25 };
 
 function shuffle(arr) {
   const a = [...arr];
@@ -129,6 +129,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   // 재생 상태
   const [isPlaying, setIsPlaying]     = useState(false);   // 전체 재생 중
   const [currentIdx, setCurrentIdx]   = useState(null);    // 전체 재생 중 현재 인덱스
+  const isPlayingFavoritesRef         = useRef(false);     // 즐겨찾기 재생 여부 기억
   const [singleIdx, setSingleIdx]     = useState(null);    // 개별 재생 중 인덱스
   const [currentRepeat, setCurrentRepeat] = useState(0);   // 현재 반복 회차
   const [isWaiting, setIsWaiting]     = useState(false);   // 따라 말하기 인터벌 대기 중 여부
@@ -168,8 +169,16 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
 
   // ── 전체 재생 ──────────────────────────────────────
-  const handlePlayAll = useCallback(async (startFromIdx = null, onlyFavorites = false) => {
+  const handlePlayAll = useCallback(async (startFromIdx = null, onlyFavoritesArg = null) => {
     let isJump = typeof startFromIdx === 'number';
+
+    // onlyFavorites 인자가 안 넘어온 경우(설정 변경 시 등), 기존 상태 유지
+    let onlyFavorites = onlyFavoritesArg !== null ? onlyFavoritesArg : isPlayingFavoritesRef.current;
+    
+    // 새 재생(버튼 클릭)인 경우 상태 업데이트
+    if (!isJump) {
+      isPlayingFavoritesRef.current = onlyFavorites;
+    }
 
     // 재생 중인데 버튼을 눌렀다면 정지
     if (isPlaying && !isJump) {
@@ -197,7 +206,19 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
     setIsPlaying(true);
 
+    let validIndicesForInit = onlyFavorites 
+      ? (favoritesRef.current || [])
+      : sentences.map((_, i) => i);
+      
     let playedInCycle = new Set();
+    
+    // 설정 변경 등으로 점프할 때 이전 인덱스들을 이미 재생한 것으로 처리
+    if (isJump && validIndicesForInit.includes(startFromIdx)) {
+      const startPos = validIndicesForInit.indexOf(startFromIdx);
+      for (let i = 0; i < startPos; i++) {
+        playedInCycle.add(validIndicesForInit[i]);
+      }
+    }
 
     while (!isCancelled()) {
       let validIndices = onlyFavorites 
@@ -414,10 +435,9 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
           </div>
           <div className="row">
             <span>속도</span>
-            <AutoWidthSelect value={speed} onChange={e => setSpeed(e.target.value)} className="settings-select">
+            <AutoWidthSelect value={speed === 'slightly_fast' ? 'fast' : speed} onChange={e => setSpeed(e.target.value)} className="settings-select">
               <option value="slow">느림</option>
               <option value="normal">보통</option>
-              <option value="slightly_fast">약간 빠름</option>
               <option value="fast">빠름</option>
             </AutoWidthSelect>
           </div>

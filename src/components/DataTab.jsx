@@ -3,7 +3,7 @@ import { usePersistentState } from '../hooks/usePersistentState';
 
 const FOLDER_ID = '1q1aY9ht38J3JYYaiSq0nMTmn_zug2Wvq';
 
-export default function DataTab({ setUser: appSetUser, setSentences, setPackTitle, setStudiedIndices, setCurrentPackId }) {
+export default function DataTab({ setUser: appSetUser, setSentences, setPackTitle, setStudiedIndices, setCurrentPackId, setFavorites }) {
   const [user, setUser] = usePersistentState('linguist-user', null);
   const [downloaded, setDownloaded] = useState({});
   const [packs, setPacks] = useState([]);
@@ -54,17 +54,32 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
       const parsed = JSON.parse(text);
-      if (!Array.isArray(parsed)) throw new Error('유효한 JSON 배열 형식이 아닙니다.');
+      
+      let sentencesData = null;
+      let titleName = pack.name.replace(/\.json$/, '').replace(/\.txt$/, '');
+      let studiedData = [];
+      let favoritesData = [];
+
+      if (Array.isArray(parsed)) {
+        sentencesData = parsed;
+      } else if (parsed && typeof parsed === 'object' && Array.isArray(parsed.sentences)) {
+        sentencesData = parsed.sentences;
+        if (parsed.title) titleName = parsed.title;
+        if (parsed.studiedIndices) studiedData = parsed.studiedIndices;
+        if (parsed.favorites) favoritesData = parsed.favorites;
+      } else {
+        throw new Error('유효한 JSON 배열 형식이 아닙니다.');
+      }
       
       // 메모리에 저장되어 있던 학습데이터 대체
-      setSentences(parsed);
+      setSentences(sentencesData);
       
       // 파일명 기반으로 타이틀 업데이트
-      let titleName = pack.name.replace(/\.json$/, '').replace(/\.txt$/, '');
       setPackTitle(titleName);
       
       // 학습 현황 초기화
-      setStudiedIndices([]);
+      setStudiedIndices(studiedData);
+      if (setFavorites) setFavorites(favoritesData);
       if (setCurrentPackId) setCurrentPackId(null);
       
       alert(`"${pack.name}" 패키지가 적용되었습니다!`);

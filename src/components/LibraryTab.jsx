@@ -23,6 +23,23 @@ export default function LibraryTab({
     }
   };
 
+  const handleDownloadPack = (pack) => {
+    try {
+      // 다운로드 시 즐겨찾기(favorites) 데이터 제외
+      const { favorites, ...packToDownload } = pack;
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(packToDownload, null, 2));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", (pack.title || "학습데이터") + ".json");
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    } catch (e) {
+      console.error("다운로드 실패:", e);
+      alert("다운로드 중 오류가 발생했습니다.");
+    }
+  };
+
   return (
     <div className="tab-fade-in" style={{ paddingBottom: '40px' }}>
       <h2 className="section-heading" style={{ fontSize: '20px', marginBottom: '16px' }}>내 학습 데이터</h2>
@@ -56,8 +73,16 @@ export default function LibraryTab({
                   <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>play_arrow</i>
                 </button>
                 <button 
+                  onClick={() => handleDownloadPack(pack)}
+                  style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                  title="다운로드"
+                >
+                  <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</i>
+                </button>
+                <button 
                   onClick={() => handleDeletePack(pack.id)}
                   style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                  title="삭제"
                 >
                   <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</i>
                 </button>

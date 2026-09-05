@@ -136,7 +136,7 @@ function App() {
           <LibraryTab savedPacks={savedPacks} setSavedPacks={setSavedPacks} setSentences={setSentences} setPackTitle={setPackTitle} setFavorites={setFavorites} setStudiedIndices={setStudiedIndices} setActiveTab={setActiveTab} setCurrentPackId={setCurrentPackId} />
         </div>
         <div style={{ display: activeTab === 'store' ? 'block' : 'none' }}>
-          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} setCurrentPackId={setCurrentPackId} />
+          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} setCurrentPackId={setCurrentPackId} setFavorites={setFavorites} />
         </div>
         <div style={{ display: activeTab === 'create' ? 'block' : 'none' }}>
           <CreateTab
