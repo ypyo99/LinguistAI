@@ -87,11 +87,11 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     };
   }, []);
 
-  const settingsRef = useRef({ speed, mode, repeat, langOrder });
-  const prevSettingsRef = useRef({ speed, mode, repeat, langOrder });
+  const settingsRef = useRef({ speed, mode, repeat, langOrder, voiceEn, voiceKo });
+  const prevSettingsRef = useRef({ speed, mode, repeat, langOrder, voiceEn, voiceKo });
   useEffect(() => {
-    settingsRef.current = { speed, mode, repeat, langOrder };
-  }, [speed, mode, repeat, langOrder]);
+    settingsRef.current = { speed, mode, repeat, langOrder, voiceEn, voiceKo };
+  }, [speed, mode, repeat, langOrder, voiceEn, voiceKo]);
 
   // 재생 설정 패널 자동 닫기 (30초, 드롭다운 선택 중에는 중단)
   const [isFocusedInSettings, setIsFocusedInSettings] = useState(false);
@@ -286,9 +286,11 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       prev.speed !== speed ||
       prev.mode !== mode ||
       prev.repeat !== repeat ||
-      prev.langOrder !== langOrder
+      prev.langOrder !== langOrder ||
+      prev.voiceEn !== voiceEn ||
+      prev.voiceKo !== voiceKo
     ) {
-      prevSettingsRef.current = { speed, mode, repeat, langOrder };
+      prevSettingsRef.current = { speed, mode, repeat, langOrder, voiceEn, voiceKo };
       
       // 설정이 바뀌면 현재 읽고 있는 위치에서 즉시 재시작하여 새 설정 적용
       if (isPlaying && currentIdx !== null) {
@@ -297,7 +299,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
         handlePlayOne(singleIdx);
       }
     }
-  }, [speed, mode, repeat, langOrder, isPlaying, currentIdx, singleIdx, handlePlayAll, handlePlayOne]);
+  }, [speed, mode, repeat, langOrder, voiceEn, voiceKo, isPlaying, currentIdx, singleIdx, handlePlayAll, handlePlayOne]);
 
   const activeIdx = currentIdx !== null ? currentIdx : singleIdx;
   const activeSentence = activeIdx !== null ? sentences[activeIdx] : null;
