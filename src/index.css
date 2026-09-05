@@ -446,8 +446,11 @@ body{
 .list-header i{ color:var(--ink-soft); font-size:18px; }
 
 .transcript{
-  margin-top:12px; background:var(--surface); border:0.5px solid var(--line);
+  margin-top:12px; background:var(--surface); border:1.5px solid rgba(0, 0, 0, 0.2);
   border-radius:16px; box-shadow:var(--shadow); overflow:hidden;
+}
+.dark .transcript, [data-mode="dark"] .transcript {
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
 }
 .turn{
   display:flex; gap:12px; padding:16px 14px;
