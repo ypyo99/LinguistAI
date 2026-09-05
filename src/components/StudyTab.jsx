@@ -66,7 +66,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const [langOrder, setLangOrder] = usePersistentState('linguist-study-lang', 'en-ko');
   const [repeat, setRepeat]     = usePersistentState('linguist-study-repeat', 1);
   const [voiceEn, setVoiceEn]   = usePersistentState('linguist-voice-en', 'en-US-Neural2-C');
-  const [voiceKo, setVoiceKo]   = usePersistentState('linguist-voice-ko', 'ko-KR-Neural2-A');
+  const [voiceKo, setVoiceKo]   = usePersistentState('linguist-voice-ko', 'ko-KR-Neural2-C');
 
   const [localVoices, setLocalVoices] = useState({ en: [], ko: [] });
   useEffect(() => {
@@ -410,26 +410,47 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
             </select>
           </div>
           <div className="row">
-            <span>영어 (기기)</span>
+            <span>영어</span>
             <select value={voiceEn} onChange={e => setVoiceEn(e.target.value)} className="settings-select">
               <option value="">(자동 선택)</option>
-              {localVoices.en.map(v => (
-                <option key={v.name} value={v.name}>{v.name}</option>
-              ))}
+              {localVoices.en.map(v => {
+                const cleanName = v.name
+                  .replace(/영어|English|한국어|Korean|Desktop/gi, '')
+                  .replace(/\([^)]*\)/g, '') // 괄호 안 내용 삭제
+                  .replace(/United States|Republic of Korea/gi, '')
+                  .replace(/ - | -|- /g, ' ')
+                  .replace(/\s+/g, ' ')
+                  .trim();
+                return <option key={v.name} value={v.name}>{cleanName}</option>;
+              })}
             </select>
           </div>
-          {ttsApiKey && (
-            <>
-              <div className="row">
-                <span>한국어 (AI)</span>
-                <select value={voiceKo} onChange={e => setVoiceKo(e.target.value)} className="settings-select">
-                  {GOOGLE_VOICES['ko-KR'].map(v => (
-                    <option key={v.name} value={v.name}>{v.label}</option>
-                  ))}
-                </select>
-              </div>
-            </>
-          )}
+          <div className="row">
+            <span>한국어 ({ttsApiKey ? 'AI' : '기기'})</span>
+            <select value={voiceKo} onChange={e => setVoiceKo(e.target.value)} className="settings-select">
+              {ttsApiKey ? (
+                // API 키가 있을 때는 고음질 구글 음성
+                GOOGLE_VOICES['ko-KR'].map(v => (
+                  <option key={v.name} value={v.name}>{v.label}</option>
+                ))
+              ) : (
+                // API 키가 없을 때는 기기 내장 음성
+                <>
+                  <option value="">(자동 선택)</option>
+                  {localVoices.ko.map(v => {
+                    const cleanName = v.name
+                      .replace(/영어|English|한국어|Korean|Desktop/gi, '')
+                      .replace(/\([^)]*\)/g, '')
+                      .replace(/United States|Republic of Korea/gi, '')
+                      .replace(/ - | -|- /g, ' ')
+                      .replace(/\s+/g, ' ')
+                      .trim();
+                    return <option key={v.name} value={v.name}>{cleanName}</option>;
+                  })}
+                </>
+              )}
+            </select>
+          </div>
           </div>
         </div>
       </div>

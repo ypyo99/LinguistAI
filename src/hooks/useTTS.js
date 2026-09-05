@@ -155,7 +155,7 @@ function webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus, targetVoiceN
  * @param {string} voiceEn   - 영어 음성 이름 (예: 'en-US-Neural2-C')
  * @param {string} voiceKo   - 한국어 음성 이름 (예: 'ko-KR-Neural2-A')
  */
-export function useTTS(ttsApiKey = '', voiceEn = 'en-US-Neural2-C', voiceKo = 'ko-KR-Neural2-A') {
+export function useTTS(ttsApiKey = '', voiceEn = 'en-US-Neural2-C', voiceKo = 'ko-KR-Neural2-C') {
   const [ttsStatus, setTtsStatus] = useState(null);
   const voiceCache = useRef({});
   const audioCtxRef = useRef(null);
