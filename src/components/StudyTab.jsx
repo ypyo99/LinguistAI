@@ -6,6 +6,16 @@ import { useWakeLock } from '../hooks/useWakeLock';
 // ── 유틸 ────────────────────────────────────────────
 const SPEED_MAP = { slow: 0.6, normal: 1.0, slightly_fast: 1.25, fast: 1.25 };
 
+const getDynamicRate = (speedMode, repeatIdx, totalRepeats) => {
+  if (speedMode !== 'speed_up') {
+    return SPEED_MAP[speedMode] || 1.0;
+  }
+  if (totalRepeats <= 1) return 1.0;
+  const minRate = 0.8;
+  const maxRate = 1.2;
+  return minRate + ((maxRate - minRate) / (totalRepeats - 1)) * repeatIdx;
+};
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -132,6 +142,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const isPlayingFavoritesRef         = useRef(false);     // 즐겨찾기 재생 여부 기억
   const [singleIdx, setSingleIdx]     = useState(null);    // 개별 재생 중 인덱스
   const [currentRepeat, setCurrentRepeat] = useState(0);   // 현재 반복 회차
+  const [currentRate, setCurrentRate] = useState(1.0);     // 현재 재생 배속
   const [isWaiting, setIsWaiting]     = useState(false);   // 따라 말하기 인터벌 대기 중 여부
 
   const shouldStop = useRef(false);
@@ -161,7 +172,8 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
     for (const { text, lang } of pairs) {
       if (stopRef.current) return;
-      await ttsSpeak(text, lang, rate);
+      const actualRate = lang === 'ko-KR' ? 1.0 : rate;
+      await ttsSpeak(text, lang, actualRate);
       if (stopRef.current) return;
       await delay(350);
     }
@@ -255,7 +267,8 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       for (let r = 0; r < settingsRef.current.repeat; r++) {
         if (isCancelled()) break;
         setCurrentRepeat(r + 1);
-        const rate = SPEED_MAP[settingsRef.current.speed];
+        const rate = getDynamicRate(settingsRef.current.speed, r, settingsRef.current.repeat);
+        setCurrentRate(rate);
         await speakSentence(sentences[nextIdx], rate, localStopRef, r);
         if (!isCancelled() && r < settingsRef.current.repeat - 1) await delay(300);
       }
@@ -307,7 +320,8 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     for (let r = 0; r < settingsRef.current.repeat; r++) {
       if (singleStop.current) break;
       setCurrentRepeat(r + 1);
-      const rate = SPEED_MAP[settingsRef.current.speed];
+      const rate = getDynamicRate(settingsRef.current.speed, r, settingsRef.current.repeat);
+      setCurrentRate(rate);
       await speakSentence(sentences[idx], rate, singleStop, r);
       if (!singleStop.current && r < settingsRef.current.repeat - 1) await delay(300);
     }
@@ -435,10 +449,21 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
           </div>
           <div className="row">
             <span>속도</span>
-            <AutoWidthSelect value={speed === 'slightly_fast' ? 'fast' : speed} onChange={e => setSpeed(e.target.value)} className="settings-select">
+            <AutoWidthSelect 
+              value={speed === 'slightly_fast' ? 'fast' : speed} 
+              onChange={e => {
+                const newSpeed = e.target.value;
+                setSpeed(newSpeed);
+                if (newSpeed === 'speed_up') {
+                  setRepeat(3);
+                }
+              }} 
+              className="settings-select"
+            >
               <option value="slow">느림</option>
               <option value="normal">보통</option>
               <option value="fast">빠름</option>
+              <option value="speed_up">점진적 가속</option>
             </AutoWidthSelect>
           </div>
           <div className="row">
@@ -558,7 +583,13 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                 {currentRepeat} / {settingsRef.current.repeat}회
               </span>
             )}
+            {!isWaiting && (
+              <span style={{ marginLeft: '6px', opacity: 0.9, fontSize: '11px', fontWeight: 'bold', color: '#ffb74d' }}>
+                {currentRate.toFixed(1)}x
+              </span>
+            )}
           </div>
+
           {langOrder === 'ko-en' ? (
             <>
               <div className="now-playing-en" style={isWaiting ? { opacity: 0.7 } : {}}>{activeSentence.ko}</div>

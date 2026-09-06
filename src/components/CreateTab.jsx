@@ -6,10 +6,55 @@ const DIFFICULTY_MAP = { '초급': 'beginner (A1-A2)', '중급': 'intermediate (
 export default function CreateTab({ apiKey, onGenerate }) {
   const [topic, setTopic] = usePersistentState('linguist-create-topic', '');
   const [difficulty, setDifficulty] = usePersistentState('linguist-create-difficulty', '초급');
+  const [availableModels, setAvailableModels] = useState([]);
+
+  useEffect(() => {
+    if (!apiKey) return;
+    const fetchModels = async () => {
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.models) {
+            const validModels = data.models
+              .filter(m => {
+                if (!m.supportedGenerationMethods || !m.supportedGenerationMethods.includes('generateContent')) return false;
+                const name = m.name.replace('models/', '');
+                
+                // 1. gemini 계열 중 핵심 텍스트 모델(flash, pro)만 허용 (이미지/기타 특수 목적 제외)
+                if (!name.startsWith('gemini-')) return false;
+                if (!name.includes('flash') && !name.includes('pro')) return false;
+                // 2. 구형 1.0 모델 제외 (JSON MimeType 옵션 미지원으로 에러 발생)
+                if (name.includes('1.0')) return false;
+                // 3. 구형 vision 전용 모델 제외
+                if (name.includes('vision')) return false;
+                // 4. 스냅샷(-001 등) 및 최신(-latest) 중복 별칭 제외 (대표 이름만 깔끔하게 유지)
+                if (/-\d{3}$/.test(name) || name.endsWith('-latest')) return false;
+                
+                return true;
+              })
+              .map(m => m.name.replace('models/', ''));
+            setAvailableModels(validModels);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch models", e);
+      }
+    };
+    fetchModels();
+  }, [apiKey]);
+
   const [count, setCount] = usePersistentState('linguist-create-count', 10);
   const [model, setModel] = usePersistentState('linguist-create-model', 'gemini-3.6-flash');
+  const [customModel, setCustomModel] = usePersistentState('linguist-create-custom-model', '');
   const [inputMode, setInputMode] = usePersistentState('linguist-create-input-mode', 'api');
   const [manualText, setManualText] = useState('');
+
+  const isCustom = availableModels.length > 0 
+    ? !availableModels.includes(model)
+    : !['gemini-3.6-flash', 'gemini-3.6-flash-8b', 'gemini-3.6-pro'].includes(model);
+
+  
   
   const [loading, setLoading] = useState(false);
   const [generatingCount, setGeneratingCount] = useState(0);
@@ -17,13 +62,23 @@ export default function CreateTab({ apiKey, onGenerate }) {
   const [preview, setPreview] = usePersistentState('linguist-create-preview', []);
   const [packTitle, setPackTitle] = usePersistentState('linguist-create-packtitle', '');
 
+  const getDifficultyRule = (diff) => {
+    switch (diff) {
+      case '초급': return '- STRICT RULE: Use very simple vocabulary, short sentences, and basic grammar (A1-A2 level).';
+      case '중급': return '- STRICT RULE: Use everyday conversational vocabulary, moderate sentence length, and common idioms (B1-B2 level).';
+      case '고급': return '- STRICT RULE: Use sophisticated vocabulary, complex grammar structures, and advanced/native idiomatic expressions (C1-C2 level).';
+      default: return '';
+    }
+  };
+
   const generatedPrompt = `Generate exactly ${count} English learning sentences for a Korean learner.
 Topic: "${topic || '일상 회화'}"
 Level: ${DIFFICULTY_MAP[difficulty]}
 Rules:
-- Each sentence must be natural, practical, and appropriate for the level
-- Korean translation must be accurate and natural
-- Return ONLY a valid JSON array, no markdown fences, no explanation
+- Each sentence must be natural, practical, and appropriate for the context.
+${getDifficultyRule(difficulty)}
+- Korean translation must be accurate and natural.
+- Return ONLY a valid JSON array, no markdown fences, no explanation.
 Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
 
   const handleGenerate = async () => {
@@ -57,7 +112,11 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.8, maxOutputTokens: 2048 },
+              generationConfig: { 
+                temperature: 0.8, 
+                maxOutputTokens: 8192,
+                responseMimeType: "application/json"
+              },
             }),
           }
         );
@@ -113,9 +172,44 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
 
       // JSON 추출 (마크다운 코드블록 제거 포함)
       const jsonMatch = fullText.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) throw new Error('응답에서 JSON 형식을 찾을 수 없습니다. 다시 시도해 주세요.');
+      if (!jsonMatch) {
+        console.error("AI Response FullText:", fullText);
+        throw new Error(`응답에서 JSON 형식을 찾을 수 없습니다.\nAI 응답 내용: ${fullText.slice(0, 100)}...`);
+      }
 
-      const parsed = JSON.parse(jsonMatch[0]);
+      let parsed = [];
+      try {
+        parsed = JSON.parse(jsonMatch[0]);
+      } catch (e) {
+        console.warn("Standard JSON parse failed:", e.message, "Attempting recovery...");
+        
+        // 1. 에러 위치(position) 이전까지만 잘라서 다시 시도 (뒤에 쓰레기값이 붙은 경우)
+        const posMatch = e.message.match(/position (\d+)/);
+        if (posMatch) {
+          const pos = parseInt(posMatch[1], 10);
+          try {
+            parsed = JSON.parse(jsonMatch[0].substring(0, pos).trim());
+          } catch (e2) {
+            console.warn("Recovery by substring failed.");
+          }
+        }
+        
+        // 2. 그래도 안되면 텍스트 전체에서 개별 문장 객체({ "en":..., "ko":... })만 무식하게 추출
+        if (!parsed || !Array.isArray(parsed) || parsed.length === 0) {
+          const matches = fullText.match(/\{[\s\S]*?\}/g) || [];
+          for (const m of matches) {
+            try {
+              const obj = JSON.parse(m);
+              if (obj && obj.en && obj.ko) parsed.push(obj);
+            } catch(err) {}
+          }
+        }
+        
+        if (parsed.length === 0) {
+          throw new Error(`JSON 복구 실패: ${e.message}\n응답 앞부분: ${fullText.slice(0, 100)}`);
+        }
+      }
+
       if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('유효한 문장 데이터를 받지 못했습니다.');
 
       setPreview(parsed);
@@ -251,19 +345,49 @@ Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
                   <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="model">
                     AI 모델 (에러시 변경)
                   </label>
-                  <input
-                    list="model-list"
-                    className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base font-mono"
-                    id="model"
-                    value={model}
-                    placeholder="예: gemini-3.6-flash"
-                    onChange={e => setModel(e.target.value)}
-                  />
-                  <datalist id="model-list">
-                    <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                  </datalist>
+                  <div className="flex gap-2">
+                    <select
+                      className={`${isCustom ? 'w-2/5' : 'w-full'} h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base font-mono`}
+                      id="model"
+                      value={isCustom ? 'custom' : model}
+                      onChange={e => {
+                        if (e.target.value === 'custom') {
+                          setModel(customModel || 'gemini-3.6-flash-8b');
+                        } else {
+                          setModel(e.target.value);
+                        }
+                      }}
+                    >
+                      {availableModels.length > 0 ? (
+                        <>
+                          {availableModels.map(m => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                          <option value="custom">직접 입력...</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="gemini-3.6-flash">Gemini 3.6 Flash (표준)</option>
+                          <option value="gemini-3.6-flash-8b">Gemini 3.6 Flash-8B (가장 저렴)</option>
+                          <option value="gemini-3.6-pro">Gemini 3.6 Pro (고성능)</option>
+                          <option value="custom">직접 입력...</option>
+                        </>
+                      )}
+                    </select>
+                    
+                    {isCustom && (
+                      <input
+                        type="text"
+                        className="flex-1 h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base font-mono"
+                        placeholder="예: gemini-4.0-flash"
+                        value={model}
+                        onChange={e => {
+                          setModel(e.target.value);
+                          setCustomModel(e.target.value);
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 {/* 에러 메시지 */}
