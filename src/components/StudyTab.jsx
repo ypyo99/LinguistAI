@@ -561,21 +561,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               <>
                 <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>volume_up</i>
                 현재 재생 중
-                {ttsStatus === 'api' && (
-                  <span style={{ marginLeft: '8px', fontSize: '11px', color: '#fff', opacity: 0.9, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                    <i className="material-symbols-outlined" style={{ fontSize: '12px' }}>cloud_download</i> API 호출
-                  </span>
-                )}
-                {ttsStatus === 'cache' && (
-                  <span style={{ marginLeft: '8px', fontSize: '11px', color: '#fff', opacity: 0.9, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                    <i className="material-symbols-outlined" style={{ fontSize: '12px' }}>bolt</i> 캐시 재생
-                  </span>
-                )}
-                {ttsStatus === 'fallback' && (
-                  <span style={{ marginLeft: '8px', fontSize: '11px', color: '#fff', opacity: 0.9, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                    <i className="material-symbols-outlined" style={{ fontSize: '12px' }}>robot_2</i> 기본 음성
-                  </span>
-                )}
+
               </>
             )}
             {settingsRef.current.repeat > 1 && !isWaiting && (
@@ -584,7 +570,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               </span>
             )}
             {!isWaiting && (
-              <span style={{ marginLeft: '6px', opacity: 0.9, fontSize: '11px', fontWeight: 'bold', color: '#ffb74d' }}>
+              <span style={{ marginLeft: '6px', opacity: 0.9, fontSize: '11px', fontWeight: 'bold', color: '#fff' }}>
                 {currentRate.toFixed(1)}x
               </span>
             )}
