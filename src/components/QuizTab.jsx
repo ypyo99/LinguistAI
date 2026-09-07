@@ -293,17 +293,47 @@ export default function QuizTab({ sentences }) {
         {quizData.quizType === 'vocab-meaning' ? (
           <>
             <p className="text-lg md:text-xl text-ink-soft mb-6 font-semibold text-center leading-relaxed flex flex-wrap justify-center gap-x-1 sm:gap-x-1.5 gap-y-1">
-              {quizData.en.split(' ').map((w, i) => {
-                const cw = cleanWord(w).toLowerCase();
-                const tv = quizData.targetVocab.toLowerCase();
-                // AI may return base forms (e.g. booked -> book)
-                const isTarget = cw === tv || cw.startsWith(tv) || tv.startsWith(cw);
-                return (
-                  <span key={i} className={isTarget ? 'text-teal-deep font-bold border-b-2 border-teal-deep pb-0.5' : ''}>
-                    {w}
-                  </span>
-                );
-              })}
+              {(() => {
+                const enWords = quizData.en.split(' ');
+                const tvWords = quizData.targetVocab.toLowerCase().split(' ').map(w => cleanWord(w)).filter(Boolean);
+                
+                let targetIndices = new Set();
+                for (let i = 0; i <= enWords.length - tvWords.length; i++) {
+                  let match = true;
+                  for (let j = 0; j < tvWords.length; j++) {
+                    const cw = cleanWord(enWords[i + j]).toLowerCase();
+                    const tvw = tvWords[j];
+                    if (!(cw === tvw || cw.startsWith(tvw) || tvw.startsWith(cw))) {
+                      match = false;
+                      break;
+                    }
+                  }
+                  if (match) {
+                    for (let j = 0; j < tvWords.length; j++) {
+                      targetIndices.add(i + j);
+                    }
+                    break;
+                  }
+                }
+                
+                if (targetIndices.size === 0) {
+                  enWords.forEach((w, i) => {
+                    const cw = cleanWord(w).toLowerCase();
+                    if (cw.length > 2 && tvWords.some(tvw => cw === tvw || cw.startsWith(tvw) || tvw.startsWith(cw))) {
+                      targetIndices.add(i);
+                    }
+                  });
+                }
+
+                return enWords.map((w, i) => {
+                  const isTarget = targetIndices.has(i);
+                  return (
+                    <span key={i} className={isTarget ? 'text-teal-deep font-bold border-b-2 border-teal-deep pb-0.5' : ''}>
+                      {w}
+                    </span>
+                  );
+                });
+              })()}
             </p>
             <div className={`quiz-sentence-box bg-white p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
               ${selectedAnswer === 'correct' ? 'border-green-400 bg-green-50 shadow-green-100' : 'border-teal-tint'}
