@@ -401,6 +401,12 @@ body{
   color: var(--teal-deep) !important;
 }
 
+/* Custom theme color utilities for QuizTab */
+.text-teal-deep { color: var(--teal-deep) !important; }
+.text-teal { color: var(--teal) !important; }
+.border-teal-deep { border-color: var(--teal-deep) !important; }
+.border-teal { border-color: var(--teal) !important; }
+
 /* now playing box */
 .now-playing {
   background: var(--teal);
