@@ -261,21 +261,21 @@ export default function QuizTab({ sentences }) {
             className={`px-3 sm:px-5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 ${quizMode === 'mixed' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
           >
             <i className="material-symbols-outlined text-[18px]">shuffle</i>
-            랜덤 섞기
+            랜덤
           </button>
           <button 
             onClick={() => setQuizMode('sentence')}
             className={`px-3 sm:px-5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 ${quizMode === 'sentence' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
           >
             <i className="material-symbols-outlined text-[18px]">short_text</i>
-            문장 빈칸
+            문장
           </button>
           <button 
             onClick={() => setQuizMode('vocab')}
             className={`px-3 sm:px-5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 ${quizMode === 'vocab' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
           >
             <i className="material-symbols-outlined text-[18px]">lightbulb</i>
-            단어 뜻
+            단어
           </button>
         </div>
 
