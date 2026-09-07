@@ -330,7 +330,7 @@ export default function QuizTab({ sentences }) {
                     const displayWord = isCorrect ? seg.wordText : (seg.wordText.includes(' ') ? '_____ _____' : '_____');
                     return (
                       <span key={i} className={`inline-block pb-1 border-b-4 
-                        ${isCorrect ? 'text-green-500 border-green-500' : 'text-teal-deep border-teal'}`}>
+                        ${isCorrect ? 'text-green-500 border-green-500' : 'text-teal-deep border-transparent'}`}>
                         {displayWord}{seg.punctuation}
                       </span>
                     );
