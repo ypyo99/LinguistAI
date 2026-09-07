@@ -1,0 +1,256 @@
+import React, { useState, useEffect } from 'react';
+
+const FALLBACK_WORDS = [
+  'where', 'station', 'please', 'speak', 'book', 'table', 'two', 'nearest', 
+  'train', 'slower', 'little', 'could', 'excuse', 'would', 'like', 'time',
+  'name', 'help', 'much', 'cost', 'go', 'want', 'need', 'have', 'do'
+];
+
+function shuffleArray(array) {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+function cleanWord(word) {
+  return word.replace(/[.,!?()]/g, '').toLowerCase();
+}
+
+export default function QuizTab({ sentences }) {
+  const [quizData, setQuizData] = useState(null);
+  const [selectedAnswer, setSelectedAnswer] = useState(null); // 'correct', 'wrong', or null
+  const [shake, setShake] = useState(false);
+  const [score, setScore] = useState(0);
+
+  const generateQuiz = () => {
+    if (!sentences || sentences.length === 0) return;
+
+    // 1. Randomly pick a sentence
+    const randomSentenceIdx = Math.floor(Math.random() * sentences.length);
+    const sentenceObj = sentences[randomSentenceIdx];
+    const enText = sentenceObj.en;
+    
+    // 2. Decide if we want to blank 1 or 2 words
+    const words = enText.split(' ');
+    const numBlanks = (words.length >= 4 && Math.random() > 0.4) ? 2 : 1; 
+    
+    let blankIndices = [];
+    let isConsecutive = false;
+    let targetWordClean = '';
+
+    if (numBlanks === 2) {
+      isConsecutive = Math.random() > 0.5; // 50% chance for consecutive or non-consecutive
+      
+      const validIndices = words.map((w, idx) => idx).filter(idx => cleanWord(words[idx]).length > 0);
+      
+      if (isConsecutive) {
+        const validStart = validIndices.filter(idx => validIndices.includes(idx + 1));
+        const startIdx = validStart.length > 0 ? validStart[Math.floor(Math.random() * validStart.length)] : 0;
+        blankIndices = [startIdx, startIdx + 1];
+        targetWordClean = `${cleanWord(words[startIdx])} ${cleanWord(words[startIdx+1])}`;
+      } else {
+        const possiblePairs = [];
+        for (let i = 0; i < validIndices.length; i++) {
+          for (let j = i + 2; j < validIndices.length; j++) {
+            possiblePairs.push([validIndices[i], validIndices[j]]);
+          }
+        }
+        if (possiblePairs.length > 0) {
+          blankIndices = possiblePairs[Math.floor(Math.random() * possiblePairs.length)];
+          targetWordClean = `${cleanWord(words[blankIndices[0]])} ... ${cleanWord(words[blankIndices[1]])}`;
+        } else {
+          // fallback to 1 word if no valid pairs
+          blankIndices = [validIndices[Math.floor(Math.random() * validIndices.length)]];
+          targetWordClean = cleanWord(words[blankIndices[0]]);
+        }
+      }
+    } else {
+      const validIndices = words.map((w, idx) => idx).filter(idx => cleanWord(words[idx]).length > 2);
+      const startIdx = validIndices.length > 0 
+        ? validIndices[Math.floor(Math.random() * validIndices.length)] 
+        : Math.floor(Math.random() * words.length);
+      blankIndices = [startIdx];
+      targetWordClean = cleanWord(words[startIdx]);
+    }
+
+    // 3. Create the segments array
+    const segments = [];
+    for (let i = 0; i < words.length; i++) {
+      if (blankIndices.includes(i)) {
+        if (isConsecutive && blankIndices.length === 2 && i === blankIndices[0]) {
+          const punctuationMatch = words[i+1].match(/[.,!?()]+$/);
+          const punctuation = punctuationMatch ? punctuationMatch[0] : '';
+          segments.push({ isBlank: true, wordText: targetWordClean, punctuation });
+          i++; // skip next word
+        } else {
+          const punctuationMatch = words[i].match(/[.,!?()]+$/);
+          const punctuation = punctuationMatch ? punctuationMatch[0] : '';
+          segments.push({ isBlank: true, wordText: cleanWord(words[i]), punctuation });
+        }
+      } else {
+        segments.push({ isBlank: false, wordText: words[i] });
+      }
+    }
+
+    // 4. Generate options (1 correct + 3 distractors)
+    const optionsSet = new Set();
+    optionsSet.add(targetWordClean);
+
+    if (blankIndices.length === 2) {
+      const allOtherPairs = [];
+      sentences.filter((_, idx) => idx !== randomSentenceIdx).forEach(s => {
+        const sWords = s.en.split(' ');
+        if (isConsecutive) {
+          for(let i = 0; i < sWords.length - 1; i++) {
+            const w1 = cleanWord(sWords[i]);
+            const w2 = cleanWord(sWords[i+1]);
+            if(w1 && w2) allOtherPairs.push(`${w1} ${w2}`);
+          }
+        } else {
+          for(let i = 0; i < sWords.length - 2; i++) {
+            for(let j = i + 2; j < sWords.length; j++) {
+              const w1 = cleanWord(sWords[i]);
+              const w2 = cleanWord(sWords[j]);
+              if(w1 && w2) allOtherPairs.push(`${w1} ... ${w2}`);
+            }
+          }
+        }
+      });
+      const fallbackPairs = isConsecutive 
+        ? ['would you', 'thank you', 'how much', 'over there', 'excuse me', 'could you', 'very good', 'a little', 'want to', 'looking for']
+        : ['would ... like', 'how ... much', 'where ... is', 'could ... please', 'can ... get', 'thank ... for', 'what ... time'];
+      
+      const distractorPool = shuffleArray([...allOtherPairs, ...fallbackPairs]);
+      for (const pair of distractorPool) {
+        if (optionsSet.size >= 4) break;
+        if (!optionsSet.has(pair)) optionsSet.add(pair);
+      }
+    } else {
+      const allOtherWords = sentences
+        .filter((_, idx) => idx !== randomSentenceIdx)
+        .flatMap(s => s.en.split(' ').map(cleanWord))
+        .filter(w => w.length > 2 && w !== targetWordClean);
+      const distractorPool = shuffleArray([...allOtherWords, ...FALLBACK_WORDS]);
+      for (const word of distractorPool) {
+        if (optionsSet.size >= 4) break;
+        if (!optionsSet.has(word)) optionsSet.add(word);
+      }
+    }
+
+    const options = shuffleArray(Array.from(optionsSet));
+
+    setQuizData({
+      ko: sentenceObj.ko,
+      en: sentenceObj.en,
+      segments,
+      answer: targetWordClean,
+      options,
+    });
+    setSelectedAnswer(null);
+    setShake(false);
+  };
+
+  useEffect(() => {
+    if (sentences && sentences.length > 0) {
+      generateQuiz();
+    }
+  }, [sentences]);
+
+  const handleOptionClick = (option) => {
+    if (selectedAnswer === 'correct') return; // Prevent clicking after correct
+
+    if (option === quizData.answer) {
+      setSelectedAnswer('correct');
+      setScore(s => s + 1);
+      setTimeout(() => {
+        generateQuiz();
+      }, 1200); // Wait a bit before next question
+    } else {
+      setSelectedAnswer('wrong');
+      setShake(true);
+      setTimeout(() => setShake(false), 500); // Remove shake class
+    }
+  };
+
+  if (!sentences || sentences.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-amber">
+        <i className="material-symbols-outlined text-6xl mb-4">inventory_2</i>
+        <h2 className="text-xl font-bold mb-2">데이터가 없습니다</h2>
+        <p>학습할 문장을 먼저 생성하거나 스토어에서 가져와주세요.</p>
+      </div>
+    );
+  }
+
+  if (!quizData) return null;
+
+  return (
+    <div className="flex flex-col flex-1 h-full items-center justify-between py-6 px-4 tab-fade-in relative">
+      
+      {/* Top Section */}
+      <div className="w-full max-w-2xl flex justify-between items-center mb-6 px-2">
+        <div className="text-sm font-bold text-teal-deep bg-teal-tint px-4 py-2 rounded-full shadow-sm">
+          점수: {score}점
+        </div>
+        <button onClick={generateQuiz} className="text-sm text-ink-soft flex items-center gap-1 bg-white px-3 py-2 rounded-full shadow-sm">
+          <i className="material-symbols-outlined text-lg">skip_next</i>
+          건너뛰기
+        </button>
+      </div>
+
+      {/* Main Question Area */}
+      <div className="flex-1 flex flex-col justify-center items-center w-full max-w-2xl mb-8">
+        <p className="text-lg md:text-xl text-ink-soft mb-6 font-semibold text-center break-keep">
+          {quizData.ko}
+        </p>
+        
+        <div className={`quiz-sentence-box bg-white p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
+          ${selectedAnswer === 'correct' ? 'border-green-400 bg-green-50 shadow-green-100' : 'border-teal-tint'}
+          transition-colors duration-300`}>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-ink leading-relaxed md:leading-tight tracking-tight flex flex-wrap justify-center items-center gap-x-2 gap-y-3">
+            {quizData.segments.map((seg, i) => {
+              if (seg.isBlank) {
+                const isCorrect = selectedAnswer === 'correct';
+                const displayWord = isCorrect ? seg.wordText : (seg.wordText.includes(' ') ? '_____ _____' : '_____');
+                return (
+                  <span key={i} className={`inline-block pb-1 border-b-4 
+                    ${isCorrect ? 'text-green-500 border-green-500' : 'text-teal-deep border-teal'}`}>
+                    {displayWord}{seg.punctuation}
+                  </span>
+                );
+              }
+              return <span key={i}>{seg.wordText}</span>;
+            })}
+          </h2>
+        </div>
+        
+        {/* Feedback Message */}
+        <div className="h-12 mt-4 flex items-center justify-center">
+          {selectedAnswer === 'correct' && (
+            <span className="text-xl font-bold text-green-500 flex items-center gap-2 animate-bounce">
+              <i className="material-symbols-outlined text-3xl">check_circle</i>
+              정답입니다!
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Options Grid */}
+      <div className={`w-full max-w-2xl grid grid-cols-2 gap-3 md:gap-6 ${shake ? 'quiz-shake' : ''}`}>
+        {quizData.options.map((option, idx) => (
+          <button
+            key={idx}
+            onClick={() => handleOptionClick(option)}
+            className="quiz-option-btn relative overflow-hidden bg-white hover:bg-teal-tint active:bg-teal-deep text-ink hover:text-teal-deep active:text-white font-bold text-lg sm:text-xl md:text-3xl py-5 md:py-8 rounded-2xl shadow-md border border-line transition-all break-words"
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+      
+    </div>
+  );
+}

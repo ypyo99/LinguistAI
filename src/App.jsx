@@ -5,6 +5,7 @@ import TabNavigation from './components/TabNavigation';
 import SetupTab from './components/SetupTab';
 import CreateTab from './components/CreateTab';
 import StudyTab from './components/StudyTab';
+import QuizTab from './components/QuizTab';
 import DataTab from './components/DataTab';
 import LibraryTab from './components/LibraryTab';
 import Footer from './components/Footer';
@@ -131,6 +132,9 @@ function App() {
       <div className="content">
         <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>
           <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} favorites={favorites} setFavorites={setFavorites} onSavePack={handleSavePack} />
+        </div>
+        <div style={{ display: activeTab === 'quiz' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <QuizTab sentences={sentences} />
         </div>
         <div style={{ display: activeTab === 'library' ? 'block' : 'none' }}>
           <LibraryTab savedPacks={savedPacks} setSavedPacks={setSavedPacks} setSentences={setSentences} setPackTitle={setPackTitle} setFavorites={setFavorites} setStudiedIndices={setStudiedIndices} setActiveTab={setActiveTab} setCurrentPackId={setCurrentPackId} />
