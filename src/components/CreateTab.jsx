@@ -12,7 +12,7 @@ export default function CreateTab({ apiKey, onGenerate }) {
     if (!apiKey) return;
     const fetchModels = async () => {
       try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey.trim()}`);
         if (res.ok) {
           const data = await res.json();
           if (data && data.models) {
@@ -45,14 +45,14 @@ export default function CreateTab({ apiKey, onGenerate }) {
   }, [apiKey]);
 
   const [count, setCount] = usePersistentState('linguist-create-count', 10);
-  const [model, setModel] = usePersistentState('linguist-create-model', 'gemini-3.6-flash');
+  const [model, setModel] = usePersistentState('linguist-create-model', 'gemini-1.5-flash');
   const [customModel, setCustomModel] = usePersistentState('linguist-create-custom-model', '');
   const [inputMode, setInputMode] = usePersistentState('linguist-create-input-mode', 'api');
   const [manualText, setManualText] = useState('');
 
   const isCustom = availableModels.length > 0 
     ? !availableModels.includes(model)
-    : !['gemini-3.6-flash', 'gemini-3.6-flash-8b', 'gemini-3.6-pro'].includes(model);
+    : !['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-1.5-pro'].includes(model);
 
   
   
@@ -107,7 +107,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
         fullText = '';
         
         res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${model.trim()}:streamGenerateContent?alt=sse&key=${apiKey.trim()}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -353,7 +353,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
                       value={isCustom ? 'custom' : model}
                       onChange={e => {
                         if (e.target.value === 'custom') {
-                          setModel(customModel || 'gemini-3.6-flash-8b');
+                          setModel(customModel || 'gemini-1.5-flash-8b');
                         } else {
                           setModel(e.target.value);
                         }
@@ -368,9 +368,9 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
                         </>
                       ) : (
                         <>
-                          <option value="gemini-3.6-flash">Gemini 3.6 Flash (표준)</option>
-                          <option value="gemini-3.6-flash-8b">Gemini 3.6 Flash-8B (가장 저렴)</option>
-                          <option value="gemini-3.6-pro">Gemini 3.6 Pro (고성능)</option>
+                          <option value="gemini-1.5-flash">Gemini 1.5 Flash (표준)</option>
+                          <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B (가장 저렴)</option>
+                          <option value="gemini-1.5-pro">Gemini 1.5 Pro (고성능)</option>
                           <option value="custom">직접 입력...</option>
                         </>
                       )}
@@ -380,7 +380,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
                       <input
                         type="text"
                         className="flex-1 h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-sm sm:text-base font-mono"
-                        placeholder="예: gemini-4.0-flash"
+                        placeholder="예: gemini-1.5-pro"
                         value={model}
                         onChange={e => {
                           setModel(e.target.value);
