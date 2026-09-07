@@ -78,8 +78,9 @@ Rules:
 - Each sentence must be natural, practical, and appropriate for the context.
 ${getDifficultyRule(difficulty)}
 - Korean translation must be accurate and natural.
+- Extract 2-3 key words from the English sentence and provide their contextual Korean meaning in a "vocab" object.
 - Return ONLY a valid JSON array, no markdown fences, no explanation.
-Format: [{"en":"English sentence here","ko":"Korean translation here"}]`;
+Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"word1":"meaning1", "word2":"meaning2"}}]`;
 
   const handleGenerate = async () => {
     if (!apiKey) {

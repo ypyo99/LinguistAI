@@ -35,9 +35,9 @@ function App() {
     catch (e) { return ''; }
   });
   const [sentences, setSentences] = usePersistentState('linguist-sentences', [
-    { en: 'Excuse me, where is the nearest train station?', ko: '실례합니다, 가장 가까운 기차역이 어디에 있나요?' },
-    { en: 'I would like to book a table for two at 7 PM.', ko: '오후 7시에 두 명 자리를 예약하고 싶습니다.' },
-    { en: 'Could you please speak a little slower?', ko: '조금만 더 천천히 말씀해 주시겠어요?' },
+    { en: 'Excuse me, where is the nearest train station?', ko: '실례합니다, 가장 가까운 기차역이 어디에 있나요?', vocab: { "nearest": "가장 가까운", "station": "기차역", "where": "어디에" } },
+    { en: 'I would like to book a table for two at 7 PM.', ko: '저녁 7시에 두 명 자리 예약하고 싶습니다.', vocab: { "book": "예약하다", "table": "테이블, 자리", "would like": "~하고 싶다" } },
+    { en: 'Could you please speak a little slower?', ko: '조금만 더 천천히 말씀해 주시겠어요?', vocab: { "speak": "말하다", "slower": "더 천천히", "little": "조금" } },
   ]);
   
   const [packTitle, setPackTitle] = usePersistentState('linguist-pack-title', '');

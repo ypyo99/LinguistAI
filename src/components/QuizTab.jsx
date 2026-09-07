@@ -24,17 +24,74 @@ export default function QuizTab({ sentences }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null); // 'correct', 'wrong', or null
   const [shake, setShake] = useState(false);
   const [score, setScore] = useState(0);
+  const [quizMode, setQuizMode] = useState('mixed'); // 'mixed', 'sentence', 'vocab'
 
   const generateQuiz = () => {
     if (!sentences || sentences.length === 0) return;
 
-    // 1. Randomly pick a sentence
-    const randomSentenceIdx = Math.floor(Math.random() * sentences.length);
-    const sentenceObj = sentences[randomSentenceIdx];
+    // 1. Filter sentences based on mode if necessary
+    let validSentences = sentences;
+    if (quizMode === 'vocab') {
+      validSentences = sentences.filter(s => s.vocab && Object.keys(s.vocab).length > 0);
+      if (validSentences.length === 0) validSentences = sentences; // fallback
+    }
+
+    const randomSentenceIdx = Math.floor(Math.random() * validSentences.length);
+    const sentenceObj = validSentences[randomSentenceIdx];
     const enText = sentenceObj.en;
     
-    // 2. Decide if we want to blank 1 or 2 words
     const words = enText.split(' ');
+    
+    // 2. Check if we can do a vocab quiz from the dynamic vocab object
+    const vocabObj = sentenceObj.vocab || {};
+    const vocabKeys = Object.keys(vocabObj);
+    
+    let wantVocabQuiz = false;
+    if (quizMode === 'vocab') wantVocabQuiz = true;
+    else if (quizMode === 'sentence') wantVocabQuiz = false;
+    else wantVocabQuiz = Math.random() < 0.4;
+    
+    if (wantVocabQuiz && vocabKeys.length > 0) {
+      const targetVocab = vocabKeys[Math.floor(Math.random() * vocabKeys.length)];
+      const answerMeaning = vocabObj[targetVocab];
+      
+      // Gather distractors from all sentences that have a vocab object
+      const allMeanings = [];
+      sentences.forEach(s => {
+        if (s.vocab) {
+          Object.values(s.vocab).forEach(m => allMeanings.push(m));
+        }
+      });
+      // Fallback distractor meanings if too few
+      if (allMeanings.length < 4) {
+        allMeanings.push('예약하다', '기차역', '시간', '어디에', '가장 가까운', '말하다', '천천히', '조금');
+      }
+
+      const optionsSet = new Set();
+      optionsSet.add(answerMeaning);
+      
+      const shuffledMeanings = shuffleArray(allMeanings);
+      for (const m of shuffledMeanings) {
+        if (optionsSet.size >= 4) break;
+        if (m !== answerMeaning) optionsSet.add(m);
+      }
+      
+      const options = shuffleArray(Array.from(optionsSet));
+
+      setQuizData({
+        quizType: 'vocab-meaning',
+        ko: sentenceObj.ko,
+        en: sentenceObj.en,
+        targetVocab,
+        answer: answerMeaning,
+        options,
+      });
+      setSelectedAnswer(null);
+      setShake(false);
+      return;
+    }
+
+    // 3. Decide if we want to blank 1 or 2 words (Fill in the blank mode)
     const numBlanks = (words.length >= 4 && Math.random() > 0.4) ? 2 : 1; 
     
     let blankIndices = [];
@@ -143,6 +200,7 @@ export default function QuizTab({ sentences }) {
     const options = shuffleArray(Array.from(optionsSet));
 
     setQuizData({
+      quizType: 'fill-in-the-blank',
       ko: sentenceObj.ko,
       en: sentenceObj.en,
       segments,
@@ -157,7 +215,7 @@ export default function QuizTab({ sentences }) {
     if (sentences && sentences.length > 0) {
       generateQuiz();
     }
-  }, [sentences]);
+  }, [sentences, quizMode]);
 
   const handleOptionClick = (option) => {
     if (selectedAnswer === 'correct') return; // Prevent clicking after correct
@@ -191,11 +249,37 @@ export default function QuizTab({ sentences }) {
     <div className="flex flex-col flex-1 h-full items-center justify-between py-6 px-4 tab-fade-in relative">
       
       {/* Top Section */}
-      <div className="w-full max-w-2xl flex justify-between items-center mb-6 px-2">
-        <div className="text-sm font-bold text-teal-deep bg-teal-tint px-4 py-2 rounded-full shadow-sm">
+      <div className="w-full max-w-2xl flex flex-col sm:flex-row justify-between items-center mb-6 px-2 gap-4">
+        <div className="text-sm font-bold text-teal-deep bg-teal-tint px-4 py-2 rounded-full shadow-sm whitespace-nowrap">
           점수: {score}점
         </div>
-        <button onClick={generateQuiz} className="text-sm text-ink-soft flex items-center gap-1 bg-white px-3 py-2 rounded-full shadow-sm">
+        
+        {/* Mode Toggle */}
+        <div className="flex flex-wrap justify-center bg-amber-tint/60 p-1.5 rounded-2xl shadow-inner text-sm font-semibold gap-1 sm:gap-2 border border-line/50">
+          <button 
+            onClick={() => setQuizMode('mixed')}
+            className={`px-3 sm:px-5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 ${quizMode === 'mixed' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
+          >
+            <i className="material-symbols-outlined text-[18px]">shuffle</i>
+            랜덤 섞기
+          </button>
+          <button 
+            onClick={() => setQuizMode('sentence')}
+            className={`px-3 sm:px-5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 ${quizMode === 'sentence' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
+          >
+            <i className="material-symbols-outlined text-[18px]">short_text</i>
+            문장 빈칸
+          </button>
+          <button 
+            onClick={() => setQuizMode('vocab')}
+            className={`px-3 sm:px-5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 ${quizMode === 'vocab' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
+          >
+            <i className="material-symbols-outlined text-[18px]">lightbulb</i>
+            단어 뜻
+          </button>
+        </div>
+
+        <button onClick={generateQuiz} className="text-sm text-ink-soft flex items-center gap-1 bg-white px-3 py-2 rounded-full shadow-sm whitespace-nowrap">
           <i className="material-symbols-outlined text-lg">skip_next</i>
           건너뛰기
         </button>
@@ -203,29 +287,57 @@ export default function QuizTab({ sentences }) {
 
       {/* Main Question Area */}
       <div className="flex-1 flex flex-col justify-center items-center w-full max-w-2xl mb-8">
-        <p className="text-lg md:text-xl text-ink-soft mb-6 font-semibold text-center break-keep">
-          {quizData.ko}
-        </p>
-        
-        <div className={`quiz-sentence-box bg-white p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
-          ${selectedAnswer === 'correct' ? 'border-green-400 bg-green-50 shadow-green-100' : 'border-teal-tint'}
-          transition-colors duration-300`}>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-ink leading-relaxed md:leading-tight tracking-tight flex flex-wrap justify-center items-center gap-x-2 gap-y-3">
-            {quizData.segments.map((seg, i) => {
-              if (seg.isBlank) {
-                const isCorrect = selectedAnswer === 'correct';
-                const displayWord = isCorrect ? seg.wordText : (seg.wordText.includes(' ') ? '_____ _____' : '_____');
+        {quizData.quizType === 'vocab-meaning' ? (
+          <>
+            <p className="text-lg md:text-xl text-ink-soft mb-6 font-semibold text-center leading-relaxed flex flex-wrap justify-center gap-x-1 sm:gap-x-1.5 gap-y-1">
+              {quizData.en.split(' ').map((w, i) => {
+                const cw = cleanWord(w).toLowerCase();
+                const tv = quizData.targetVocab.toLowerCase();
+                // AI may return base forms (e.g. booked -> book)
+                const isTarget = cw === tv || cw.startsWith(tv) || tv.startsWith(cw);
                 return (
-                  <span key={i} className={`inline-block pb-1 border-b-4 
-                    ${isCorrect ? 'text-green-500 border-green-500' : 'text-teal-deep border-teal'}`}>
-                    {displayWord}{seg.punctuation}
+                  <span key={i} className={isTarget ? 'text-teal-deep font-bold border-b-2 border-teal-deep pb-0.5' : ''}>
+                    {w}
                   </span>
                 );
-              }
-              return <span key={i}>{seg.wordText}</span>;
-            })}
-          </h2>
-        </div>
+              })}
+            </p>
+            <div className={`quiz-sentence-box bg-white p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
+              ${selectedAnswer === 'correct' ? 'border-green-400 bg-green-50 shadow-green-100' : 'border-teal-tint'}
+              transition-colors duration-300`}>
+              <div className="text-base sm:text-lg md:text-xl font-bold text-ink-soft mb-2">이 문장에서 밑줄 친 단어의 뜻은?</div>
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-ink leading-relaxed md:leading-tight tracking-tight">
+                {quizData.targetVocab}
+              </h2>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-lg md:text-xl text-ink-soft mb-6 font-semibold text-center break-keep">
+              {quizData.ko}
+            </p>
+            
+            <div className={`quiz-sentence-box bg-white p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
+              ${selectedAnswer === 'correct' ? 'border-green-400 bg-green-50 shadow-green-100' : 'border-teal-tint'}
+              transition-colors duration-300`}>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-ink leading-relaxed md:leading-tight tracking-tight flex flex-wrap justify-center items-center gap-x-2 gap-y-3">
+                {quizData.segments.map((seg, i) => {
+                  if (seg.isBlank) {
+                    const isCorrect = selectedAnswer === 'correct';
+                    const displayWord = isCorrect ? seg.wordText : (seg.wordText.includes(' ') ? '_____ _____' : '_____');
+                    return (
+                      <span key={i} className={`inline-block pb-1 border-b-4 
+                        ${isCorrect ? 'text-green-500 border-green-500' : 'text-teal-deep border-teal'}`}>
+                        {displayWord}{seg.punctuation}
+                      </span>
+                    );
+                  }
+                  return <span key={i}>{seg.wordText}</span>;
+                })}
+              </h2>
+            </div>
+          </>
+        )}
         
         {/* Feedback Message */}
         <div className="h-12 mt-4 flex items-center justify-center">
@@ -244,7 +356,8 @@ export default function QuizTab({ sentences }) {
           <button
             key={idx}
             onClick={() => handleOptionClick(option)}
-            className="quiz-option-btn relative overflow-hidden bg-white hover:bg-teal-tint active:bg-teal-deep text-ink hover:text-teal-deep active:text-white font-bold text-lg sm:text-xl md:text-3xl py-5 md:py-8 rounded-2xl shadow-md border border-line transition-all break-words"
+            className={`quiz-option-btn relative overflow-hidden bg-white hover:bg-teal-tint active:bg-teal-deep text-ink hover:text-teal-deep active:text-white font-bold py-5 md:py-8 rounded-2xl shadow-md border border-line transition-all break-words
+              ${quizData.quizType === 'vocab-meaning' ? 'text-base sm:text-lg md:text-xl lg:text-2xl' : 'text-lg sm:text-xl md:text-3xl'}`}
           >
             {option}
           </button>
