@@ -249,39 +249,42 @@ export default function QuizTab({ sentences }) {
     <div className="flex flex-col flex-1 h-full items-center justify-between py-6 px-4 tab-fade-in relative">
       
       {/* Top Section */}
-      <div className="w-full max-w-2xl flex flex-col sm:flex-row justify-between items-center mb-6 px-2 gap-4">
-        <div className="text-sm font-bold text-teal-deep bg-teal-tint px-4 py-2 rounded-full shadow-sm whitespace-nowrap">
-          점수: {score}점
+      <div className="w-full max-w-2xl flex flex-row justify-between items-center mb-6 px-1 sm:px-2 gap-1 sm:gap-4">
+        {/* Score */}
+        <div className="text-xs sm:text-sm font-bold text-teal-deep bg-teal-tint px-2 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-sm whitespace-nowrap flex-shrink-0">
+          <span className="hidden sm:inline">점수: </span>{score}점
         </div>
         
         {/* Mode Toggle */}
-        <div className="flex flex-wrap justify-center bg-amber-tint/60 p-1.5 rounded-2xl shadow-inner text-sm font-semibold gap-1 sm:gap-2 border border-line/50">
+        <div className="flex flex-row justify-center bg-amber-tint/60 p-1 sm:p-1.5 rounded-2xl shadow-inner text-xs sm:text-sm font-semibold gap-0.5 sm:gap-2 border border-line/50 flex-shrink min-w-0">
           <button 
             onClick={() => setQuizMode('mixed')}
-            className={`px-3 sm:px-5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 ${quizMode === 'mixed' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
+            className={`px-1.5 sm:px-5 py-1.5 sm:py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-0.5 sm:gap-1.5 ${quizMode === 'mixed' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
           >
-            <i className="material-symbols-outlined text-[18px]">shuffle</i>
-            랜덤
+            <i className="material-symbols-outlined text-[14px] sm:text-[18px]">shuffle</i>
+            <span className="whitespace-nowrap">랜덤</span>
           </button>
           <button 
             onClick={() => setQuizMode('sentence')}
-            className={`px-3 sm:px-5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 ${quizMode === 'sentence' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
+            className={`px-1.5 sm:px-5 py-1.5 sm:py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-0.5 sm:gap-1.5 ${quizMode === 'sentence' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
           >
-            <i className="material-symbols-outlined text-[18px]">short_text</i>
-            문장
+            <i className="material-symbols-outlined text-[14px] sm:text-[18px]">short_text</i>
+            <span className="whitespace-nowrap">문장</span>
           </button>
           <button 
             onClick={() => setQuizMode('vocab')}
-            className={`px-3 sm:px-5 py-2 rounded-xl transition-all duration-300 flex items-center gap-1.5 ${quizMode === 'vocab' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
+            className={`px-1.5 sm:px-5 py-1.5 sm:py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-0.5 sm:gap-1.5 ${quizMode === 'vocab' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
           >
-            <i className="material-symbols-outlined text-[18px]">lightbulb</i>
-            단어
+            <i className="material-symbols-outlined text-[14px] sm:text-[18px]">lightbulb</i>
+            <span className="whitespace-nowrap">단어</span>
           </button>
         </div>
 
-        <button onClick={generateQuiz} className="text-sm text-ink-soft flex items-center gap-1 bg-white px-3 py-2 rounded-full shadow-sm whitespace-nowrap">
-          <i className="material-symbols-outlined text-lg">skip_next</i>
-          건너뛰기
+        {/* Skip Button */}
+        <button onClick={generateQuiz} className="text-xs sm:text-sm text-ink-soft flex items-center justify-center gap-0.5 sm:gap-1 bg-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-full shadow-sm whitespace-nowrap flex-shrink-0">
+          <i className="material-symbols-outlined text-[14px] sm:text-[18px]">skip_next</i>
+          <span className="hidden sm:inline">건너뛰기</span>
+          <span className="sm:hidden">패스</span>
         </button>
       </div>
 
