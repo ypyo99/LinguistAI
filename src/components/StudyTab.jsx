@@ -143,6 +143,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const [singleIdx, setSingleIdx]     = useState(null);    // 개별 재생 중 인덱스
   const [currentRepeat, setCurrentRepeat] = useState(0);   // 현재 반복 회차
   const [currentRate, setCurrentRate] = useState(1.0);     // 현재 재생 배속
+  const [currentSpeakingLang, setCurrentSpeakingLang] = useState(null); // 'en' or 'ko'
   const [isWaiting, setIsWaiting]     = useState(false);   // 따라 말하기 인터벌 대기 중 여부
 
   const shouldStop = useRef(false);
@@ -158,6 +159,10 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     return () => { ttsStop(); };
   }, [ttsStop]);
 
+  useEffect(() => {
+    if (!isPlaying && singleIdx === null) setCurrentSpeakingLang(null);
+  }, [isPlaying, singleIdx]);
+
 
   // ── TTS 헬퍼 (useTTS 훅 위임) ────────────────────────
   const speakSentence = useCallback(async (sentence, rate, stopRef, repeatIndex = 0) => {
@@ -171,12 +176,20 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     }
 
     for (const { text, lang } of pairs) {
-      if (stopRef.current) return;
+      if (stopRef.current) {
+        setCurrentSpeakingLang(null);
+        return;
+      }
       const actualRate = lang === 'ko-KR' ? 1.0 : rate;
+      setCurrentSpeakingLang(lang === 'ko-KR' ? 'ko' : 'en');
       await ttsSpeak(text, lang, actualRate);
-      if (stopRef.current) return;
+      if (stopRef.current) {
+        setCurrentSpeakingLang(null);
+        return;
+      }
       await delay(350);
     }
+    setCurrentSpeakingLang(null);
   }, [ttsSpeak]);
 
 
@@ -410,6 +423,46 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     }
   }, [isPlaying, activeIdx, handlePlayAll, ttsStop]);
 
+  const getStyleEn = () => {
+    if (isWaiting || currentSpeakingLang === 'en') {
+      return { textShadow: '0 2px 5px rgba(0,0,0,0.4)', fontSize: '20px', fontWeight: '800', opacity: 1, color: '#fff', transition: 'all 0.3s' };
+    }
+    if (currentSpeakingLang === 'ko') {
+      return { fontSize: '15px', opacity: 0.6, transition: 'all 0.3s' };
+    }
+    return { transition: 'all 0.3s' }; // default
+  };
+
+  const getStyleKo = () => {
+    if (currentSpeakingLang === 'ko') {
+      return { textShadow: '0 2px 5px rgba(0,0,0,0.4)', fontSize: '20px', fontWeight: '800', opacity: 1, color: '#fff', transition: 'all 0.3s' };
+    }
+    if (isWaiting || currentSpeakingLang === 'en') {
+      return { fontSize: '14px', opacity: 0.6, transition: 'all 0.3s' };
+    }
+    return { transition: 'all 0.3s' }; // default
+  };
+
+  const getStyleCommuteEn = () => {
+    if (isWaiting || currentSpeakingLang === 'en') {
+      return { fontSize: '38px', fontWeight: '800', opacity: 1, color: '#FFFFFF', transition: 'all 0.3s' };
+    }
+    if (currentSpeakingLang === 'ko') {
+      return { fontSize: '24px', opacity: 0.5, transition: 'all 0.3s' };
+    }
+    return { transition: 'all 0.3s' };
+  };
+
+  const getStyleCommuteKo = () => {
+    if (currentSpeakingLang === 'ko') {
+      return { fontSize: '32px', fontWeight: '800', opacity: 1, color: '#FFFFFF', transition: 'all 0.3s' };
+    }
+    if (isWaiting || currentSpeakingLang === 'en') {
+      return { fontSize: '20px', opacity: 0.5, transition: 'all 0.3s' };
+    }
+    return { transition: 'all 0.3s' };
+  };
+
   return (
     <div className="tab-fade-in">
       <div
@@ -578,19 +631,13 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
           {langOrder === 'ko-en' ? (
             <>
-              <div className="now-playing-en" style={isWaiting ? { opacity: 0.7 } : {}}>{activeSentence.ko}</div>
-              <div className="now-playing-ko" style={isWaiting ? { textShadow: '0 2px 5px rgba(0,0,0,0.4)', fontSize: '18px', fontWeight: '700', opacity: 1, color: '#fff', transition: 'all 0.3s' } : { transition: 'all 0.3s' }}>
-                {activeSentence.en}
-              </div>
+              <div className="now-playing-ko" style={getStyleKo()}>{activeSentence.ko}</div>
+              <div className="now-playing-en" style={getStyleEn()}>{activeSentence.en}</div>
             </>
           ) : (
             <>
-              <div className="now-playing-en" style={isWaiting ? { textShadow: '0 2px 5px rgba(0,0,0,0.4)', fontSize: '20px', fontWeight: '800', color: '#fff', transition: 'all 0.3s' } : { transition: 'all 0.3s' }}>
-                {activeSentence.en}
-              </div>
-              <div className="now-playing-ko" style={isWaiting ? { opacity: 0.7 } : {}}>
-                {activeSentence.ko}
-              </div>
+              <div className="now-playing-en" style={getStyleEn()}>{activeSentence.en}</div>
+              <div className="now-playing-ko" style={getStyleKo()}>{activeSentence.ko}</div>
             </>
           )}
         </div>
@@ -709,13 +756,13 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
             {activeSentence ? (
               langOrder === 'ko-en' ? (
                 <>
-                  <div className="commute-text-en">{activeSentence.ko}</div>
-                  <div className="commute-text-ko">{activeSentence.en}</div>
+                  <div className="commute-text-ko" style={getStyleCommuteKo()}>{activeSentence.ko}</div>
+                  <div className="commute-text-en" style={getStyleCommuteEn()}>{activeSentence.en}</div>
                 </>
               ) : (
                 <>
-                  <div className="commute-text-en">{activeSentence.en}</div>
-                  <div className="commute-text-ko">{activeSentence.ko}</div>
+                  <div className="commute-text-en" style={getStyleCommuteEn()}>{activeSentence.en}</div>
+                  <div className="commute-text-ko" style={getStyleCommuteKo()}>{activeSentence.ko}</div>
                 </>
               )
             ) : (
