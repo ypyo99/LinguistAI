@@ -346,6 +346,25 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     setSingleIdx(null);
   }, [singleIdx, sentences, speakSentence, isPlaying, handlePlayAll, setStudiedIndices]);
 
+  // ── 단일 언어 재생 (리스트에서 텍스트 직접 터치 시) ──────────────────
+  const handlePlaySingleLang = useCallback(async (text, lang, e) => {
+    if (e) e.stopPropagation();
+    
+    shouldStop.current = true;
+    singleStop.current = true;
+    ttsStop();
+    playRunId.current++;
+    setIsPlaying(false);
+    setCurrentIdx(null);
+    setSingleIdx(null);
+    
+    await delay(50);
+    
+    setCurrentSpeakingLang(lang === 'ko-KR' ? 'ko' : 'en');
+    await ttsSpeak(text, lang, 1.0);
+    setCurrentSpeakingLang(null);
+  }, [ttsSpeak, ttsStop]);
+
   // ── 설정 변경 시 즉시 반영 ──────────────────────────
   useEffect(() => {
     const prev = prevSettingsRef.current;
@@ -691,20 +710,20 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                   <div className="turn-body" onClick={() => handlePlayOne(idx)} style={{ cursor: 'pointer' }}>
                     {langOrder === 'ko-en' ? (
                       <>
-                        <div className="turn-en" style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
+                        <div className="turn-en" onClick={(e) => handlePlaySingleLang(s.ko, 'ko-KR', e)} style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
                           {s.ko}
                         </div>
-                        <div className="turn-ko-row">
+                        <div className="turn-ko-row" onClick={(e) => handlePlaySingleLang(s.en, 'en-US', e)}>
                           <div className="turn-ko-bar"></div>
                           <div className="turn-ko">{s.en}</div>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="turn-en" style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
+                        <div className="turn-en" onClick={(e) => handlePlaySingleLang(s.en, 'en-US', e)} style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
                           {s.en}
                         </div>
-                        <div className="turn-ko-row">
+                        <div className="turn-ko-row" onClick={(e) => handlePlaySingleLang(s.ko, 'ko-KR', e)}>
                           <div className="turn-ko-bar"></div>
                           <div className="turn-ko">{s.ko}</div>
                         </div>
