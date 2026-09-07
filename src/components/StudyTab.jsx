@@ -763,14 +763,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                 style={{ flex: 1, accentColor: 'var(--teal)' }}
               />
             </div>
-            <button className="commute-close-btn" onClick={() => {
-              setIsCommuteMode(false);
-              if (isPlaying) {
-                handlePlayAll();
-              } else if (singleIdx !== null) {
-                handlePlayOne(singleIdx);
-              }
-            }}>
+            <button className="commute-close-btn" onClick={() => setIsCommuteMode(false)}>
               <i className="material-symbols-outlined">close</i>
             </button>
           </div>
