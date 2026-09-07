@@ -616,8 +616,8 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
           </>
         )}
         <button className="cta btn-orange" style={{ margin: 0, flex: 2 }} onClick={() => setIsCommuteMode(true)}>
-          <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>podcasts</i>
-          팟캐스트
+          <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>dark_mode</i>
+          집중 모드
         </button>
       </div>
 
