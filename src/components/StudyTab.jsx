@@ -700,7 +700,10 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                   key={idx} 
                   style={{ transition: 'background-color 0.2s', backgroundColor: isThis ? 'var(--teal-tint)' : '' }}
                 >
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginTop: '2px' }}>
+                  <div 
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginTop: '2px', cursor: 'pointer' }}
+                    onClick={() => handlePlayOne(idx)}
+                  >
                     {isCompleted ? (
                       <i className="material-symbols-outlined" style={{ color: 'var(--teal)', fontSize: '24px' }}>check_circle</i>
                     ) : (
