@@ -1,5 +1,10 @@
 {
   "appId": "com.linguistai.app",
   "appName": "LinguistAI",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorUpdater": {
+      "autoUpdate": true
+    }
+  }
 }
