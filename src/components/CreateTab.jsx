@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
+import { Capacitor } from '@capacitor/core';
+import { Clipboard } from '@capacitor/clipboard';
 
 const DIFFICULTY_MAP = { '초급': 'beginner (A1-A2)', '중급': 'intermediate (B1-B2)', '고급': 'advanced (C1-C2)' };
 
@@ -452,8 +454,15 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
                       <button
                         onClick={async () => {
                           try {
-                            const text = await navigator.clipboard.readText();
-                            setManualText(text);
+                            if (Capacitor.isNativePlatform()) {
+                              const { value } = await Clipboard.read();
+                              if (value) {
+                                setManualText(value);
+                              }
+                            } else {
+                              const text = await navigator.clipboard.readText();
+                              setManualText(text);
+                            }
                           } catch (err) {
                             console.error('Failed to read clipboard contents: ', err);
                           }
