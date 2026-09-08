@@ -139,7 +139,14 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
               <circle cx="26.3" cy="22" r="1" fill="var(--surface)" stroke="none"/>
             </svg>
           </div>
-          LinguistAI
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <span>LinguistAI</span>
+            {user && (
+              <span style={{ fontSize: '12px', fontWeight: '600', color: 'rgba(255, 255, 255, 0.85)', marginTop: '-2px', lineHeight: '1.2', letterSpacing: '0' }}>
+                {user.name}
+              </span>
+            )}
+          </div>
         </div>
         <div className="topbar-actions" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           {streak > 0 && (
@@ -147,28 +154,18 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
               <span style={{ fontSize: '16px' }}>🔥</span> {streak}
             </div>
           )}
+
+          <button className="icon-btn" onClick={toggleTheme}>
+            <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isDark ? "light_mode" : "dark_mode"}</i>
+          </button>
           
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <button className="icon-btn" onClick={toggleTheme}>
-                <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isDark ? "light_mode" : "dark_mode"}</i>
-              </button>
-              
-              <button className={user ? "user-avatar" : "icon-btn"} onClick={handleUserClick} style={{ padding: 0, overflow: 'hidden' }}>
-                {user ? (
-                  <img src={user.picture} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <i className="material-symbols-outlined" style={{ fontSize: '20px' }}>person</i>
-                )}
-              </button>
-            </div>
-            
-            {user && (
-              <div style={{ fontSize: '12px', fontWeight: '600', color: '#D1D5DB', textShadow: '0 1px 2px rgba(0,0,0,0.3)', paddingRight: '2px' }}>
-                {user.name}
-              </div>
+          <button className={user ? "user-avatar" : "icon-btn"} onClick={handleUserClick} style={{ padding: 0, overflow: 'hidden' }}>
+            {user ? (
+              <img src={user.picture} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <i className="material-symbols-outlined" style={{ fontSize: '20px' }}>person</i>
             )}
-          </div>
+          </button>
 
           {showDropdown && user && (
             <div className="user-dropdown">
