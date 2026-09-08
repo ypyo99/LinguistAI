@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LinguistAI</string>
+    <string name="title_activity_main">LinguistAI</string>
+    <string name="package_name">com.linguistai.app</string>
+    <string name="custom_url_scheme">com.linguistai.app</string>
+</resources>
