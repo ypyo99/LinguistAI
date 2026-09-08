@@ -87,6 +87,8 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const [showList, setShowList] = usePersistentState('linguist-study-list', true);
   const favoritesRef = useRef(favorites);
   useEffect(() => { favoritesRef.current = favorites; }, [favorites]);
+  const studiedIndicesRef = useRef(studiedIndices);
+  useEffect(() => { studiedIndicesRef.current = studiedIndices; }, [studiedIndices]);
   const [isCommuteMode, setIsCommuteMode] = useState(false);
   const [commuteBrightness, setCommuteBrightness] = usePersistentState('linguist-commute-brightness', 1.0);
 
@@ -261,7 +263,15 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
       let nextIdx;
       if (settingsRef.current.mode === 'random') {
-        nextIdx = unplayed[Math.floor(Math.random() * unplayed.length)];
+        const currentStudied = studiedIndicesRef.current || [];
+        // 아직 한 번도 공부하지 않은 문장을 먼저 찾음
+        const unstudiedUnplayed = unplayed.filter(idx => !currentStudied.includes(idx));
+        
+        if (unstudiedUnplayed.length > 0) {
+          nextIdx = unstudiedUnplayed[Math.floor(Math.random() * unstudiedUnplayed.length)];
+        } else {
+          nextIdx = unplayed[Math.floor(Math.random() * unplayed.length)];
+        }
       } else {
         unplayed.sort((a, b) => a - b);
         nextIdx = unplayed[0];
