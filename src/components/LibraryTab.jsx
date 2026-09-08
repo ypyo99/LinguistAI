@@ -96,24 +96,24 @@ export default function LibraryTab({
                   {pack.favorites?.length || 0}
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                 <button 
                   onClick={() => handleLoadPack(pack)}
                   className="btn-orange"
-                  style={{ padding: '8px 12px', borderRadius: '10px', border: 'none', background: 'var(--teal)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                  style={{ padding: '6px 8px', borderRadius: '8px', border: 'none', background: 'var(--teal)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                 >
                   <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>play_arrow</i>
                 </button>
                 <button 
                   onClick={() => handleDownloadPack(pack)}
-                  style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                  style={{ padding: '6px 8px', borderRadius: '8px', border: '1px solid var(--line)', background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
                   title="다운로드"
                 >
                   <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</i>
                 </button>
                 <button 
                   onClick={() => handleDeletePack(pack.id)}
-                  style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                  style={{ padding: '6px 8px', borderRadius: '8px', border: '1px solid var(--line)', background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
                   title="삭제"
                 >
                   <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</i>
