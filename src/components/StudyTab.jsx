@@ -444,40 +444,40 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
   const getStyleEn = () => {
     if (isWaiting || currentSpeakingLang === 'en') {
-      return { textShadow: '0 2px 5px rgba(0,0,0,0.4)', fontSize: '20px', fontWeight: '800', opacity: 1, color: '#fff', transition: 'all 0.3s' };
+      return { textShadow: '0 2px 5px rgba(0,0,0,0.4)', opacity: 1, color: '#fff', transition: 'all 0.3s' };
     }
     if (currentSpeakingLang === 'ko') {
-      return { fontSize: '15px', opacity: 0.6, transition: 'all 0.3s' };
+      return { opacity: 0.6, transition: 'all 0.3s' };
     }
     return { transition: 'all 0.3s' }; // default
   };
 
   const getStyleKo = () => {
     if (currentSpeakingLang === 'ko') {
-      return { textShadow: '0 2px 5px rgba(0,0,0,0.4)', fontSize: '20px', fontWeight: '800', opacity: 1, color: '#fff', transition: 'all 0.3s' };
+      return { textShadow: '0 2px 5px rgba(0,0,0,0.4)', fontWeight: 'bold', opacity: 1, color: '#fff', transition: 'all 0.3s' };
     }
     if (isWaiting || currentSpeakingLang === 'en') {
-      return { fontSize: '14px', opacity: 0.6, transition: 'all 0.3s' };
+      return { opacity: 0.6, transition: 'all 0.3s' };
     }
     return { transition: 'all 0.3s' }; // default
   };
 
   const getStyleCommuteEn = () => {
     if (isWaiting || currentSpeakingLang === 'en') {
-      return { fontSize: '38px', fontWeight: '800', opacity: 1, color: '#FFFFFF', transition: 'all 0.3s' };
+      return { opacity: 1, color: '#FFFFFF', transition: 'all 0.3s' };
     }
     if (currentSpeakingLang === 'ko') {
-      return { fontSize: '24px', opacity: 0.5, transition: 'all 0.3s' };
+      return { opacity: 0.5, transition: 'all 0.3s' };
     }
     return { transition: 'all 0.3s' };
   };
 
   const getStyleCommuteKo = () => {
     if (currentSpeakingLang === 'ko') {
-      return { fontSize: '32px', fontWeight: '800', opacity: 1, color: '#FFFFFF', transition: 'all 0.3s' };
+      return { fontWeight: 'bold', opacity: 1, color: '#FFFFFF', transition: 'all 0.3s' };
     }
     if (isWaiting || currentSpeakingLang === 'en') {
-      return { fontSize: '20px', opacity: 0.5, transition: 'all 0.3s' };
+      return { opacity: 0.5, transition: 'all 0.3s' };
     }
     return { transition: 'all 0.3s' };
   };
