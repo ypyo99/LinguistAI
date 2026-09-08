@@ -170,6 +170,9 @@ body{
   .topbar-title {
     font-size: 18px;
   }
+  .user-name-display {
+    display: none;
+  }
 }
 .progress-track{
   margin-top:14px; height:5px; border-radius:3px;
