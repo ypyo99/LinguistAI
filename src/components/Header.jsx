@@ -147,22 +147,28 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
               <span style={{ fontSize: '16px' }}>🔥</span> {streak}
             </div>
           )}
-          {user && (
-            <div style={{ fontSize: '14px', fontWeight: '600', marginRight: '4px', color: '#D1D5DB' }}>
-              {user.name}
-            </div>
-          )}
-          <button className="icon-btn" onClick={toggleTheme}>
-            <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isDark ? "light_mode" : "dark_mode"}</i>
-          </button>
           
-          <button className={user ? "user-avatar" : "icon-btn"} onClick={handleUserClick} style={{ padding: 0, overflow: 'hidden' }}>
-            {user ? (
-              <img src={user.picture} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <i className="material-symbols-outlined" style={{ fontSize: '20px' }}>person</i>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <button className="icon-btn" onClick={toggleTheme}>
+                <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isDark ? "light_mode" : "dark_mode"}</i>
+              </button>
+              
+              <button className={user ? "user-avatar" : "icon-btn"} onClick={handleUserClick} style={{ padding: 0, overflow: 'hidden' }}>
+                {user ? (
+                  <img src={user.picture} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <i className="material-symbols-outlined" style={{ fontSize: '20px' }}>person</i>
+                )}
+              </button>
+            </div>
+            
+            {user && (
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#D1D5DB', textShadow: '0 1px 2px rgba(0,0,0,0.3)', paddingRight: '2px' }}>
+                {user.name}
+              </div>
             )}
-          </button>
+          </div>
 
           {showDropdown && user && (
             <div className="user-dropdown">
