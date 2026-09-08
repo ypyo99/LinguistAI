@@ -15,7 +15,7 @@ const LANDMARKS = [
   "/images/landmarks/img9.jpg"
 ];
 
-export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0, onResetProgress }) {
+export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0, streak = 0, onResetProgress }) {
   const [isDark, setIsDark] = useState(false);
   const pressTimer = useRef(null);
   
@@ -142,6 +142,11 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
           LinguistAI
         </div>
         <div className="topbar-actions" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          {streak > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '8px', padding: '4px 8px', background: 'rgba(255,255,255,0.2)', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+              <span style={{ fontSize: '16px' }}>🔥</span> {streak}
+            </div>
+          )}
           {user && (
             <div style={{ fontSize: '14px', fontWeight: '600', marginRight: '4px', color: '#D1D5DB' }}>
               {user.name}

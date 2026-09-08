@@ -52,6 +52,53 @@ function App() {
   const [savedPacks, setSavedPacks] = usePersistentState('linguist-saved-packs', []);
   const [currentPackId, setCurrentPackId] = usePersistentState('linguist-current-pack-id', null);
 
+  // ── 스트릭 (연속 학습일) 관리 ──────────────────────────
+  const [streak, setStreak] = usePersistentState('linguist-streak', 0);
+  const [lastStudyDate, setLastStudyDate] = usePersistentState('linguist-last-study', null);
+
+  // 앱 실행 시, 마지막 학습일이 어제보다 이전이면 스트릭 초기화
+  useEffect(() => {
+    if (lastStudyDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const parts = lastStudyDate.split('-');
+      if (parts.length === 3) {
+        const last = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        const diffDays = Math.round((today - last) / (1000 * 60 * 60 * 24));
+        if (diffDays > 1 && streak > 0) {
+          setStreak(0);
+        }
+      }
+    }
+  }, []); // 컴포넌트 마운트 시 1회 실행
+
+  // 진도가 올라갈 때(학습 시) 스트릭 업데이트
+  useEffect(() => {
+    if (studiedIndices.length > 0) {
+      const now = new Date();
+      const localTodayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      
+      if (lastStudyDate !== localTodayStr) {
+        if (!lastStudyDate) {
+          setStreak(1);
+        } else {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const parts = lastStudyDate.split('-');
+          const last = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+          const diffDays = Math.round((today - last) / (1000 * 60 * 60 * 24));
+          
+          if (diffDays === 1) {
+            setStreak(prev => prev + 1);
+          } else if (diffDays > 1) {
+            setStreak(1); // 이틀 이상 지났으면 1로 리셋
+          }
+        }
+        setLastStudyDate(localTodayStr);
+      }
+    }
+  }, [studiedIndices.length, lastStudyDate, setLastStudyDate, setStreak]);
+
   useEffect(() => {
     if (currentPackId && savedPacks.length > 0) {
       setSavedPacks(prev => {
@@ -126,6 +173,7 @@ function App() {
         title={displayTitle} 
         total={sentences.length} 
         progress={studiedIndices.length} 
+        streak={streak}
         onResetProgress={() => setStudiedIndices([])}
       />
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
