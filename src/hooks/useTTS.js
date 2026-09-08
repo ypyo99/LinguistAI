@@ -162,7 +162,16 @@ async function nativeSpeechSpeak(text, lang, rate, setTtsStatus, targetVoiceName
       volume: 1.0,
       category: 'ambient',
     };
-    // capacitor-community TTS supports voice property in some platforms, but lang is most reliable
+    
+    if (targetVoiceName) {
+      const result = await TextToSpeech.getSupportedVoices();
+      const voices = result.voices || [];
+      const voiceIndex = voices.findIndex(v => v.name === targetVoiceName);
+      if (voiceIndex !== -1) {
+        options.voice = voiceIndex;
+      }
+    }
+    
     await TextToSpeech.speak(options);
   } catch(e) {
     console.error("Native TTS error", e);
@@ -214,13 +223,14 @@ export function useTTS(ttsApiKey = '', voiceEn = 'en-US-Neural2-C', voiceKo = 'k
   const speak = useCallback(
     async (text, lang, rate = 1.0) => {
       stop();
-      if (ttsApiKey && lang === 'ko-KR') {
-        const voiceName = voiceKo;
+      if (ttsApiKey && (lang === 'ko-KR' || lang === 'en-US' || lang === 'en')) {
+        const voiceName = lang === 'ko-KR' ? voiceKo : voiceEn;
+        const normalizedLang = lang === 'en' ? 'en-US' : lang;
         try {
-          await googleTTSSpeak(text, lang, rate, ttsApiKey, voiceName, audioCtxRef, currentSourceRef, setTtsStatus);
+          await googleTTSSpeak(text, normalizedLang, rate, ttsApiKey, voiceName, audioCtxRef, currentSourceRef, setTtsStatus);
           return;
         } catch (e) {
-          console.warn('[TTS] Google Cloud TTS 실패, Web Speech API로 폴백:', e.message);
+          console.warn('[TTS] Google Cloud TTS 실패, 웹/네이티브 API로 폴백:', e.message);
         }
       }
       

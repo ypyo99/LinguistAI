@@ -578,22 +578,30 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
             </AutoWidthSelect>
           </div>
           <div className="row">
-            <span>영어</span>
+            <span>{ttsApiKey ? '영어 (AI)' : '영어'}</span>
             <AutoWidthSelect value={voiceEn} onChange={e => setVoiceEn(e.target.value)} className="settings-select">
-              <option value="">(자동 선택)</option>
-              {localVoices.en.map(v => {
-                let cleanName = v.name
-                  .replace(/영어|English|한국어|Korean|Desktop/gi, '')
-                  .replace(/\(([^)]+)\)/g, ' $1 ') // 괄호 안 내용 유지, 괄호 제거
-                  .replace(/United States/gi, 'US')
-                  .replace(/United Kingdom/gi, 'UK')
-                  .replace(/Republic of Korea/gi, 'KR')
-                  .replace(/ - | -|- /g, ' ')
-                  .replace(/\s+/g, ' ')
-                  .trim();
-                if (!cleanName) cleanName = v.name;
-                return <option key={v.name} value={v.name}>{cleanName}</option>;
-              })}
+              {ttsApiKey ? (
+                GOOGLE_VOICES['en-US'].map(v => (
+                  <option key={v.name} value={v.name}>{v.label}</option>
+                ))
+              ) : (
+                <>
+                  <option value="">(자동 선택)</option>
+                  {localVoices.en.map(v => {
+                    let cleanName = v.name
+                      .replace(/영어|English|한국어|Korean|Desktop/gi, '')
+                      .replace(/\(([^)]+)\)/g, ' $1 ') // 괄호 안 내용 유지, 괄호 제거
+                      .replace(/United States/gi, 'US')
+                      .replace(/United Kingdom/gi, 'UK')
+                      .replace(/Republic of Korea/gi, 'KR')
+                      .replace(/ - | -|- /g, ' ')
+                      .replace(/\s+/g, ' ')
+                      .trim();
+                    if (!cleanName) cleanName = v.name;
+                    return <option key={v.name} value={v.name}>{cleanName}</option>;
+                  })}
+                </>
+              )}
             </AutoWidthSelect>
           </div>
           <div className="row">
