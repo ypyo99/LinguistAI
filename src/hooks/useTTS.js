@@ -1,5 +1,7 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { getCachedAudio, saveCachedAudio } from '../utils/idb';
+import { Capacitor } from '@capacitor/core';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
 
 let allVoices = [];
 if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -149,6 +151,25 @@ function webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus, targetVoiceN
   });
 }
 
+async function nativeSpeechSpeak(text, lang, rate, setTtsStatus, targetVoiceName) {
+  setTtsStatus('native');
+  try {
+    let options = {
+      text,
+      lang: lang,
+      rate: rate,
+      pitch: 1.0,
+      volume: 1.0,
+      category: 'ambient',
+    };
+    // capacitor-community TTS supports voice property in some platforms, but lang is most reliable
+    await TextToSpeech.speak(options);
+  } catch(e) {
+    console.error("Native TTS error", e);
+  }
+}
+
+
 // ── 메인 훅 ──────────────────────────────────────────────────────
 /**
  * useTTS(ttsApiKey, voiceEn, voiceKo)
@@ -178,12 +199,16 @@ export function useTTS(ttsApiKey = '', voiceEn = 'en-US-Neural2-C', voiceKo = 'k
     return () => {};
   }, []);
 
-  const stop = useCallback(() => {
+  const stop = useCallback(async () => {
     if (currentSourceRef.current) {
       try { currentSourceRef.current.stop(); } catch (_) {}
       currentSourceRef.current = null;
     }
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (Capacitor.isNativePlatform()) {
+      try { await TextToSpeech.stop(); } catch(_) {}
+    } else {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+    }
   }, []);
 
   const speak = useCallback(
@@ -198,7 +223,12 @@ export function useTTS(ttsApiKey = '', voiceEn = 'en-US-Neural2-C', voiceKo = 'k
           console.warn('[TTS] Google Cloud TTS 실패, Web Speech API로 폴백:', e.message);
         }
       }
-      return webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus, lang === 'ko-KR' ? voiceKo : voiceEn);
+      
+      if (Capacitor.isNativePlatform()) {
+        return nativeSpeechSpeak(text, lang, rate, setTtsStatus, lang === 'ko-KR' ? voiceKo : voiceEn);
+      } else {
+        return webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus, lang === 'ko-KR' ? voiceKo : voiceEn);
+      }
     },
     [stop, ttsApiKey, voiceEn, voiceKo]
   );

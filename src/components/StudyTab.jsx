@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useTTS, GOOGLE_VOICES } from '../hooks/useTTS';
+import { Capacitor } from '@capacitor/core';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { useWakeLock } from '../hooks/useWakeLock';
 
 // ── 유틸 ────────────────────────────────────────────
@@ -101,20 +103,40 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
   const [localVoices, setLocalVoices] = useState({ en: [], ko: [] });
   useEffect(() => {
-    const updateVoices = () => {
-      if (!window.speechSynthesis) return;
-      const voices = window.speechSynthesis.getVoices();
-      setLocalVoices({
-        en: voices.filter(v => v.lang.startsWith('en-') || v.lang.startsWith('en_') || v.lang === 'en'),
-        ko: voices.filter(v => v.lang.startsWith('ko-') || v.lang.startsWith('ko_') || v.lang === 'ko')
-      });
+    const updateVoices = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const result = await TextToSpeech.getSupportedVoices();
+          const voices = result.voices || [];
+          setLocalVoices({
+            en: voices.filter(v => v.lang.startsWith('en-') || v.lang.startsWith('en_') || v.lang === 'en'),
+            ko: voices.filter(v => v.lang.startsWith('ko-') || v.lang.startsWith('ko_') || v.lang === 'ko')
+          });
+        } catch (e) {
+          console.error("Native TTS GetVoices Failed", e);
+        }
+      } else {
+        if (!window.speechSynthesis) return;
+        const voices = window.speechSynthesis.getVoices();
+        setLocalVoices({
+          en: voices.filter(v => v.lang.startsWith('en-') || v.lang.startsWith('en_') || v.lang === 'en'),
+          ko: voices.filter(v => v.lang.startsWith('ko-') || v.lang.startsWith('ko_') || v.lang === 'ko')
+        });
+      }
     };
-    if (window.speechSynthesis) {
+    
+    if (Capacitor.isNativePlatform()) {
       updateVoices();
-      window.speechSynthesis.addEventListener('voiceschanged', updateVoices);
+    } else {
+      if (window.speechSynthesis) {
+        updateVoices();
+        window.speechSynthesis.addEventListener('voiceschanged', updateVoices);
+      }
     }
     return () => {
-      if (window.speechSynthesis) window.speechSynthesis.removeEventListener('voiceschanged', updateVoices);
+      if (!Capacitor.isNativePlatform() && window.speechSynthesis) {
+        window.speechSynthesis.removeEventListener('voiceschanged', updateVoices);
+      }
     };
   }, []);
 
