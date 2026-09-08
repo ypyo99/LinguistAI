@@ -40,11 +40,43 @@ export default function LibraryTab({
     }
   };
 
+  // 보관함 정렬 로직: 기본 제목 가나다순 -> 초급/중급/고급 순 -> 최신순
+  const sortedPacks = [...savedPacks].sort((a, b) => {
+    const titleA = a.title || '';
+    const titleB = b.title || '';
+    
+    // '초급', '중급', '고급' 텍스트를 제거하여 기본 제목 추출
+    const baseA = titleA.replace(/초급|중급|고급/g, '').trim();
+    const baseB = titleB.replace(/초급|중급|고급/g, '').trim();
+    
+    // 1. 기본 제목이 다르면 가나다순 정렬 (같은 제목끼리 묶이도록)
+    const baseDiff = baseA.localeCompare(baseB);
+    if (baseDiff !== 0) {
+      return baseDiff;
+    }
+    
+    // 2. 기본 제목이 같으면 초급(1) -> 중급(2) -> 고급(3) 순으로 정렬
+    const getLevel = (t) => {
+      if (t.includes('초급')) return 1;
+      if (t.includes('중급')) return 2;
+      if (t.includes('고급')) return 3;
+      return 4; // 그 외
+    };
+    
+    const levelDiff = getLevel(titleA) - getLevel(titleB);
+    if (levelDiff !== 0) {
+      return levelDiff;
+    }
+    
+    // 3. 제목과 난이도가 모두 같으면 최신순(내림차순) 정렬
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   return (
     <div className="tab-fade-in" style={{ paddingBottom: '40px' }}>
       <h2 className="section-heading" style={{ fontSize: '20px', marginBottom: '16px' }}>내 학습 데이터</h2>
       
-      {savedPacks.length === 0 ? (
+      {sortedPacks.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--ink-soft)', background: 'var(--surface-container-lowest)', borderRadius: '16px', border: '1px dashed var(--line)' }}>
           <i className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--amber)', marginBottom: '16px' }}>inventory_2</i>
           <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6' }}>
@@ -54,7 +86,7 @@ export default function LibraryTab({
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {savedPacks.map(pack => (
+          {sortedPacks.map(pack => (
             <div key={pack.id} style={{ background: 'var(--surface)', border: '0.5px solid var(--line)', padding: '16px 20px', borderRadius: '16px', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pack.title}</h3>
