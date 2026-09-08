@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useGoogleLogin } from '@react-oauth/google';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 const LANDMARKS = [
   "/images/landmarks/img0.jpg",
@@ -50,15 +52,47 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
     }
   });
 
-  const handleUserClick = () => {
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      GoogleAuth.initialize({
+        clientId: '686267885768-dbfrdhospkatu04hvsc5mbu5n6gnjapd.apps.googleusercontent.com',
+        scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive.readonly'],
+        grantOfflineAccess: true,
+      });
+    }
+  }, []);
+
+  const handleUserClick = async () => {
     if (!user) {
-      login();
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const result = await GoogleAuth.signIn();
+          setUser({
+            name: result.name || 'Google User',
+            email: result.email || '',
+            picture: result.imageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=GoogleUser&backgroundColor=e5e7eb',
+            accessToken: result.authentication.accessToken
+          });
+        } catch (error) {
+          console.error("Native Google Login Failed", error);
+          alert("모바일 구글 로그인에 실패했습니다.");
+        }
+      } else {
+        login();
+      }
     } else {
       setShowDropdown(!showDropdown);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (Capacitor.isNativePlatform() && user) {
+      try {
+        await GoogleAuth.signOut();
+      } catch(e) {
+        console.error("Native Google Logout Failed", e);
+      }
+    }
     setUser(null);
     setShowDropdown(false);
   };
