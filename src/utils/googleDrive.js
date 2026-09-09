@@ -109,11 +109,14 @@ async function getOrCreateFolder(accessToken, parentId, name) {
   if (_folderInflight.has(cacheKey)) return _folderInflight.get(cacheKey);
 
   const promise = (async () => {
-    const existing = await findFolder(accessToken, parentId, name);
-    const id = existing ?? await createFolder(accessToken, parentId, name);
-    _folderCache.set(cacheKey, id);
-    _folderInflight.delete(cacheKey);
-    return id;
+    try {
+      const existing = await findFolder(accessToken, parentId, name);
+      const id = existing ?? await createFolder(accessToken, parentId, name);
+      _folderCache.set(cacheKey, id);
+      return id;
+    } finally {
+      _folderInflight.delete(cacheKey);
+    }
   })();
 
   _folderInflight.set(cacheKey, promise);

@@ -220,6 +220,7 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       cursor: loadingId ? 'wait' : 'pointer',
                       transition: 'background 0.15s',
+                    }}
                   >
                     <i className="material-symbols-outlined" style={{ fontSize: '16px', animation: isDown ? 'spin 1s linear infinite' : 'none' }}>
                       {isDown ? 'autorenew' : 'play_arrow'}

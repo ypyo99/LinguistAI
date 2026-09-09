@@ -52,6 +52,13 @@ export default function CreateTab({ apiKey, onGenerate }) {
   const [inputMode, setInputMode] = usePersistentState('linguist-create-input-mode', 'api');
   const [manualText, setManualText] = useState('');
 
+  // API 키가 없으면 자동으로 직접 붙여넣기 모드로 전환
+  useEffect(() => {
+    if (!apiKey && inputMode === 'api') {
+      setInputMode('manual');
+    }
+  }, [apiKey, inputMode, setInputMode]);
+
   const isCustom = availableModels.length > 0 
     ? !availableModels.includes(model)
     : !['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-1.5-pro'].includes(model);
@@ -264,7 +271,15 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
             <div className="flex bg-surface-variant/30 dark:bg-dark-surface-bright/30 p-1 rounded-lg shrink-0">
               <button
                 onClick={() => setInputMode('api')}
-                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'api' ? 'bg-orange-500 dark:bg-orange-600 shadow-sm text-white' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
+                disabled={!apiKey}
+                title={!apiKey ? "설정 탭에서 Gemini API 키를 먼저 입력해주세요." : ""}
+                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
+                  inputMode === 'api' 
+                    ? 'bg-orange-500 dark:bg-orange-600 shadow-sm text-white' 
+                    : !apiKey 
+                      ? 'text-on-surface-variant/50 cursor-not-allowed opacity-50'
+                      : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'
+                }`}
               >
                 API 자동 생성
               </button>
