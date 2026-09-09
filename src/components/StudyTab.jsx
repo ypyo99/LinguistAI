@@ -84,7 +84,7 @@ function AutoWidthSelect({ value, onChange, children, className }) {
 }
 
 // ── 메인 컴포넌트 ────────────────────────────────────
-export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setStudiedIndices, studiedIndices, favorites, setFavorites, onSavePack }) {
+export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setStudiedIndices, studiedIndices, favorites, setFavorites, onSavePack, user }) {
   const [showSettings, setShowSettings] = usePersistentState('linguist-study-settings', false);
   const [showList, setShowList] = usePersistentState('linguist-study-list', true);
   const favoritesRef = useRef(favorites);
@@ -708,10 +708,12 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
           <span className="c">{sentences.length}개 문장</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={(e) => { e.stopPropagation(); onSavePack?.(); }} style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px', border: 'none', background: 'var(--teal)', color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-            <i className="material-symbols-outlined" style={{ fontSize: '16px', color: 'inherit' }}>save</i>
-            보관함에 저장
-          </button>
+          {user?.accessToken && (
+            <button onClick={(e) => { e.stopPropagation(); onSavePack?.(); }} style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px', border: 'none', background: 'var(--teal)', color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+              <i className="material-symbols-outlined" style={{ fontSize: '16px', color: 'inherit' }}>save</i>
+              보관함에 저장
+            </button>
+          )}
         </div>
       </div>
 

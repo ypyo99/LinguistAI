@@ -264,13 +264,13 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
             <div className="flex bg-surface-variant/30 dark:bg-dark-surface-bright/30 p-1 rounded-lg shrink-0">
               <button
                 onClick={() => setInputMode('api')}
-                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'api' ? 'bg-surface dark:bg-dark-surface shadow-sm text-orange' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
+                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'api' ? 'bg-orange-500 dark:bg-orange-600 shadow-sm text-white' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
               >
                 API 자동 생성
               </button>
               <button
                 onClick={() => setInputMode('manual')}
-                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'manual' ? 'bg-surface dark:bg-dark-surface shadow-sm text-orange' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
+                className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'manual' ? 'bg-orange-500 dark:bg-orange-600 shadow-sm text-white' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
               >
                 직접 붙여넣기
               </button>
@@ -467,7 +467,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
                             console.error('Failed to read clipboard contents: ', err);
                           }
                         }}
-                        className="flex items-center gap-1 text-xs px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-900 dark:text-orange-100 rounded hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+                        className="flex items-center gap-1 text-xs px-2 py-1 bg-orange-500 dark:bg-orange-600 text-white rounded hover:bg-orange-600 dark:hover:bg-orange-700 transition-colors"
                         title="클립보드 내용 붙여넣기"
                       >
                         <span className="material-symbols-outlined text-[16px]">content_paste</span>

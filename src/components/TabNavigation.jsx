@@ -10,7 +10,7 @@ const TABS = [
 export default function TabNavigation({ activeTab, setActiveTab, user }) {
   return (
     <div className="tabs">
-      {TABS.filter(t => t.id !== 'store' || user).map(({ id, label, icon }) => {
+      {TABS.filter(t => (t.id !== 'store' && t.id !== 'library') || user).map(({ id, label, icon }) => {
         const isActive = activeTab === id;
         return (
           <button

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePersistentState } from './hooks/usePersistentState';
+import { savePack } from './utils/googleDrive';
 import Header from './components/Header';
 import TabNavigation from './components/TabNavigation';
 import SetupTab from './components/SetupTab';
@@ -19,10 +20,10 @@ function App() {
     const prevUser = prevUserRef.current;
     if (!prevUser && user) {
       // User just logged in
-      setActiveTab('store');
+      setActiveTab('library');
     } else if (prevUser && !user) {
       // User just logged out
-      if (activeTab === 'store') {
+      if (activeTab === 'store' || activeTab === 'library') {
         setActiveTab('study');
       }
     }
@@ -122,27 +123,66 @@ function App() {
     }
   }, [favorites, studiedIndices, displayTitle, sentences, currentPackId, setSavedPacks, savedPacks.length]);
 
-  const handleSavePack = () => {
+  const handleSavePack = async () => {
     if (sentences.length === 0) return;
-    if (currentPackId) {
-      setSavedPacks(prev => prev.map(p => 
-        p.id === currentPackId 
-          ? { ...p, title: displayTitle, sentences, favorites, studiedIndices } 
-          : p
-      ));
-      alert('현재 보관함에 덮어쓰기 저장되었습니다!');
+
+    if (user?.accessToken) {
+      // ── 구글 드라이브에 저장 ──────────────────────────────────
+      const pack = currentPackId
+        ? savedPacks.find(p => p.id === currentPackId) || {
+            id: currentPackId,
+            title: displayTitle,
+            sentences,
+            favorites,
+            studiedIndices,
+            createdAt: new Date().toISOString()
+          }
+        : {
+            id: Date.now().toString(),
+            title: displayTitle,
+            sentences,
+            favorites,
+            studiedIndices,
+            createdAt: new Date().toISOString()
+          };
+
+      // 현재 내용으로 pack 갱신
+      const packToSave = { ...pack, title: displayTitle, sentences, favorites, studiedIndices };
+
+      try {
+        await savePack(user.accessToken, packToSave);
+        if (!currentPackId) setCurrentPackId(packToSave.id);
+        alert('구글 드라이브 보관함에 저장되었습니다!');
+      } catch (err) {
+        if (err.code === 'TOKEN_EXPIRED') {
+          setUser(null);
+          alert('구글 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+        } else {
+          alert(`저장 중 오류가 발생했습니다: ${err.message}`);
+        }
+      }
     } else {
-      const newPack = {
-        id: Date.now().toString(),
-        title: displayTitle,
-        sentences,
-        favorites,
-        studiedIndices,
-        createdAt: new Date().toISOString()
-      };
-      setSavedPacks(prev => [newPack, ...prev]);
-      setCurrentPackId(newPack.id);
-      alert('보관함에 저장되었습니다!');
+      // ── 로컬 저장소에 저장 (비로그인) ───────────────────────
+      if (currentPackId) {
+        setSavedPacks(prev => prev.map(p =>
+          p.id === currentPackId
+            ? { ...p, title: displayTitle, sentences, favorites, studiedIndices }
+            : p
+        ));
+        alert('현재 보관함에 덮어쓰기 저장되었습니다!');
+      } else {
+        const newPack = {
+          id: Date.now().toString(),
+          title: displayTitle,
+          sentences,
+          favorites,
+          studiedIndices,
+          createdAt: new Date().toISOString()
+        };
+        setSavedPacks(prev => [newPack, ...prev]);
+        setCurrentPackId(newPack.id);
+        alert('보관함에 저장되었습니다!');
+      }
     }
   };
 
@@ -179,13 +219,31 @@ function App() {
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="content">
         <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>
-          <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} favorites={favorites} setFavorites={setFavorites} onSavePack={handleSavePack} />
+          <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} favorites={favorites} setFavorites={setFavorites} onSavePack={handleSavePack} user={user} />
         </div>
         <div style={{ display: activeTab === 'quiz' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <QuizTab sentences={sentences} />
         </div>
         <div style={{ display: activeTab === 'library' ? 'block' : 'none' }}>
-          <LibraryTab savedPacks={savedPacks} setSavedPacks={setSavedPacks} setSentences={setSentences} setPackTitle={setPackTitle} setFavorites={setFavorites} setStudiedIndices={setStudiedIndices} setActiveTab={setActiveTab} setCurrentPackId={setCurrentPackId} />
+          <LibraryTab
+            savedPacks={savedPacks}
+            setSavedPacks={setSavedPacks}
+            setSentences={setSentences}
+            setPackTitle={setPackTitle}
+            setFavorites={setFavorites}
+            setStudiedIndices={setStudiedIndices}
+            setActiveTab={setActiveTab}
+            setCurrentPackId={setCurrentPackId}
+            user={user}
+            onTokenExpired={(reason) => {
+              setUser(null);
+              if (reason === 'SCOPE_INSUFFICIENT') {
+                alert('\uad6c\uae00 \ub4dc\ub77c\uc774\ube0c \uc6f0\ud55c \uad8c\ud55c\uc774 \ubd80\uc871\ud569\ub2c8\ub2e4.\n\ub85c\uadf8\uc544\uc6c3 \ud6c4 \ub2e4\uc2dc \ub85c\uadf8\uc778\ud574 \uc8fc\uc138\uc694.');
+              } else {
+                alert('\uad6c\uae00 \ub85c\uadf8\uc778 \uc138\uc158\uc774 \ub9cc\ub8cc\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \ub85c\uadf8\uc778\ud574 \uc8fc\uc138\uc694.');
+              }
+            }}
+          />
         </div>
         <div style={{ display: activeTab === 'store' ? 'block' : 'none' }}>
           <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} setCurrentPackId={setCurrentPackId} setFavorites={setFavorites} />
