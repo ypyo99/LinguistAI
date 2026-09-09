@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { loadAllPacks, deletePackFile } from '../utils/googleDrive';
+import { loadAllPacks, deletePackFile, updatePackTitleAndContent } from '../utils/googleDrive';
 
 // 난이도 뱃지 (DataTab과 동일)
 const LEVEL_BADGE = {
@@ -39,6 +39,9 @@ export default function LibraryTab({
   const [driveFiles, setDriveFiles] = useState([]);
   const [driveLoading, setDriveLoading] = useState(false);
   const [driveError, setDriveError] = useState(null);
+  const [editingPackId, setEditingPackId] = useState(null);
+  const [editTitleText, setEditTitleText] = useState('');
+  const [savingTitleId, setSavingTitleId] = useState(null);
 
   const isLoggedIn = !!(user?.accessToken);
 
@@ -96,6 +99,49 @@ export default function LibraryTab({
       setDriveFiles((prev) => prev.filter((f) => f.packId !== pack.id));
     } else {
       setSavedPacks((prev) => prev.filter((p) => p.id !== pack.id));
+    }
+  };
+
+  const handleTitleEdit = (pack, base) => {
+    setEditingPackId(pack.id);
+    setEditTitleText(base || pack.title);
+  };
+
+  const handleTitleSave = async (pack) => {
+    const newBase = editTitleText.trim();
+    const { base, level, count } = parseName(pack.title);
+    
+    if (!newBase || newBase === base) {
+      setEditingPackId(null);
+      return;
+    }
+
+    setSavingTitleId(pack.id);
+    let parts = [newBase];
+    if (level) parts.push(level);
+    if (count) parts.push(count);
+    const newTitle = parts.join('-');
+    const updatedPack = { ...pack, title: newTitle };
+
+    try {
+      if (isLoggedIn) {
+        const fileEntry = driveFiles.find((f) => f.packId === pack.id);
+        if (fileEntry) {
+          await updatePackTitleAndContent(user.accessToken, fileEntry.fileId, newTitle, updatedPack);
+        }
+        setDrivePacks(prev => prev.map(p => p.id === pack.id ? updatedPack : p));
+      } else {
+        setSavedPacks(prev => prev.map(p => p.id === pack.id ? updatedPack : p));
+      }
+    } catch (err) {
+      if (err.code === 'TOKEN_EXPIRED' || err.code === 'SCOPE_INSUFFICIENT') {
+        onTokenExpired?.(err.code);
+      } else {
+        alert(`제목 변경 실패: ${err.message}`);
+      }
+    } finally {
+      setSavingTitleId(null);
+      setEditingPackId(null);
     }
   };
 
@@ -215,9 +261,34 @@ export default function LibraryTab({
                 }}
               >
                 {/* 제목 */}
-                <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--ink)', lineHeight: '1.3', wordBreak: 'keep-all' }}>
-                  {base || pack.title}
-                </div>
+                {editingPackId === pack.id ? (
+                  <input
+                    autoFocus
+                    value={editTitleText}
+                    onChange={(e) => setEditTitleText(e.target.value)}
+                    onBlur={() => handleTitleSave(pack)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleTitleSave(pack);
+                      if (e.key === 'Escape') setEditingPackId(null);
+                    }}
+                    disabled={savingTitleId === pack.id}
+                    style={{
+                      fontSize: '14px', fontWeight: '700', color: 'var(--ink)', 
+                      lineHeight: '1.3', width: '100%', 
+                      background: 'var(--surface-container-lowest)', 
+                      border: '1px solid var(--amber)', borderRadius: '6px', 
+                      padding: '2px 6px', outline: 'none'
+                    }}
+                  />
+                ) : (
+                  <div 
+                    onClick={() => handleTitleEdit(pack, base)}
+                    style={{ fontSize: '14px', fontWeight: '700', color: 'var(--ink)', lineHeight: '1.3', wordBreak: 'keep-all', cursor: 'pointer' }}
+                    title="클릭하여 제목 수정"
+                  >
+                    {base || pack.title} {savingTitleId === pack.id && <i className="material-symbols-outlined" style={{ fontSize: '14px', animation: 'spin 1s linear infinite', verticalAlign: 'middle' }}>autorenew</i>}
+                  </div>
+                )}
 
                 {/* 뱃지 + 문장 수 + 즐겨찾기 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
@@ -243,13 +314,13 @@ export default function LibraryTab({
 
 
                 {/* 버튼 행 */}
-                <div style={{ display: 'flex', gap: '5px', marginTop: 'auto' }}>
+                <div style={{ display: 'flex', gap: '5px', marginTop: 'auto', justifyContent: 'flex-end' }}>
                   {/* 학습 시작 */}
                   <button
                     onClick={() => handleLoadPack(pack)}
                     title="학습 시작"
                     style={{
-                      flex: 1, height: '30px',
+                      width: '30px', height: '30px',
                       borderRadius: '9px', border: 'none',
                       background: '#F97316', color: '#fff',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',

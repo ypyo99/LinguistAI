@@ -232,6 +232,36 @@ export async function uploadPack(accessToken, folderId, pack, existingFileId = n
 }
 
 /**
+ * 드라이브 파일의 이름과 내용을 업데이트합니다.
+ */
+export async function updatePackTitleAndContent(accessToken, fileId, newTitle, pack) {
+  const safeTitle = (newTitle || pack.id).replace(/[\/\\:*?"<>|]/g, '_').trim().slice(0, 50);
+  const fileName = `${safeTitle}.json`;
+
+  // 1. Update metadata (filename)
+  const metaRes = await fetch(`${DRIVE_API}/files/${fileId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name: fileName })
+  });
+  await checkResponse(metaRes, '파일 이름 변경 실패');
+
+  // 2. Update content
+  pack.title = newTitle;
+  const content = JSON.stringify(pack, null, 2);
+  const blob = new Blob([content], { type: 'application/json' });
+  const uploadRes = await fetch(`${DRIVE_UPLOAD_API}/files/${fileId}?uploadType=media`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: blob
+  });
+  await checkResponse(uploadRes, '파일 내용 업데이트 실패');
+}
+
+/**
  * 드라이브에서 파일을 삭제합니다.
  */
 export async function deletePackFile(accessToken, fileId) {
