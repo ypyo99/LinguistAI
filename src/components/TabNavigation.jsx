@@ -4,8 +4,7 @@ const TABS = [
   { id: 'quiz', label: '퀴즈', icon: 'sports_esports' },
   { id: 'library', label: '보관함', icon: 'inventory_2' },
   { id: 'store', label: '스토어', icon: 'storefront' },
-  { id: 'create', label: '생성', icon: 'note_add' },
-  { id: 'setup', label: '설정', icon: 'settings' }
+  { id: 'create', label: '생성', icon: 'note_add' }
 ];
 
 export default function TabNavigation({ activeTab, setActiveTab, user }) {

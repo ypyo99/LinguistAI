@@ -17,7 +17,7 @@ const LANDMARKS = [
   "/images/landmarks/img9.jpg"
 ];
 
-export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0, streak = 0, onResetProgress }) {
+export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0, streak = 0, onResetProgress, onOpenSettings }) {
   const [isDark, setIsDark] = useState(false);
   const pressTimer = useRef(null);
   
@@ -223,8 +223,17 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
           <div className="topbar-sub" style={{ marginTop: 0 }}>{sub}</div>
           <div className="topbar-title" style={{ marginTop: '4px' }}>{title}</div>
         </div>
-        
-        <div 
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button 
+            className="icon-btn"
+            onClick={onOpenSettings}
+            style={{ color: '#fff', background: 'transparent' }}
+          >
+            <i className="material-symbols-outlined" style={{ fontSize: '26px' }}>settings</i>
+          </button>
+          
+          <div 
+
           style={{ 
             position: 'relative', width: '56px', height: '56px', flexShrink: 0, cursor: 'pointer',
             WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none'
@@ -265,6 +274,7 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
             {progress}/{total}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

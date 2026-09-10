@@ -219,6 +219,7 @@ function App() {
         progress={studiedIndices.length} 
         streak={streak}
         onResetProgress={() => setStudiedIndices([])}
+        onOpenSettings={() => setActiveTab('setup')}
       />
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="content">
