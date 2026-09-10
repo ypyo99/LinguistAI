@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTTS, GOOGLE_VOICES } from '../hooks/useTTS';
 
 function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
+  const [shuffledQuestions] = useState(() => [...questions].sort(() => Math.random() - 0.5));
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [done, setDone] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -14,7 +15,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
       ttsStop();
       return;
     }
-    const currentQ = questions[currentQIndex];
+    const currentQ = shuffledQuestions[currentQIndex];
     if (!currentQ) return;
 
     // 15 seconds for every question regardless of difficulty
@@ -75,7 +76,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
           <div className="rp-done-banner" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
             <i className="material-symbols-outlined" style={{ fontSize: '64px', color: '#f97316' }}>celebration</i>
             <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--on-surface, #1e293b)' }}>연습 완료!</h2>
-            <p style={{ color: 'var(--on-surface-variant, #64748b)', fontSize: '16px' }}>모든 질문에 대한 롤플레이를 마쳤습니다.</p>
+            <p style={{ color: 'var(--on-surface-variant, #64748b)', fontSize: '16px' }}>모든 질문에 대한 프리토킹 연습을 마쳤습니다.</p>
             <button className="btn-orange" onClick={onBack} style={{ padding: '12px 24px', borderRadius: '12px', marginTop: '10px', fontSize: '16px', fontWeight: '600' }}>
               돌아가기
             </button>
@@ -95,7 +96,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
               lineHeight: '1.4',
               wordBreak: 'keep-all'
             }}>
-              {questions[currentQIndex]}
+              {shuffledQuestions[currentQIndex]}
             </div>
             
             
@@ -163,7 +164,7 @@ export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], rolepla
           <i className="material-symbols-outlined">record_voice_over</i>
         </div>
         <div>
-          <h2 className="rp-header-title">Roleplay</h2>
+          <h2 className="rp-header-title">Free-talking</h2>
           <p className="rp-header-sub">Practice speaking English out loud</p>
         </div>
       </div>
@@ -183,7 +184,7 @@ export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], rolepla
           </div>
         ) : (
           <div className="rp-topic-card" style={{ textAlign: 'center', color: 'var(--on-surface-variant, #64748b)', padding: '40px 20px' }}>
-            롤플레이 질문 데이터가 없습니다.
+            프리토킹 질문 데이터가 없습니다.
           </div>
         )}
 
