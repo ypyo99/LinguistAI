@@ -19,48 +19,56 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTime, setTotalTime] = useState(1);
 
+  // packTitle에서 난이도 감지: 중급/고급 → 40초, 초급 → 30초
+  const answerSeconds = (packTitle.includes('중급') || packTitle.includes('고급')) ? 40 : 30;
+
   const { speak: ttsSpeak, stop: ttsStop } = useTTS(ttsApiKey);
 
   const currentItem = shuffledQuestions[currentQIndex];
 
-  // ── 질문 단계: 3번 읽기 + 30초 타이머 ────────────────────────────────────
+  // ── 질문 단계: 3번 읽기 완료 후 타이머 시작 ────────────────────────────────
   useEffect(() => {
     if (done || phase !== 'question') return;
     if (!currentItem) return;
 
-    const delaySeconds = 30;
-    setTimeLeft(delaySeconds);
-    setTotalTime(delaySeconds);
-
     let isCancelled = false;
-    const playAudioThreeTimes = async () => {
+    let timer = null;
+
+    const runQuestionPhase = async () => {
+      // 1. 질문 3번 읽기
       for (let i = 0; i < 3; i++) {
-        if (isCancelled) break;
+        if (isCancelled) return;
         await ttsSpeak(currentItem.question, 'en-US', 1.0);
         if (i < 2 && !isCancelled) {
           await new Promise(resolve => setTimeout(resolve, 800));
         }
       }
-    };
-    playAudioThreeTimes();
+      if (isCancelled) return;
 
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setPhase('modelAnswer');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      // 2. 읽기 완료 후 타이머 시작
+      setTimeLeft(answerSeconds);
+      setTotalTime(answerSeconds);
+
+      timer = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setPhase('modelAnswer');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    };
+
+    runQuestionPhase();
 
     return () => {
       isCancelled = true;
-      clearInterval(timer);
+      if (timer) clearInterval(timer);
       ttsStop();
     };
-  }, [currentQIndex, phase, done, ttsSpeak, ttsStop, currentItem]);
+  }, [currentQIndex, phase, done, ttsSpeak, ttsStop, currentItem, answerSeconds]);
 
   // ── 모범답안 단계: TTS 읽어주기 → 자동으로 다음 질문 이동 ────────────────────
   useEffect(() => {
@@ -165,25 +173,35 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
               <div style={{ position: 'relative', width: '100px', height: '100px' }}>
-                <svg width="100" height="100" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
-                  <circle cx="50" cy="50" r="40" stroke="#e2e8f0" strokeWidth="8" fill="none" />
-                  <circle
-                    cx="50" cy="50" r="40"
-                    stroke="#f97316"
-                    strokeWidth="8"
-                    fill="none"
-                    strokeDasharray={2 * Math.PI * 40}
-                    strokeDashoffset={2 * Math.PI * 40 - (timeLeft / totalTime) * 2 * Math.PI * 40}
-                    strokeLinecap="round"
-                    style={{ transition: 'stroke-dashoffset 1s linear' }}
-                  />
-                </svg>
-                <div style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 'bold', color: '#f97316' }}>
-                  {timeLeft}
-                </div>
+                {timeLeft === 0 ? (
+                  /* TTS 읽는 중 */
+                  <div style={{ width: '100px', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <i className="material-symbols-outlined" style={{ fontSize: '52px', color: '#f97316', animation: 'pulse 1.2s ease-in-out infinite' }}>volume_up</i>
+                  </div>
+                ) : (
+                  /* 카운트다운 */
+                  <>
+                    <svg width="100" height="100" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+                      <circle cx="50" cy="50" r="40" stroke="#e2e8f0" strokeWidth="8" fill="none" />
+                      <circle
+                        cx="50" cy="50" r="40"
+                        stroke="#f97316"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeDasharray={2 * Math.PI * 40}
+                        strokeDashoffset={2 * Math.PI * 40 - (timeLeft / totalTime) * 2 * Math.PI * 40}
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dashoffset 1s linear' }}
+                      />
+                    </svg>
+                    <div style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 'bold', color: '#f97316' }}>
+                      {timeLeft}
+                    </div>
+                  </>
+                )}
               </div>
               <div style={{ color: 'var(--on-surface-variant, #64748b)', fontSize: '15px', fontWeight: '500' }}>
-                답변할 시간!
+                {timeLeft === 0 ? '질문 읽는 중...' : '답변할 시간!'}
               </div>
             </div>
           </div>
