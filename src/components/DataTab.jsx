@@ -26,12 +26,16 @@ function parseName(rawName) {
   return { base, level, count };
 }
 
-export default function DataTab({ setUser: appSetUser, setSentences, setPackTitle, setStudiedIndices, setCurrentPackId, setFavorites, setRoleplayQuestions }) {
+const DIFFICULTY_MAP = { '초급': 'beginner (A1-A2)', '중급': 'intermediate (B1-B2)', '고급': 'advanced (C1-C2)' };
+
+export default function DataTab({ apiKey, setUser: appSetUser, setSentences, setPackTitle, setStudiedIndices, setCurrentPackId, setFavorites, setRoleplayQuestions }) {
   const [user, setUser] = usePersistentState('linguist-user', null);
   const [packs, setPacks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [bulkLog, setBulkLog] = useState([]);
 
   useEffect(() => {
     if (user && user.accessToken) {
@@ -102,6 +106,97 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
       console.error(err);
       alert(`다운로드 중 오류가 발생했습니다: ${err.message}`);
     } finally { setLoadingId(null); }
+  };
+
+  // ── 스토어 파일 일괄 모범답안 생성 & 업데이트 ──────────────────────────────
+  const handleBulkUpdateModelAnswers = async () => {
+    if (!user?.accessToken) { alert('로그인이 필요합니다.'); return; }
+    if (!apiKey) { alert('Gemini API 키가 필요합니다. 설정 탭에서 입력해주세요.'); return; }
+    if (!window.confirm(`스토어의 모든 파일(${packs.length}개)에 모범답안을 생성하여 덮어씁니다.\n계속하시겠습니까?`)) return;
+
+    setBulkUpdating(true);
+    setBulkLog([]);
+    const log = (msg) => setBulkLog(prev => [...prev, msg]);
+
+    for (const pack of packs) {
+      log(`📥 다운로드 중: ${pack.name}`);
+      try {
+        const res = await fetch(`https://www.googleapis.com/drive/v3/files/${pack.id}?alt=media`, {
+          headers: { Authorization: `Bearer ${user.accessToken}` }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        const parsed = JSON.parse(text);
+
+        // 데이터 구조 파악
+        const sentences = Array.isArray(parsed) ? parsed : (parsed.sentences || []);
+        const existingQuestions = Array.isArray(parsed) ? [] : (parsed.roleplayQuestions || []);
+        if (existingQuestions.length === 0) {
+          log(`⏭️ 건너뜀 (질문 없음): ${pack.name}`);
+          continue;
+        }
+
+        // 이미 모범답안이 있는지 확인
+        const hasModelAnswers = existingQuestions.some(q => typeof q === 'object' && q.modelAnswer);
+        if (hasModelAnswers) {
+          log(`✅ 이미 모범답안 있음: ${pack.name}`);
+          continue;
+        }
+
+        // 난이도 파악
+        const packName = pack.name || '';
+        const difficulty = packName.includes('초급') ? '초급' : packName.includes('고급') ? '고급' : '중급';
+        const levelStr = DIFFICULTY_MAP[difficulty];
+        const getDifficultyRule = (d) => {
+          if (d === '초급') return 'Use very simple vocabulary, short sentences, and basic grammar (A1-A2 level).';
+          if (d === '고급') return 'Use sophisticated vocabulary, complex grammar structures, and advanced/native idiomatic expressions (C1-C2 level).';
+          return 'Use everyday conversational vocabulary, moderate sentence length, and common idioms (B1-B2 level).';
+        };
+
+        log(`🤖 모범답안 생성 중 (${existingQuestions.length}개 질문): ${pack.name}`);
+        const questionsText = existingQuestions.map((q, i) => `${i + 1}. ${typeof q === 'string' ? q : q.question}`).join('\n');
+        const prompt = `You are an English teacher. For each question below, write a model answer appropriate for ${levelStr} learners.\nRule: ${getDifficultyRule(difficulty)}\nEach answer should be 2-4 natural, conversational sentences.\n\nQuestions:\n${questionsText}\n\nReturn ONLY a valid JSON array of objects. No markdown, no explanation.\nFormat: [{"question": "...", "modelAnswer": "..."}, ...]`;
+
+        const aiRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey.trim()}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: 4096, responseMimeType: 'application/json' },
+            }),
+          }
+        );
+        if (!aiRes.ok) throw new Error(`Gemini API HTTP ${aiRes.status}`);
+        const aiData = await aiRes.json();
+        const raw = aiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        const match = raw.match(/\[[\s\S]*\]/);
+        if (!match) throw new Error('AI 응답에서 JSON 형식을 찾을 수 없습니다.');
+        const updatedQuestions = JSON.parse(match[0]);
+
+        // 업데이트된 팩 구성
+        const updatedPack = Array.isArray(parsed)
+          ? { sentences: parsed, roleplayQuestions: updatedQuestions }
+          : { ...parsed, roleplayQuestions: updatedQuestions };
+
+        // 덮어쓰기 업로드
+        log(`📤 업로드 중: ${pack.name}`);
+        const blob = new Blob([JSON.stringify(updatedPack, null, 2)], { type: 'application/json' });
+        const uploadRes = await fetch(
+          `https://www.googleapis.com/upload/drive/v3/files/${pack.id}?uploadType=media`,
+          { method: 'PATCH', headers: { Authorization: `Bearer ${user.accessToken}`, 'Content-Type': 'application/json' }, body: blob }
+        );
+        if (!uploadRes.ok) throw new Error(`업로드 실패 HTTP ${uploadRes.status}`);
+        log(`✅ 완료: ${pack.name}`);
+      } catch (err) {
+        log(`❌ 오류 (${pack.name}): ${err.message}`);
+      }
+      // API rate limit 방지
+      await new Promise(r => setTimeout(r, 1500));
+    }
+    log('🎉 일괄 업데이트 완료!');
+    setBulkUpdating(false);
   };
 
   if (!user) {
@@ -244,6 +339,36 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ── 관리자 전용: 모범답안 일괄 업데이트 ── */}
+      {apiKey && packs.length > 0 && (
+        <div style={{ marginTop: '32px', padding: '16px', background: 'rgba(249,115,22,0.06)', border: '1px dashed #f97316', borderRadius: '12px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: '#ea580c', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <i className="material-symbols-outlined" style={{ fontSize: '16px' }}>admin_panel_settings</i>
+            관리자: 모범답안 일괄 생성
+          </div>
+          <button
+            onClick={handleBulkUpdateModelAnswers}
+            disabled={bulkUpdating || !!loadingId}
+            style={{
+              width: '100%', padding: '10px', borderRadius: '10px', border: 'none',
+              background: bulkUpdating ? '#fed7aa' : '#f97316', color: '#fff',
+              fontSize: '13px', fontWeight: '600', cursor: bulkUpdating ? 'wait' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+            }}
+          >
+            <i className="material-symbols-outlined" style={{ fontSize: '16px', animation: bulkUpdating ? 'spin 1s linear infinite' : 'none' }}>
+              {bulkUpdating ? 'autorenew' : 'auto_awesome'}
+            </i>
+            {bulkUpdating ? '업데이트 중...' : `모범답안 일괄 생성 (${packs.length}개 파일)`}
+          </button>
+          {bulkLog.length > 0 && (
+            <div style={{ marginTop: '10px', maxHeight: '160px', overflowY: 'auto', fontSize: '11px', lineHeight: '1.8', color: 'var(--ink-soft)', fontFamily: 'monospace' }}>
+              {bulkLog.map((line, i) => <div key={i}>{line}</div>)}
+            </div>
+          )}
         </div>
       )}
     </div>

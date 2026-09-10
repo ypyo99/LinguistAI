@@ -135,8 +135,14 @@ Generate exactly 10 open-ended English questions that:
 - Are appropriate for ${DIFFICULTY_MAP[difficulty]} level learners
 - Sound natural and conversational
 
-Return ONLY a valid JSON array of 10 question strings, no markdown, no explanation.
-Format: ["Question 1?", "Question 2?", ...]`;
+For each question, also provide a model answer that:
+- Is appropriate for ${DIFFICULTY_MAP[difficulty]} level (${getDifficultyRule(difficulty).replace('- STRICT RULE: ', '')})
+- Is 2-4 sentences long
+- Sounds natural and conversational
+- Serves as a good example the learner can reference after their own attempt
+
+Return ONLY a valid JSON array of 10 objects, no markdown, no explanation.
+Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here."}, ...]`;
 
     try {
       const modelToUse = model.trim() || 'gemini-3.1-flash';
@@ -147,7 +153,7 @@ Format: ["Question 1?", "Question 2?", ...]`;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: qPrompt }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 1024, responseMimeType: 'application/json' },
+            generationConfig: { temperature: 0.7, maxOutputTokens: 2048, responseMimeType: 'application/json' },
           }),
         }
       );
@@ -157,13 +163,22 @@ Format: ["Question 1?", "Question 2?", ...]`;
       const match = raw.match(/\[[\s\S]*\]/);
       if (!match) return [];
       const parsed = JSON.parse(match[0]);
-      if (Array.isArray(parsed) && parsed.every(q => typeof q === 'string')) return parsed;
+      // Accept both object format {question, modelAnswer} and legacy string format
+      if (Array.isArray(parsed)) {
+        return parsed.map(q => {
+          if (typeof q === 'string') return { question: q, modelAnswer: '' };
+          if (q && typeof q.question === 'string') return { question: q.question, modelAnswer: q.modelAnswer || '' };
+          return null;
+        }).filter(Boolean);
+      }
       return [];
     } catch (e) {
       console.warn('롤플레이 질문 생성 실패:', e.message);
       return [];
     }
   };
+
+
 
   const handleGenerate = async () => {
     if (!apiKey) {

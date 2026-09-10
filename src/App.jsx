@@ -276,7 +276,7 @@ function App() {
           />
         </div>
         <div style={{ display: activeTab === 'store' ? 'block' : 'none' }}>
-          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} setCurrentPackId={setCurrentPackId} setFavorites={setFavorites} setRoleplayQuestions={setRoleplayQuestions} />
+        <DataTab apiKey={apiKey} setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} setCurrentPackId={setCurrentPackId} setFavorites={setFavorites} setRoleplayQuestions={setRoleplayQuestions} />
         </div>
         <div style={{ display: activeTab === 'create' ? 'block' : 'none' }}>
           <CreateTab

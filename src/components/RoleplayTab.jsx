@@ -1,34 +1,42 @@
-import { useState, useRef, useEffect } from 'react';
-import { useTTS, GOOGLE_VOICES } from '../hooks/useTTS';
+import { useState, useEffect } from 'react';
+import { useTTS } from '../hooks/useTTS';
+
+// ── 하위 호환 정규화: string 배열 → { question, modelAnswer } 배열 ──────────
+function normalizeQuestions(questions) {
+  return questions.map(q => {
+    if (typeof q === 'string') return { question: q, modelAnswer: '' };
+    if (q && typeof q.question === 'string') return { question: q.question, modelAnswer: q.modelAnswer || '' };
+    return null;
+  }).filter(Boolean);
+}
 
 function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
-  const [shuffledQuestions] = useState(() => [...questions].sort(() => Math.random() - 0.5));
+  const normalized = normalizeQuestions(questions);
+  const [shuffledQuestions] = useState(() => [...normalized].sort(() => Math.random() - 0.5));
   const [currentQIndex, setCurrentQIndex] = useState(0);
+  const [phase, setPhase] = useState('question'); // 'question' | 'modelAnswer'
   const [done, setDone] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTime, setTotalTime] = useState(1);
 
   const { speak: ttsSpeak, stop: ttsStop } = useTTS(ttsApiKey);
 
-  useEffect(() => {
-    if (done) {
-      ttsStop();
-      return;
-    }
-    const currentQ = shuffledQuestions[currentQIndex];
-    if (!currentQ) return;
+  const currentItem = shuffledQuestions[currentQIndex];
 
-    // 30 seconds for every question regardless of difficulty
+  // ── 질문 단계: 3번 읽기 + 30초 타이머 ────────────────────────────────────
+  useEffect(() => {
+    if (done || phase !== 'question') return;
+    if (!currentItem) return;
+
     const delaySeconds = 30;
     setTimeLeft(delaySeconds);
     setTotalTime(delaySeconds);
-    
+
     let isCancelled = false;
-    // Narrate the question three times
     const playAudioThreeTimes = async () => {
       for (let i = 0; i < 3; i++) {
         if (isCancelled) break;
-        await ttsSpeak(currentQ, 'en-US', 1.0);
+        await ttsSpeak(currentItem.question, 'en-US', 1.0);
         if (i < 2 && !isCancelled) {
           await new Promise(resolve => setTimeout(resolve, 800));
         }
@@ -40,11 +48,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          if (currentQIndex < questions.length - 1) {
-            setCurrentQIndex(q => q + 1);
-          } else {
-            setDone(true);
-          }
+          setPhase('modelAnswer');
           return 0;
         }
         return prev - 1;
@@ -56,23 +60,55 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
       clearInterval(timer);
       ttsStop();
     };
-  }, [currentQIndex, questions, done, ttsSpeak, ttsStop]);
+  }, [currentQIndex, phase, done, ttsSpeak, ttsStop, currentItem]);
 
-  const progress = Math.round((currentQIndex / questions.length) * 100);
+  // ── 모범답안 단계: TTS 읽어주기 ────────────────────────────────────────────
+  useEffect(() => {
+    if (done || phase !== 'modelAnswer') return;
+    if (!currentItem?.modelAnswer) return;
+
+    let isCancelled = false;
+    const playModelAnswer = async () => {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (!isCancelled) {
+        await ttsSpeak(currentItem.modelAnswer, 'en-US', 0.95);
+      }
+    };
+    playModelAnswer();
+
+    return () => {
+      isCancelled = true;
+      ttsStop();
+    };
+  }, [phase, currentQIndex, done, ttsSpeak, ttsStop, currentItem]);
+
+  // ── 다음으로 진행 ──────────────────────────────────────────────────────────
+  const handleNext = () => {
+    ttsStop();
+    if (currentQIndex < shuffledQuestions.length - 1) {
+      setCurrentQIndex(q => q + 1);
+      setPhase('question');
+    } else {
+      setDone(true);
+    }
+  };
+
+  const progress = Math.round((currentQIndex / shuffledQuestions.length) * 100);
 
   return (
     <div className="rp-chat-wrapper" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <div className="rp-chat-header">
-        <button className="rp-back-btn" onClick={onBack}>
+        <button className="rp-back-btn" onClick={() => { ttsStop(); onBack(); }}>
           <i className="material-symbols-outlined">arrow_back</i>
         </button>
         <div className="rp-chat-header-icon">
-          <i className="material-symbols-outlined">quiz</i>
+          <i className="material-symbols-outlined">{phase === 'modelAnswer' ? 'lightbulb' : 'quiz'}</i>
         </div>
         <div className="rp-chat-header-info">
           <div className="rp-chat-header-hint" style={{ fontSize: '15px', fontWeight: '500', color: 'var(--ink)' }}>
-            Q {Math.min(currentQIndex + 1, questions.length)} / {questions.length} · English free-talking
+            Q {Math.min(currentQIndex + 1, shuffledQuestions.length)} / {shuffledQuestions.length}
+            {' · '}{phase === 'modelAnswer' ? '모범답안' : 'English free-talking'}
           </div>
         </div>
       </div>
@@ -93,7 +129,9 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
               돌아가기
             </button>
           </div>
-        ) : (
+
+        ) : phase === 'question' ? (
+          /* ── 질문 단계 ── */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '800px', gap: '32px' }}>
             <div style={{
               background: '#f97316',
@@ -108,10 +146,9 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
               lineHeight: '1.4',
               wordBreak: 'keep-all'
             }}>
-              {shuffledQuestions[currentQIndex]}
+              {currentItem?.question}
             </div>
-            
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
               <div style={{ position: 'relative', width: '100px', height: '100px' }}>
                 <svg width="100" height="100" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
@@ -136,6 +173,62 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
               </div>
             </div>
           </div>
+
+        ) : (
+          /* ── 모범답안 단계 ── */
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '800px', gap: '20px' }}>
+            {/* 질문 (작게) */}
+            <div style={{
+              background: 'var(--surface-variant, #f1f5f9)',
+              color: 'var(--on-surface-variant, #64748b)',
+              padding: '12px 18px',
+              borderRadius: '16px',
+              width: '100%',
+              textAlign: 'center',
+              fontSize: '15px',
+              fontWeight: '500',
+              lineHeight: '1.4',
+            }}>
+              {currentItem?.question}
+            </div>
+
+            {/* 모범답안 레이블 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontWeight: '600', fontSize: '14px' }}>
+              <i className="material-symbols-outlined" style={{ fontSize: '20px' }}>lightbulb</i>
+              모범답안
+            </div>
+
+            {/* 모범답안 본문 */}
+            <div style={{
+              background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+              border: '2px solid #86efac',
+              color: '#166534',
+              padding: '20px 24px',
+              borderRadius: '24px',
+              boxShadow: '0 8px 20px -4px rgba(34, 197, 94, 0.2)',
+              width: '100%',
+              textAlign: 'center',
+              fontSize: '20px',
+              fontWeight: '500',
+              lineHeight: '1.6',
+              wordBreak: 'keep-all',
+            }}>
+              {currentItem?.modelAnswer || '(모범답안 없음)'}
+            </div>
+
+            {/* 다음 질문 버튼 */}
+            <button
+              className="btn-orange"
+              onClick={handleNext}
+              style={{ padding: '14px 32px', borderRadius: '14px', fontSize: '16px', fontWeight: '600', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              {currentQIndex < shuffledQuestions.length - 1 ? (
+                <>다음 질문 <i className="material-symbols-outlined">arrow_forward</i></>
+              ) : (
+                <>완료 <i className="material-symbols-outlined">check_circle</i></>
+              )}
+            </button>
+          </div>
         )}
       </div>
     </div>
@@ -156,7 +249,7 @@ export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], rolepla
   };
 
   // ── Chat views ─────────────────────────────────────────────────────────
-  if (activeView === 'qa' && (hasQuestions || roleplayQuestions.length > 0)) {
+  if (activeView === 'qa' && hasQuestions) {
     return (
       <TopicQAPresenter
         questions={roleplayQuestions}
@@ -205,19 +298,19 @@ export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], rolepla
             <div className="rp-hiw-steps">
               <div className="rp-hiw-step">
                 <span className="rp-hiw-num">1</span>
-                <span>화면에 질문이 크게 표시됩니다</span>
+                <span>질문이 세 번 읽힙니다</span>
               </div>
               <div className="rp-hiw-step">
                 <span className="rp-hiw-num">2</span>
-                <span>영어로 자유롭게 소리 내어 답하세요</span>
+                <span>30초 동안 영어로 자유롭게 소리 내어 답하세요</span>
               </div>
               <div className="rp-hiw-step">
                 <span className="rp-hiw-num">3</span>
-                <span>30초가 지나면 다음 질문으로 자동으로 넘어갑니다</span>
+                <span>30초 후 모범답안이 표시되고 읽어줍니다</span>
               </div>
               <div className="rp-hiw-step">
                 <span className="rp-hiw-num">4</span>
-                <span>10개를 완료하면 세션이 종료됩니다</span>
+                <span>모범답안 확인 후 다음 질문으로 넘어가세요</span>
               </div>
             </div>
           </div>
