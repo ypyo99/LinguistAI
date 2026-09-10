@@ -87,12 +87,12 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
             <div style={{
               background: '#f97316',
               color: 'white',
-              padding: '40px',
+              padding: '20px 24px',
               borderRadius: '24px',
               boxShadow: '0 10px 25px -5px rgba(249, 115, 22, 0.4)',
               width: '100%',
               textAlign: 'center',
-              fontSize: '28px',
+              fontSize: '22px',
               fontWeight: 'bold',
               lineHeight: '1.4',
               wordBreak: 'keep-all'
