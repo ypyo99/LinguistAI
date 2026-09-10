@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { usePersistentState } from './hooks/usePersistentState';
 import { savePack } from './utils/googleDrive';
 import { showAuthAlert } from './utils/authAlert';
@@ -17,6 +18,31 @@ function App() {
   const [activeTab, setActiveTab] = usePersistentState('linguist-active-tab', 'study');
   const [user, setUser] = usePersistentState('linguist-user', null);
   const prevUserRef = useRef(user);
+
+  // ── 글로벌 햅틱 피드백 ────────────────────────────
+  useEffect(() => {
+    const handleGlobalClick = async (e) => {
+      if (!(e.target instanceof Element)) return;
+      
+      const target = e.target.closest('button, a, [role="button"], .tab-item, .turn, .settings-header, .icon-btn, .cta, .rp-back-btn, .material-symbols-outlined');
+      const isPointer = window.getComputedStyle(e.target).cursor === 'pointer';
+      
+      if (target || isPointer) {
+        try {
+          await Haptics.impact({ style: ImpactStyle.Light });
+        } catch (err) {
+          // 웹이나 지원하지 않는 기기에서는 무시
+        }
+      }
+    };
+    
+    // 캡처링 단계에서 이벤트를 감지하여 stopPropagation()에 의해 무시되는 것을 방지
+    document.addEventListener('click', handleGlobalClick, true);
+    
+    return () => {
+      document.removeEventListener('click', handleGlobalClick, true);
+    };
+  }, []);
 
   useEffect(() => {
     const prevUser = prevUserRef.current;
