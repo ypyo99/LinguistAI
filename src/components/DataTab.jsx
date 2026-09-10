@@ -158,7 +158,7 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
         const prompt = `You are an English teacher. For each question below, write a model answer appropriate for ${levelStr} learners.\nRule: ${getDifficultyRule(difficulty)}\nEach answer should be 2-4 natural, conversational sentences.\n\nQuestions:\n${questionsText}\n\nReturn ONLY a valid JSON array of objects. No markdown, no explanation.\nFormat: [{"question": "...", "modelAnswer": "..."}, ...]`;
 
         const aiRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey.trim()}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey.trim()}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
