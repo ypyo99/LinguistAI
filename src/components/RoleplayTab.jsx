@@ -92,7 +92,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
               boxShadow: '0 10px 25px -5px rgba(249, 115, 22, 0.4)',
               width: '100%',
               textAlign: 'center',
-              fontSize: '36px',
+              fontSize: '28px',
               fontWeight: 'bold',
               lineHeight: '1.4',
               wordBreak: 'keep-all'

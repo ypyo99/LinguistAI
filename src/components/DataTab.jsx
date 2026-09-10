@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { getStoreFolderId } from '../utils/googleDrive';
+import { showAuthAlert } from '../utils/authAlert';
 
 // 난이도 뱃지 스타일
 const LEVEL_BADGE = {
@@ -45,18 +46,17 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
             { headers: { Authorization: `Bearer ${user.accessToken}` } }
           );
           if (res.status === 401) {
-            setUser(null); if (appSetUser) appSetUser(null);
-            alert('구글 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.'); return;
+            showAuthAlert('TOKEN_EXPIRED', setUser);
+            if (appSetUser) appSetUser(null);
+            return;
           }
           const data = await res.json();
           if (data.error) throw new Error(data.error.message);
           setPacks(data.files || []);
         } catch (err) {
           if (err.code === 'TOKEN_EXPIRED' || err.code === 'SCOPE_INSUFFICIENT') {
-            setUser(null); if (appSetUser) appSetUser(null);
-            alert(err.code === 'SCOPE_INSUFFICIENT'
-              ? '구글 드라이브 권한이 부족합니다.\n로그아웃 후 다시 로그인해 주세요.'
-              : '구글 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+            showAuthAlert(err.code, setUser);
+            if (appSetUser) appSetUser(null);
           } else { setError(err.message); }
         } finally { setLoading(false); }
       };
@@ -72,8 +72,9 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
         headers: { Authorization: `Bearer ${user.accessToken}` }
       });
       if (res.status === 401) {
-        setUser(null); if (appSetUser) appSetUser(null);
-        alert('구글 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.'); return;
+        showAuthAlert('TOKEN_EXPIRED', setUser);
+        if (appSetUser) appSetUser(null);
+        return;
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();

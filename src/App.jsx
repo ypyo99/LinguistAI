@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePersistentState } from './hooks/usePersistentState';
 import { savePack } from './utils/googleDrive';
+import { showAuthAlert } from './utils/authAlert';
 import Header from './components/Header';
 import TabNavigation from './components/TabNavigation';
 import SetupTab from './components/SetupTab';
@@ -158,8 +159,7 @@ function App() {
         alert('구글 드라이브 보관함에 저장되었습니다!');
       } catch (err) {
         if (err.code === 'TOKEN_EXPIRED') {
-          setUser(null);
-          alert('구글 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+          showAuthAlert(err.code, setUser);
         } else {
           alert(`저장 중 오류가 발생했습니다: ${err.message}`);
         }
@@ -245,12 +245,7 @@ function App() {
             setRoleplayQuestions={setRoleplayQuestions}
             user={user}
             onTokenExpired={(reason) => {
-              setUser(null);
-              if (reason === 'SCOPE_INSUFFICIENT') {
-                alert('\uad6c\uae00 \ub4dc\ub77c\uc774\ube0c \uc6f0\ud55c \uad8c\ud55c\uc774 \ubd80\uc871\ud569\ub2c8\ub2e4.\n\ub85c\uadf8\uc544\uc6c3 \ud6c4 \ub2e4\uc2dc \ub85c\uadf8\uc778\ud574 \uc8fc\uc138\uc694.');
-              } else {
-                alert('\uad6c\uae00 \ub85c\uadf8\uc778 \uc138\uc158\uc774 \ub9cc\ub8cc\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \ub85c\uadf8\uc778\ud574 \uc8fc\uc138\uc694.');
-              }
+              showAuthAlert(reason, setUser);
             }}
           />
         </div>
