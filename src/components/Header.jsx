@@ -17,9 +17,11 @@ const LANDMARKS = [
   "/images/landmarks/img9.jpg"
 ];
 
-export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0, streak = 0, onResetProgress, onOpenSettings }) {
+export default function Header({ title = "병원 진료 표현 20개", sub = "오늘의 회화 연습", total = 20, progress = 0, streak = 0, onResetProgress, onOpenSettings, onFocusMode }) {
   const [isDark, setIsDark] = useState(false);
   const pressTimer = useRef(null);
+  const themePresTimer = useRef(null);
+  const themeWasLongPress = useRef(false);
   
   // 구글 사용자 상태 관리 (기본값 null)
   const [user, setUser] = usePersistentState('linguist-user', null);
@@ -189,7 +191,34 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
             </div>
           )}
 
-          <button className="icon-btn" onClick={toggleTheme}>
+          <button
+            className="icon-btn"
+            title="길게 누르면 집중 모드"
+            onMouseDown={() => {
+              themeWasLongPress.current = false;
+              themePresTimer.current = setTimeout(() => {
+                themeWasLongPress.current = true;
+                onFocusMode?.();
+              }, 600);
+            }}
+            onMouseUp={() => clearTimeout(themePresTimer.current)}
+            onMouseLeave={() => clearTimeout(themePresTimer.current)}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              themeWasLongPress.current = false;
+              themePresTimer.current = setTimeout(() => {
+                themeWasLongPress.current = true;
+                onFocusMode?.();
+              }, 600);
+            }}
+            onTouchEnd={() => {
+              clearTimeout(themePresTimer.current);
+              if (!themeWasLongPress.current) toggleTheme();
+            }}
+            onClick={() => {
+              if (!themeWasLongPress.current) toggleTheme();
+            }}
+          >
             <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>{isDark ? "light_mode" : "dark_mode"}</i>
           </button>
           

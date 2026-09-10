@@ -265,7 +265,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
 }
 
 // ── Main RoleplayTab ────────────────────────────────────────────────────────
-export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], roleplayQuestions = [], setRoleplayQuestions, packTitle = '' }) {
+export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], roleplayQuestions = [], setRoleplayQuestions, packTitle = '', isActive }) {
   const [activeView, setActiveView] = useState('home'); // 'home' | 'qa'
 
   const hasQuestions = roleplayQuestions.length > 0;
@@ -276,6 +276,13 @@ export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], rolepla
       setActiveView('qa');
     }
   };
+
+  // 탭 비활성화 시 QA 세션 종료 (cleanup에서 ttsStop 자동 호출)
+  useEffect(() => {
+    if (!isActive && activeView === 'qa') {
+      setActiveView('home');
+    }
+  }, [isActive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Chat views ─────────────────────────────────────────────────────────
   if (activeView === 'qa' && hasQuestions) {

@@ -58,6 +58,9 @@ function App() {
     prevUserRef.current = user;
   }, [user, activeTab, setActiveTab]);
 
+  // ── 집중모드 상태 ──────────────────────────────
+  const [isCommuteMode, setIsCommuteMode] = useState(false);
+
   // ── 공유 상태 ──────────────────────────────
   const [apiKey, setApiKey] = useState(() => {
     try { return localStorage.getItem('linguist-api-key') || ''; }
@@ -246,14 +249,15 @@ function App() {
         streak={streak}
         onResetProgress={() => setStudiedIndices([])}
         onOpenSettings={() => setActiveTab('setup')}
+        onFocusMode={() => { setActiveTab('study'); setIsCommuteMode(true); }}
       />
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="content">
         <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>
-          <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} favorites={favorites} setFavorites={setFavorites} onSavePack={handleSavePack} user={user} />
+          <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} favorites={favorites} setFavorites={setFavorites} onSavePack={handleSavePack} user={user} isCommuteMode={isCommuteMode} setIsCommuteMode={setIsCommuteMode} isActive={activeTab === 'study'} />
         </div>
         <div style={{ display: activeTab === 'roleplay' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <RoleplayTab apiKey={apiKey} ttsApiKey={ttsApiKey} sentences={sentences} roleplayQuestions={roleplayQuestions} setRoleplayQuestions={setRoleplayQuestions} packTitle={displayTitle} />
+          <RoleplayTab apiKey={apiKey} ttsApiKey={ttsApiKey} sentences={sentences} roleplayQuestions={roleplayQuestions} setRoleplayQuestions={setRoleplayQuestions} packTitle={displayTitle} isActive={activeTab === 'roleplay'} />
         </div>
         <div style={{ display: activeTab === 'quiz' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <QuizTab sentences={sentences} />

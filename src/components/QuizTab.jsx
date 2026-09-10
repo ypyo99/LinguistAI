@@ -259,21 +259,21 @@ export default function QuizTab({ sentences }) {
         <div className="flex flex-row justify-center bg-amber-tint/60 p-1 sm:p-1.5 rounded-2xl shadow-inner text-xs sm:text-sm font-semibold gap-0.5 sm:gap-2 border border-line/50 flex-shrink min-w-0">
           <button 
             onClick={() => setQuizMode('mixed')}
-            className={`px-1.5 sm:px-5 py-1.5 sm:py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-0.5 sm:gap-1.5 ${quizMode === 'mixed' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
+            className={`px-1.5 sm:px-5 py-1.5 sm:py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-0.5 sm:gap-1.5 ${quizMode === 'mixed' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 dark:hover:bg-white/10 hover:text-ink'}`}
           >
             <i className="material-symbols-outlined text-[14px] sm:text-[18px]">shuffle</i>
             <span className="whitespace-nowrap">랜덤</span>
           </button>
           <button 
             onClick={() => setQuizMode('sentence')}
-            className={`px-1.5 sm:px-5 py-1.5 sm:py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-0.5 sm:gap-1.5 ${quizMode === 'sentence' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
+            className={`px-1.5 sm:px-5 py-1.5 sm:py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-0.5 sm:gap-1.5 ${quizMode === 'sentence' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 dark:hover:bg-white/10 hover:text-ink'}`}
           >
             <i className="material-symbols-outlined text-[14px] sm:text-[18px]">short_text</i>
             <span className="whitespace-nowrap">문장</span>
           </button>
           <button 
             onClick={() => setQuizMode('vocab')}
-            className={`px-1.5 sm:px-5 py-1.5 sm:py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-0.5 sm:gap-1.5 ${quizMode === 'vocab' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 hover:text-ink'}`}
+            className={`px-1.5 sm:px-5 py-1.5 sm:py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-0.5 sm:gap-1.5 ${quizMode === 'vocab' ? 'btn-orange shadow-md transform scale-105 font-bold' : 'text-ink-soft hover:bg-white/60 dark:hover:bg-white/10 hover:text-ink'}`}
           >
             <i className="material-symbols-outlined text-[14px] sm:text-[18px]">lightbulb</i>
             <span className="whitespace-nowrap">단어</span>
@@ -281,7 +281,7 @@ export default function QuizTab({ sentences }) {
         </div>
 
         {/* Skip Button */}
-        <button onClick={generateQuiz} className="text-xs sm:text-sm text-ink-soft flex items-center justify-center gap-0.5 sm:gap-1 bg-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-full shadow-sm whitespace-nowrap flex-shrink-0">
+        <button onClick={generateQuiz} className="text-xs sm:text-sm text-ink-soft flex items-center justify-center gap-0.5 sm:gap-1 bg-white dark:bg-dark-surface px-2 sm:px-3 py-1.5 sm:py-2 rounded-full shadow-sm whitespace-nowrap flex-shrink-0">
           <i className="material-symbols-outlined text-[14px] sm:text-[18px]">skip_next</i>
           <span className="hidden sm:inline">건너뛰기</span>
           <span className="sm:hidden">패스</span>
@@ -335,8 +335,8 @@ export default function QuizTab({ sentences }) {
                 });
               })()}
             </p>
-            <div className={`quiz-sentence-box bg-white p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
-              ${selectedAnswer === 'correct' ? 'border-green-400 bg-green-50 shadow-green-100' : 'border-teal-tint'}
+            <div className={`quiz-sentence-box bg-white dark:bg-dark-surface p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
+              ${selectedAnswer === 'correct' ? 'border-green-400 bg-green-50 shadow-green-100 dark:bg-green-900/30 dark:border-green-500' : 'border-teal-tint'}
               transition-colors duration-300`}>
               <div className="text-base sm:text-lg md:text-xl font-bold text-ink-soft mb-2">이 문장에서 밑줄 친 단어의 뜻은?</div>
               <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-ink leading-relaxed md:leading-tight tracking-tight">
@@ -389,7 +389,7 @@ export default function QuizTab({ sentences }) {
           <button
             key={idx}
             onClick={() => handleOptionClick(option)}
-            className={`quiz-option-btn relative overflow-hidden bg-white hover:bg-teal-tint active:bg-teal-deep text-ink hover:text-teal-deep active:text-white font-bold py-5 md:py-8 rounded-2xl shadow-md border border-line transition-all break-words
+            className={`quiz-option-btn relative overflow-hidden bg-white dark:bg-dark-surface hover:bg-teal-tint active:bg-teal-deep text-ink hover:text-teal-deep active:text-white font-bold py-5 md:py-8 rounded-2xl shadow-md border border-line transition-all break-words
               ${quizData.quizType === 'vocab-meaning' ? 'text-base sm:text-lg md:text-xl lg:text-2xl' : 'text-lg sm:text-xl md:text-3xl'}`}
           >
             {option}

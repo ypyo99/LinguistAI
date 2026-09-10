@@ -84,14 +84,13 @@ function AutoWidthSelect({ value, onChange, children, className }) {
 }
 
 // ── 메인 컴포넌트 ────────────────────────────────────
-export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setStudiedIndices, studiedIndices, favorites, setFavorites, onSavePack, user }) {
+export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setStudiedIndices, studiedIndices, favorites, setFavorites, onSavePack, user, isCommuteMode, setIsCommuteMode, isActive }) {
   const [showSettings, setShowSettings] = usePersistentState('linguist-study-settings', false);
   const [showList, setShowList] = usePersistentState('linguist-study-list', true);
   const favoritesRef = useRef(favorites);
   useEffect(() => { favoritesRef.current = favorites; }, [favorites]);
   const studiedIndicesRef = useRef(studiedIndices);
   useEffect(() => { studiedIndicesRef.current = studiedIndices; }, [studiedIndices]);
-  const [isCommuteMode, setIsCommuteMode] = useState(false);
   const [commuteBrightness, setCommuteBrightness] = usePersistentState('linguist-commute-brightness', 1.0);
 
   const [speed, setSpeed]       = usePersistentState('linguist-study-speed', 'normal');
@@ -182,6 +181,21 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   useEffect(() => {
     return () => { ttsStop(); };
   }, [ttsStop]);
+
+  // 탭 비활성화 시 재생 즉시 중지
+  useEffect(() => {
+    if (!isActive) {
+      shouldStop.current = true;
+      singleStop.current = true;
+      playRunId.current++;
+      ttsStop();
+      setIsPlaying(false);
+      setCurrentIdx(null);
+      setSingleIdx(null);
+      setIsWaiting(false);
+      if (isCommuteMode) setIsCommuteMode(false);
+    }
+  }, [isActive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isPlaying && singleIdx === null) setCurrentSpeakingLang(null);
