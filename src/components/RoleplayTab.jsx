@@ -223,7 +223,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
               width: '100%',
               textAlign: 'center',
               fontSize: '20px',
-              fontWeight: '500',
+              fontWeight: 'bold',
               lineHeight: '1.6',
               wordBreak: 'keep-all',
             }}>
