@@ -47,7 +47,7 @@ export default function CreateTab({ apiKey, onGenerate }) {
   }, [apiKey]);
 
   const [count, setCount] = usePersistentState('linguist-create-count', 10);
-  const [model, setModel] = usePersistentState('linguist-create-model', 'gemini-1.5-flash');
+  const [model, setModel] = usePersistentState('linguist-create-model', 'gemini-3.1-flash');
   const [customModel, setCustomModel] = usePersistentState('linguist-create-custom-model', '');
   const [inputMode, setInputMode] = usePersistentState('linguist-create-input-mode', 'api');
   const [manualText, setManualText] = useState('');
@@ -67,8 +67,10 @@ export default function CreateTab({ apiKey, onGenerate }) {
   
   const [loading, setLoading] = useState(false);
   const [generatingCount, setGeneratingCount] = useState(0);
+  const [generatingQuestions, setGeneratingQuestions] = useState(false);
   const [error, setError] = useState('');
   const [preview, setPreview] = usePersistentState('linguist-create-preview', []);
+  const [previewQuestions, setPreviewQuestions] = usePersistentState('linguist-create-preview-questions', []);
   const [packTitle, setPackTitle] = usePersistentState('linguist-create-packtitle', '');
 
   const getDifficultyRule = (diff) => {
@@ -91,6 +93,78 @@ ${getDifficultyRule(difficulty)}
 - Return ONLY a valid JSON array, no markdown fences, no explanation.
 Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"word1":"meaning1", "word2":"meaning2"}}]`;
 
+  const manualPrompt = `Generate exactly ${count} English learning sentences for a Korean learner.
+Topic: "${topic || '일상 회화'}"
+Level: ${DIFFICULTY_MAP[difficulty]}
+Rules for sentences:
+- Each sentence must be natural, practical, and appropriate for the context.
+${getDifficultyRule(difficulty)}
+- Korean translation must be accurate and natural.
+- Extract 2-3 key words from the English sentence and provide their contextual Korean meaning in a "vocab" object.
+
+Also generate exactly 10 open-ended English roleplay questions that:
+- Are directly related to the topic above
+- Encourage free-talking answers (not yes/no)
+- Progress from simpler to more complex
+- Sound natural and conversational
+
+Return ONLY a valid JSON object containing both "sentences" and "roleplayQuestions". No markdown fences, no explanation.
+Format:
+{
+  "sentences": [
+    {"en":"English sentence here","ko":"Korean translation here","vocab":{"word1":"meaning1", "word2":"meaning2"}}
+  ],
+  "roleplayQuestions": [
+    "Question 1?",
+    "Question 2?"
+  ]
+}`;
+
+  // ── 롤플레이 질문 생성 함수 ──────────────────────────────────
+  const generateRoleplayQuestions = async (parsedSentences) => {
+    const exampleSentences = parsedSentences.slice(0, 5).map(s => s.en).join('\n');
+    const qPrompt = `You are an English teacher creating conversational practice questions for a Korean learner.
+The learner is studying the topic: "${topic || '일상 회화'}" at ${DIFFICULTY_MAP[difficulty]} level.
+Here are some of their learning sentences for context:
+${exampleSentences}
+
+Generate exactly 10 open-ended English questions that:
+- Are directly related to the topic above
+- Encourage free-talking answers (not yes/no)
+- Progress from simpler to more complex
+- Are appropriate for ${DIFFICULTY_MAP[difficulty]} level learners
+- Sound natural and conversational
+
+Return ONLY a valid JSON array of 10 question strings, no markdown, no explanation.
+Format: ["Question 1?", "Question 2?", ...]`;
+
+    try {
+      const modelToUse = model.trim() || 'gemini-3.1-flash';
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey.trim()}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: qPrompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 1024, responseMimeType: 'application/json' },
+          }),
+        }
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      const match = raw.match(/\[[\s\S]*\]/);
+      if (!match) return [];
+      const parsed = JSON.parse(match[0]);
+      if (Array.isArray(parsed) && parsed.every(q => typeof q === 'string')) return parsed;
+      return [];
+    } catch (e) {
+      console.warn('롤플레이 질문 생성 실패:', e.message);
+      return [];
+    }
+  };
+
   const handleGenerate = async () => {
     if (!apiKey) {
       setError('⚠️ 설정 탭에서 Gemini API 키를 먼저 입력해주세요.');
@@ -100,6 +174,7 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
     setLoading(true);
     setError('');
     setPreview([]);
+    setPreviewQuestions([]);
 
     const prompt = generatedPrompt;
 
@@ -223,8 +298,15 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
       if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('유효한 문장 데이터를 받지 못했습니다.');
 
       setPreview(parsed);
+
+      // ── 롤플레이 질문 생성 (백그라운드) ──
+      setGeneratingQuestions(true);
+      const questions = await generateRoleplayQuestions(parsed);
+      setPreviewQuestions(questions);
+      setGeneratingQuestions(false);
     } catch (e) {
       setError(`오류: ${e.message}`);
+      setGeneratingQuestions(false);
     } finally {
       setLoading(false);
     }
@@ -234,13 +316,33 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
     if (!manualText.trim()) return;
     
     try {
-      const jsonMatch = manualText.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) return;
-      
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].en && parsed[0].ko) {
-        setPreview(parsed);
-        setError('');
+      // First try to parse as an object { sentences: [], roleplayQuestions: [] } (New manual prompt format)
+      const objMatch = manualText.match(/\{[\s\S]*\}/);
+      if (objMatch) {
+        try {
+          const parsedObj = JSON.parse(objMatch[0]);
+          if (parsedObj.sentences && Array.isArray(parsedObj.sentences) && parsedObj.sentences.length > 0 && parsedObj.sentences[0].en) {
+            setPreview(parsedObj.sentences);
+            if (parsedObj.roleplayQuestions && Array.isArray(parsedObj.roleplayQuestions)) {
+              setPreviewQuestions(parsedObj.roleplayQuestions);
+            }
+            setError('');
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // Fallback: Try to parse as an array of sentences (Old prompt format / API fallback)
+      const arrMatch = manualText.match(/\[[\s\S]*\]/);
+      if (arrMatch) {
+        try {
+          const parsedArr = JSON.parse(arrMatch[0]);
+          if (Array.isArray(parsedArr) && parsedArr.length > 0 && parsedArr[0].en && parsedArr[0].ko) {
+            setPreview(parsedArr);
+            setError('');
+            return;
+          }
+        } catch (e) {}
       }
     } catch (e) {
       // 입력 중이거나 유효하지 않은 JSON일 때는 무시
@@ -251,8 +353,9 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
     if (preview.length > 0) {
       const baseTitle = packTitle.trim() || topic.trim() || '일상 회화';
       const generatedTitle = `${baseTitle}-${difficulty}-${preview.length}`;
-      onGenerate(preview, generatedTitle);
+      onGenerate(preview, generatedTitle, previewQuestions);
       setPreview([]); // 적용 후 미리보기 박스 숨기기
+      setPreviewQuestions([]);
       setManualText(''); // 적용 후 텍스트 박스 초기화
     }
   };
@@ -447,12 +550,12 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
                     <div className="relative">
                       <textarea
                         readOnly
-                        value={generatedPrompt}
+                        value={manualPrompt}
                         className="w-full h-24 p-3 rounded-md bg-surface-container-lowest dark:bg-dark-bg text-on-surface-variant dark:text-on-dark-surface-variant font-mono text-xs border border-outline-variant dark:border-outline focus:outline-none resize-none"
                       />
                       <button
                         onClick={() => {
-                          navigator.clipboard.writeText(generatedPrompt);
+                          navigator.clipboard.writeText(manualPrompt);
                           window.open('https://gemini.google.com/app', '_blank');
                         }}
                         className="absolute right-2 top-2 p-1.5 rounded-md btn-orange hover:opacity-90 transition-opacity"
@@ -532,15 +635,34 @@ Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"
                 </div>
               ))}
             </div>
+
+            {/* 롤플레이 질문 생성 상태 */}
+            {generatingQuestions ? (
+              <div className="flex items-center gap-2 mb-3 p-3 rounded-lg" style={{ background: 'var(--teal-tint)', color: 'var(--teal-deep)', fontSize: '13px' }}>
+                <svg className="animate-spin h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+                롤플레이 연습 질문 10개 생성 중...
+              </div>
+            ) : previewQuestions.length > 0 ? (
+              <div className="flex items-center gap-2 mb-3 p-3 rounded-lg" style={{ background: 'var(--teal-tint)', color: 'var(--teal-deep)', fontSize: '13px' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>record_voice_over</span>
+                <span>롤플레이 연습 질문 {previewQuestions.length}개도 함께 저장됩니다.</span>
+              </div>
+            ) : null}
+
             <button
               onClick={handleApply}
               className="btn-orange w-full h-11 rounded-xl text-sm sm:text-label-md font-medium active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+              disabled={generatingQuestions}
             >
               <span className="material-symbols-outlined text-xl">playlist_add_check</span>
-              학습 목록에 적용하고 학습 시작
+              {generatingQuestions ? '질문 생성 완료 후 적용 가능...' : '학습 목록에 적용하고 학습 시작'}
             </button>
           </section>
         )}
+
       </div>
     </div>
   );

@@ -32,6 +32,7 @@ export default function LibraryTab({
   setStudiedIndices,
   setActiveTab,
   setCurrentPackId,
+  setRoleplayQuestions,
   user,
   onTokenExpired,
 }) {
@@ -80,6 +81,7 @@ export default function LibraryTab({
     setFavorites(pack.favorites || []);
     setStudiedIndices(pack.studiedIndices || []);
     if (setCurrentPackId) setCurrentPackId(pack.id);
+    if (setRoleplayQuestions) setRoleplayQuestions(pack.roleplayQuestions || []);
     setActiveTab('study');
   };
 

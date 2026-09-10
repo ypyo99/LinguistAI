@@ -25,7 +25,7 @@ function parseName(rawName) {
   return { base, level, count };
 }
 
-export default function DataTab({ setUser: appSetUser, setSentences, setPackTitle, setStudiedIndices, setCurrentPackId, setFavorites }) {
+export default function DataTab({ setUser: appSetUser, setSentences, setPackTitle, setStudiedIndices, setCurrentPackId, setFavorites, setRoleplayQuestions }) {
   const [user, setUser] = usePersistentState('linguist-user', null);
   const [packs, setPacks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -80,7 +80,7 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
       const parsed = JSON.parse(text);
       let sentencesData = null;
       let titleName = pack.name.replace(/\.json$/i, '').replace(/\.txt$/i, '');
-      let studiedData = [], favoritesData = [];
+      let studiedData = [], favoritesData = [], roleplayData = [];
       if (Array.isArray(parsed)) {
         sentencesData = parsed;
       } else if (parsed && typeof parsed === 'object' && Array.isArray(parsed.sentences)) {
@@ -88,11 +88,13 @@ export default function DataTab({ setUser: appSetUser, setSentences, setPackTitl
         if (parsed.title) titleName = parsed.title;
         if (parsed.studiedIndices) studiedData = parsed.studiedIndices;
         if (parsed.favorites) favoritesData = parsed.favorites;
+        if (parsed.roleplayQuestions) roleplayData = parsed.roleplayQuestions;
       } else { throw new Error('유효한 JSON 배열 형식이 아닙니다.'); }
       setSentences(sentencesData);
       setPackTitle(titleName);
       setStudiedIndices(studiedData);
       if (setFavorites) setFavorites(favoritesData);
+      if (setRoleplayQuestions) setRoleplayQuestions(roleplayData);
       if (setCurrentPackId) setCurrentPackId(null);
       alert(`"${titleName}" 패키지가 적용되었습니다!`);
     } catch (err) {

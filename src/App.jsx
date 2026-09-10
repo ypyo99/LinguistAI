@@ -9,6 +9,7 @@ import StudyTab from './components/StudyTab';
 import QuizTab from './components/QuizTab';
 import DataTab from './components/DataTab';
 import LibraryTab from './components/LibraryTab';
+import RoleplayTab from './components/RoleplayTab';
 import Footer from './components/Footer';
 
 function App() {
@@ -52,6 +53,7 @@ function App() {
   const [favorites, setFavorites] = usePersistentState('linguist-study-favorites', []);
   const [savedPacks, setSavedPacks] = usePersistentState('linguist-saved-packs', []);
   const [currentPackId, setCurrentPackId] = usePersistentState('linguist-current-pack-id', null);
+  const [roleplayQuestions, setRoleplayQuestions] = usePersistentState('linguist-roleplay-questions', []);
 
   // ── 스트릭 (연속 학습일) 관리 ──────────────────────────
   const [streak, setStreak] = usePersistentState('linguist-streak', 0);
@@ -110,18 +112,19 @@ function App() {
           JSON.stringify(pack.favorites) !== JSON.stringify(favorites) ||
           JSON.stringify(pack.studiedIndices) !== JSON.stringify(studiedIndices) ||
           pack.title !== displayTitle ||
-          JSON.stringify(pack.sentences) !== JSON.stringify(sentences);
+          JSON.stringify(pack.sentences) !== JSON.stringify(sentences) ||
+          JSON.stringify(pack.roleplayQuestions) !== JSON.stringify(roleplayQuestions);
           
         if (!hasChanged) return prev;
 
         return prev.map(p => 
           p.id === currentPackId 
-            ? { ...p, favorites, studiedIndices, title: displayTitle, sentences } 
+            ? { ...p, favorites, studiedIndices, title: displayTitle, sentences, roleplayQuestions } 
             : p
         );
       });
     }
-  }, [favorites, studiedIndices, displayTitle, sentences, currentPackId, setSavedPacks, savedPacks.length]);
+  }, [favorites, studiedIndices, displayTitle, sentences, roleplayQuestions, currentPackId, setSavedPacks, savedPacks.length]);
 
   const handleSavePack = async () => {
     if (sentences.length === 0) return;
@@ -147,7 +150,7 @@ function App() {
           };
 
       // 현재 내용으로 pack 갱신
-      const packToSave = { ...pack, title: displayTitle, sentences, favorites, studiedIndices };
+      const packToSave = { ...pack, title: displayTitle, sentences, favorites, studiedIndices, roleplayQuestions };
 
       try {
         await savePack(user.accessToken, packToSave);
@@ -177,6 +180,7 @@ function App() {
           sentences,
           favorites,
           studiedIndices,
+          roleplayQuestions,
           createdAt: new Date().toISOString()
         };
         setSavedPacks(prev => [newPack, ...prev]);
@@ -221,6 +225,9 @@ function App() {
         <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>
           <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} favorites={favorites} setFavorites={setFavorites} onSavePack={handleSavePack} user={user} />
         </div>
+        <div style={{ display: activeTab === 'roleplay' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <RoleplayTab apiKey={apiKey} ttsApiKey={ttsApiKey} sentences={sentences} roleplayQuestions={roleplayQuestions} setRoleplayQuestions={setRoleplayQuestions} packTitle={displayTitle} />
+        </div>
         <div style={{ display: activeTab === 'quiz' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <QuizTab sentences={sentences} />
         </div>
@@ -234,6 +241,7 @@ function App() {
             setStudiedIndices={setStudiedIndices}
             setActiveTab={setActiveTab}
             setCurrentPackId={setCurrentPackId}
+            setRoleplayQuestions={setRoleplayQuestions}
             user={user}
             onTokenExpired={(reason) => {
               setUser(null);
@@ -246,14 +254,15 @@ function App() {
           />
         </div>
         <div style={{ display: activeTab === 'store' ? 'block' : 'none' }}>
-          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} setCurrentPackId={setCurrentPackId} setFavorites={setFavorites} />
+          <DataTab setUser={setUser} setSentences={setSentences} setPackTitle={setPackTitle} setStudiedIndices={setStudiedIndices} setCurrentPackId={setCurrentPackId} setFavorites={setFavorites} setRoleplayQuestions={setRoleplayQuestions} />
         </div>
         <div style={{ display: activeTab === 'create' ? 'block' : 'none' }}>
           <CreateTab
             apiKey={apiKey}
-            onGenerate={(s, title) => { 
+            onGenerate={(s, title, questions) => { 
               setSentences(s); 
               setPackTitle(title || `AI 생성 학습 데이터 ${s.length}개`);
+              setRoleplayQuestions(questions || []);
               setStudiedIndices([]);
               setFavorites([]);
               setCurrentPackId(null);
