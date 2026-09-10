@@ -18,8 +18,8 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
     const currentQ = shuffledQuestions[currentQIndex];
     if (!currentQ) return;
 
-    // 15 seconds for every question regardless of difficulty
-    const delaySeconds = 15;
+    // 30 seconds for every question regardless of difficulty
+    const delaySeconds = 30;
     setTimeLeft(delaySeconds);
     setTotalTime(delaySeconds);
     
@@ -202,7 +202,7 @@ export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], rolepla
               </div>
               <div className="rp-hiw-step">
                 <span className="rp-hiw-num">3</span>
-                <span>15초가 지나면 다음 질문으로 자동으로 넘어갑니다</span>
+                <span>30초가 지나면 다음 질문으로 자동으로 넘어갑니다</span>
               </div>
               <div className="rp-hiw-step">
                 <span className="rp-hiw-num">4</span>
