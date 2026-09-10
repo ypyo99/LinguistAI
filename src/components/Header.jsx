@@ -27,7 +27,7 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
 
   // 구글 로그인 훅
   const login = useGoogleLogin({
-    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly',
+    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive',
     onSuccess: async (tokenResponse) => {
       try {
         const res = await fetch('https://www.googleapis.com/oauth2/v1/userinfo', {
@@ -56,7 +56,7 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
     if (Capacitor.isNativePlatform()) {
       GoogleAuth.initialize({
         clientId: '686267885768-dbfrdhospkatu04hvsc5mbu5n6gnjapd.apps.googleusercontent.com',
-        scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive.readonly'],
+        scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive.readonly', 'https://www.googleapis.com/auth/drive'],
         grantOfflineAccess: true,
       });
     }
