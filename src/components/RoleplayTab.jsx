@@ -62,28 +62,42 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
     };
   }, [currentQIndex, phase, done, ttsSpeak, ttsStop, currentItem]);
 
-  // ── 모범답안 단계: TTS 읽어주기 ────────────────────────────────────────────
+  // ── 모범답안 단계: TTS 읽어주기 → 자동으로 다음 질문 이동 ────────────────────
   useEffect(() => {
     if (done || phase !== 'modelAnswer') return;
-    if (!currentItem?.modelAnswer) return;
 
     let isCancelled = false;
-    const playModelAnswer = async () => {
+    const playAndAdvance = async () => {
       await new Promise(resolve => setTimeout(resolve, 600));
-      if (!isCancelled) {
+      if (isCancelled) return;
+      if (currentItem?.modelAnswer) {
         await ttsSpeak(currentItem.modelAnswer, 'en-US', 0.95);
+      } else {
+        // 모범답안 없으면 2초 대기 후 진행
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+      if (isCancelled) return;
+      // TTS 종료 후 1초 텀을 두고 자동으로 다음 질문 이동
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!isCancelled) {
+        if (currentQIndex < shuffledQuestions.length - 1) {
+          setCurrentQIndex(q => q + 1);
+          setPhase('question');
+        } else {
+          setDone(true);
+        }
       }
     };
-    playModelAnswer();
+    playAndAdvance();
 
     return () => {
       isCancelled = true;
       ttsStop();
     };
-  }, [phase, currentQIndex, done, ttsSpeak, ttsStop, currentItem]);
+  }, [phase, currentQIndex, done, ttsSpeak, ttsStop, currentItem, shuffledQuestions.length]);
 
-  // ── 다음으로 진행 ──────────────────────────────────────────────────────────
-  const handleNext = () => {
+  // ── 건너뛰기 (수동) ───────────────────────────────────────────────────────
+  const handleSkip = () => {
     ttsStop();
     if (currentQIndex < shuffledQuestions.length - 1) {
       setCurrentQIndex(q => q + 1);
@@ -216,17 +230,14 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
               {currentItem?.modelAnswer || '(모범답안 없음)'}
             </div>
 
-            {/* 다음 질문 버튼 */}
+            {/* 건너뛰기 버튼 */}
             <button
               className="btn-orange"
-              onClick={handleNext}
-              style={{ padding: '14px 32px', borderRadius: '14px', fontSize: '16px', fontWeight: '600', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}
+              onClick={handleSkip}
+              style={{ padding: '10px 24px', borderRadius: '14px', fontSize: '14px', fontWeight: '600', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.8 }}
             >
-              {currentQIndex < shuffledQuestions.length - 1 ? (
-                <>다음 질문 <i className="material-symbols-outlined">arrow_forward</i></>
-              ) : (
-                <>완료 <i className="material-symbols-outlined">check_circle</i></>
-              )}
+              <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>skip_next</i>
+              {currentQIndex < shuffledQuestions.length - 1 ? '건너뛰기' : '완료'}
             </button>
           </div>
         )}
