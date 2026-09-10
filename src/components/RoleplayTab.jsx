@@ -23,8 +23,18 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
     setTimeLeft(delaySeconds);
     setTotalTime(delaySeconds);
     
-    // Narrate the question
-    ttsSpeak(currentQ, 'en-US', 1.0);
+    let isCancelled = false;
+    // Narrate the question three times
+    const playAudioThreeTimes = async () => {
+      for (let i = 0; i < 3; i++) {
+        if (isCancelled) break;
+        await ttsSpeak(currentQ, 'en-US', 1.0);
+        if (i < 2 && !isCancelled) {
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+      }
+    };
+    playAudioThreeTimes();
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
@@ -42,6 +52,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
     }, 1000);
 
     return () => {
+      isCancelled = true;
       clearInterval(timer);
       ttsStop();
     };
