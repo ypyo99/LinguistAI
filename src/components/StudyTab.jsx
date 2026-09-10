@@ -523,7 +523,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       >
         <div className="settings-header" onClick={() => setShowSettings(!showSettings)}>
           <div className="settings-left">
-            <div className="settings-ic"><i className="material-symbols-outlined" style={{ fontSize: '20px' }}>settings</i></div>
+            <div className="settings-ic"><i className="material-symbols-outlined" style={{ fontSize: '20px' }}>tune</i></div>
             <div className="settings-label">재생 설정</div>
           </div>
           <i className="material-symbols-outlined chev">expand_more</i>
