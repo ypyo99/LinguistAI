@@ -19,8 +19,8 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTime, setTotalTime] = useState(1);
 
-  // packTitle에서 난이도 감지: 중급/고급 → 40초, 초급 → 30초
-  const answerSeconds = (packTitle.includes('중급') || packTitle.includes('고급')) ? 40 : 30;
+  // packTitle에서 난이도 감지: 초급 20초, 중급/고급 30초
+  const answerSeconds = packTitle.includes('초급') ? 20 : 30;
 
   const { speak: ttsSpeak, stop: ttsStop } = useTTS(ttsApiKey);
 
