@@ -60,8 +60,9 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
           <i className="material-symbols-outlined">quiz</i>
         </div>
         <div className="rp-chat-header-info">
-          <div className="rp-chat-header-label">{packTitle}</div>
-          <div className="rp-chat-header-hint">Q {Math.min(currentQIndex + 1, questions.length)} / {questions.length} · English free-talking</div>
+          <div className="rp-chat-header-hint" style={{ fontSize: '15px', fontWeight: '500', color: 'var(--ink)' }}>
+            Q {Math.min(currentQIndex + 1, questions.length)} / {questions.length} · English free-talking
+          </div>
         </div>
       </div>
 
