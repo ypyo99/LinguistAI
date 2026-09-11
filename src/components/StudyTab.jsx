@@ -892,7 +892,15 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               </button>
 
               {!isLocked && (
-                <button className="commute-close-btn" onClick={() => setIsCommuteMode(false)}>
+                <button 
+                  className="commute-close-btn" 
+                  onClick={() => setIsCommuteMode(false)}
+                  style={{
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none'
+                  }}
+                >
                   <i className="material-symbols-outlined">close</i>
                 </button>
               )}
