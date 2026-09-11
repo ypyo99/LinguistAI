@@ -3,6 +3,7 @@ import { usePersistentState } from '../hooks/usePersistentState';
 import { useTTS, GOOGLE_VOICES } from '../hooks/useTTS';
 import { Capacitor } from '@capacitor/core';
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { useWakeLock } from '../hooks/useWakeLock';
 
 // ── 유틸 ────────────────────────────────────────────
@@ -92,6 +93,10 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const studiedIndicesRef = useRef(studiedIndices);
   useEffect(() => { studiedIndicesRef.current = studiedIndices; }, [studiedIndices]);
   const [commuteBrightness, setCommuteBrightness] = usePersistentState('linguist-commute-brightness', 1.0);
+  
+  const [isLocked, setIsLocked] = useState(false);
+  const [showLockHint, setShowLockHint] = useState(false);
+  const lockPressTimer = useRef(null);
 
   const [speed, setSpeed]       = usePersistentState('linguist-study-speed', 'normal');
   const [mode, setMode]         = usePersistentState('linguist-study-mode', 'sequential');
@@ -807,21 +812,88 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       {isCommuteMode && (
         <div className="commute-mode-overlay">
           <div className="commute-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, paddingRight: '20px' }}>
-              <i className="material-symbols-outlined" style={{ fontSize: '20px', color: '#888' }}>light_mode</i>
-              <input 
-                type="range" 
-                min="0.1" 
-                max="1.0" 
-                step="0.05" 
-                value={commuteBrightness} 
-                onChange={e => setCommuteBrightness(Number(e.target.value))} 
-                style={{ flex: 1, accentColor: 'var(--teal)' }}
-              />
+            {!isLocked && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, paddingRight: '20px' }}>
+                <i className="material-symbols-outlined" style={{ fontSize: '20px', color: '#888' }}>light_mode</i>
+                <input 
+                  type="range" 
+                  min="0.1" 
+                  max="1.0" 
+                  step="0.05" 
+                  value={commuteBrightness} 
+                  onChange={e => setCommuteBrightness(Number(e.target.value))} 
+                  style={{ flex: 1, accentColor: 'var(--teal)' }}
+                />
+              </div>
+            )}
+            
+            <div style={{ display: 'flex', alignItems: 'center', marginLeft: isLocked ? 'auto' : '0' }}>
+              <button 
+                className="commute-close-btn" 
+                style={{ 
+                  marginRight: isLocked ? '0' : '12px', 
+                  background: isLocked ? 'rgba(255, 255, 255, 0.15)' : '',
+                  color: isLocked ? 'var(--amber)' : '',
+                  position: 'relative'
+                }}
+                onMouseDown={() => {
+                  if (!isLocked) return;
+                  lockPressTimer.current = setTimeout(() => {
+                    setIsLocked(false);
+                    setShowLockHint(false);
+                    try { Haptics.impact({ style: ImpactStyle.Heavy }); } catch (e) {}
+                  }, 800);
+                }}
+                onMouseUp={() => clearTimeout(lockPressTimer.current)}
+                onMouseLeave={() => clearTimeout(lockPressTimer.current)}
+                onTouchStart={() => {
+                  if (!isLocked) return;
+                  lockPressTimer.current = setTimeout(() => {
+                    setIsLocked(false);
+                    setShowLockHint(false);
+                    try { Haptics.impact({ style: ImpactStyle.Heavy }); } catch (e) {}
+                  }, 800);
+                }}
+                onTouchEnd={() => clearTimeout(lockPressTimer.current)}
+                onClick={() => {
+                  if (!isLocked) {
+                    setIsLocked(true);
+                    setShowLockHint(true);
+                    setTimeout(() => setShowLockHint(false), 2500);
+                  } else {
+                    setShowLockHint(true);
+                    setTimeout(() => setShowLockHint(false), 2500);
+                  }
+                }}
+              >
+                <i className="material-symbols-outlined">{isLocked ? 'lock' : 'lock_open'}</i>
+                
+                {/* 툴팁/힌트 */}
+                {isLocked && showLockHint && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '120%',
+                    right: 0,
+                    background: 'rgba(0,0,0,0.8)',
+                    color: '#fff',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    whiteSpace: 'nowrap',
+                    pointerEvents: 'none',
+                    animation: 'fadeIn 0.2s',
+                  }}>
+                    길게 눌러 잠금 해제
+                  </div>
+                )}
+              </button>
+
+              {!isLocked && (
+                <button className="commute-close-btn" onClick={() => setIsCommuteMode(false)}>
+                  <i className="material-symbols-outlined">close</i>
+                </button>
+              )}
             </div>
-            <button className="commute-close-btn" onClick={() => setIsCommuteMode(false)}>
-              <i className="material-symbols-outlined">close</i>
-            </button>
           </div>
           <div className="commute-content" style={{ filter: `brightness(${commuteBrightness})` }}>
             {activeSentence ? (
@@ -840,19 +912,22 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               <div className="commute-text-ko" style={{ color: '#888' }}>재생 대기 중...</div>
             )}
           </div>
-          <div className="commute-controls" style={{ filter: `brightness(${commuteBrightness})` }}>
-            <button className="commute-btn" onClick={handlePrev}>
-              <i className="material-symbols-outlined">skip_previous</i>
-            </button>
-            <button className="commute-btn" onClick={handleTogglePlay}>
-              <i className="material-symbols-outlined">
-                {isPlaying ? "pause_circle" : "play_circle"}
-              </i>
-            </button>
-            <button className="commute-btn" onClick={handleNext}>
-              <i className="material-symbols-outlined">skip_next</i>
-            </button>
-          </div>
+          
+          {!isLocked && (
+            <div className="commute-controls" style={{ filter: `brightness(${commuteBrightness})` }}>
+              <button className="commute-btn" onClick={handlePrev}>
+                <i className="material-symbols-outlined">skip_previous</i>
+              </button>
+              <button className="commute-btn" onClick={handleTogglePlay}>
+                <i className="material-symbols-outlined">
+                  {isPlaying ? "pause_circle" : "play_circle"}
+                </i>
+              </button>
+              <button className="commute-btn" onClick={handleNext}>
+                <i className="material-symbols-outlined">skip_next</i>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
