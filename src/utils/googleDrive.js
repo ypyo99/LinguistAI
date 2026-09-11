@@ -1,11 +1,5 @@
-/**
- * googleDrive.js
- * 구글 드라이브 API 유틸리티 — 보관함 / 스토어 연동용
- *
- * 폴더 구조:
- *   내 드라이브 / LinguistAI / 보관함 / {pack_id}.json  ← 사용자 보관함
- *   내 드라이브 / LinguistAI / 스토어  / *.json         ← 관리자가 올린 프리미엄 데이터
- */
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
@@ -13,7 +7,32 @@ const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
 // ── 내부 헬퍼 ─────────────────────────────────────────────────────────────────
 
 /**
- * 401 응답 시 토큰 만료로 처리할 수 있도록 에러를 throw합니다.
+ * 401 응답 시 모바일 환경이면 토큰을 백그라운드 갱신하고 API를 재요청합니다.
+ */
+async function fetchWithAuth(url, options) {
+  let res = await fetch(url, options);
+  
+  if (res.status === 401 && Capacitor.isNativePlatform()) {
+    try {
+      const authResult = await GoogleAuth.refresh();
+      const newAccessToken = authResult.authentication.accessToken;
+      
+      // 앱(App.jsx 등)의 전역 상태 업데이트를 위한 이벤트 발생
+      window.dispatchEvent(new CustomEvent('token_refreshed', { detail: newAccessToken }));
+      
+      // 헤더를 갱신하고 재시도
+      options.headers.Authorization = `Bearer ${newAccessToken}`;
+      res = await fetch(url, options);
+    } catch (refreshErr) {
+      console.error('백그라운드 토큰 갱신 실패', refreshErr);
+      // 갱신 실패 시 기존처럼 401 유지
+    }
+  }
+  return res;
+}
+
+/**
+ * 응답의 에러를 체크하고 throw합니다.
  */
 async function checkResponse(res, errorPrefix = '드라이브 API 오류') {
   if (res.status === 401) {
@@ -56,7 +75,7 @@ async function findFolder(accessToken, parentId, name) {
     ? `name='${name}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`
     : `name='${name}' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false`;
 
-  const res = await fetch(
+  const res = await fetchWithAuth(
     `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id,name)`,
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );
@@ -75,7 +94,7 @@ async function createFolder(accessToken, parentId, name) {
     mimeType: 'application/vnd.google-apps.folder',
     ...(parentId ? { parents: [parentId] } : { parents: ['root'] }),
   };
-  const res = await fetch(`${DRIVE_API}/files?fields=id`, {
+  const res = await fetchWithAuth(`${DRIVE_API}/files?fields=id`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -153,7 +172,7 @@ export async function getStoreFolderId(accessToken) {
  */
 export async function listPackFiles(accessToken, folderId) {
   const q = `'${folderId}' in parents and trashed=false and mimeType='application/json'`;
-  const res = await fetch(
+  const res = await fetchWithAuth(
     `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id,name,modifiedTime)&orderBy=name`,
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );
@@ -167,7 +186,7 @@ export async function listPackFiles(accessToken, folderId) {
  * @returns {Object} pack 객체
  */
 export async function downloadPackFile(accessToken, fileId) {
-  const res = await fetch(`${DRIVE_API}/files/${fileId}?alt=media`, {
+  const res = await fetchWithAuth(`${DRIVE_API}/files/${fileId}?alt=media`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   await checkResponse(res, '파일 다운로드 실패');
@@ -195,7 +214,7 @@ export async function uploadPack(accessToken, folderId, pack, existingFileId = n
 
   if (existingFileId) {
     // 기존 파일 내용 업데이트 (PATCH)
-    const res = await fetch(
+    const res = await fetchWithAuth(
       `${DRIVE_UPLOAD_API}/files/${existingFileId}?uploadType=media`,
       {
         method: 'PATCH',
@@ -220,7 +239,7 @@ export async function uploadPack(accessToken, folderId, pack, existingFileId = n
     form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
     form.append('file', blob);
 
-    const res = await fetch(`${DRIVE_UPLOAD_API}/files?uploadType=multipart&fields=id`, {
+    const res = await fetchWithAuth(`${DRIVE_UPLOAD_API}/files?uploadType=multipart&fields=id`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}` },
       body: form,
@@ -239,7 +258,7 @@ export async function updatePackTitleAndContent(accessToken, fileId, newTitle, p
   const fileName = `${safeTitle}.json`;
 
   // 1. Update metadata (filename)
-  const metaRes = await fetch(`${DRIVE_API}/files/${fileId}`, {
+  const metaRes = await fetchWithAuth(`${DRIVE_API}/files/${fileId}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -253,7 +272,7 @@ export async function updatePackTitleAndContent(accessToken, fileId, newTitle, p
   pack.title = newTitle;
   const content = JSON.stringify(pack, null, 2);
   const blob = new Blob([content], { type: 'application/json' });
-  const uploadRes = await fetch(`${DRIVE_UPLOAD_API}/files/${fileId}?uploadType=media`, {
+  const uploadRes = await fetchWithAuth(`${DRIVE_UPLOAD_API}/files/${fileId}?uploadType=media`, {
     method: 'PATCH',
     headers: { Authorization: `Bearer ${accessToken}` },
     body: blob
@@ -265,7 +284,7 @@ export async function updatePackTitleAndContent(accessToken, fileId, newTitle, p
  * 드라이브에서 파일을 삭제합니다.
  */
 export async function deletePackFile(accessToken, fileId) {
-  const res = await fetch(`${DRIVE_API}/files/${fileId}`, {
+  const res = await fetchWithAuth(`${DRIVE_API}/files/${fileId}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -320,7 +339,7 @@ export async function savePack(accessToken, pack, _driveFiles = [], folderId = n
 
   // 드라이브에서 같은 이름의 파일 검색
   const q = `name='${fileName.replace(/'/g, "\\'")}'  and '${resolvedFolderId}' in parents and trashed=false`;
-  const res = await fetch(
+  const res = await fetchWithAuth(
     `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id)`,
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );

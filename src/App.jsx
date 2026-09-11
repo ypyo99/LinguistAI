@@ -58,6 +58,17 @@ function App() {
     prevUserRef.current = user;
   }, [user, activeTab, setActiveTab]);
 
+  // ── 토큰 갱신 이벤트 리스너 ──────────────────────────────
+  useEffect(() => {
+    const handleTokenRefresh = (e) => {
+      const newAccessToken = e.detail;
+      setUser(prev => prev ? { ...prev, accessToken: newAccessToken } : null);
+    };
+    
+    window.addEventListener('token_refreshed', handleTokenRefresh);
+    return () => window.removeEventListener('token_refreshed', handleTokenRefresh);
+  }, [setUser]);
+
   // ── 집중모드 상태 ──────────────────────────────
   const [isCommuteMode, setIsCommuteMode] = useState(false);
 
