@@ -834,7 +834,10 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                   marginRight: isLocked ? '0' : '12px', 
                   background: isLocked ? 'rgba(255, 255, 255, 0.15)' : '',
                   color: isLocked ? 'var(--amber)' : '',
-                  position: 'relative'
+                  position: 'relative',
+                  WebkitUserSelect: 'none',
+                  userSelect: 'none',
+                  WebkitTouchCallout: 'none'
                 }}
                 onMouseDown={() => {
                   if (!isLocked) return;
