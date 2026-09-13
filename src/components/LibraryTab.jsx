@@ -337,14 +337,14 @@ export default function LibraryTab({
                     </span>
                   )}
                   {count && (
-                    <span style={{ fontSize: '11px', color: 'var(--ink-soft)', fontWeight: '600' }}>{count}문장</span>
+                    <span style={{ fontSize: '11px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600' }}>{count}문장</span>
                   )}
-                  <span style={{ fontSize: '11px', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', gap: '2px', marginLeft: 'auto' }}>
-                    <i className="material-symbols-outlined" style={{ fontSize: '12px', color: 'var(--amber)' }}>star</i>
+                  <span style={{ fontSize: '11px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px', marginLeft: 'auto' }}>
+                    <i className="material-symbols-outlined" style={{ fontSize: '14px', color: 'var(--teal)' }}>star</i>
                     {pack.favorites?.length || 0}
                   </span>
                   {isLoggedIn && (
-                    <i className="material-symbols-outlined" style={{ fontSize: '13px', color: '#F97316' }} title="구글 드라이브에 저장됨">cloud_done</i>
+                    <i className="material-symbols-outlined" style={{ fontSize: '14px', color: 'var(--teal)' }} title="구글 드라이브에 저장됨">cloud_done</i>
                   )}
                 </div>
 

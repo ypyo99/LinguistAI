@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { getStoreFolderId, deletePackFile } from '../utils/googleDrive';
 import { showAuthAlert } from '../utils/authAlert';
@@ -34,7 +34,16 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
+  const [inputValue, setInputValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // 한글 입력(IME) 시 버벅임 및 자음/모음 분리 방지를 위한 디바운스
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(inputValue);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [inputValue]);
 
   const fetchFiles = async () => {
     if (!user || !user.accessToken) return;
@@ -153,21 +162,22 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
     return levelDiff;
   });
 
-  const filteredPacks = packs.filter((pack) => {
-    if (!searchQuery) return true;
-    const { base, level } = parseName(pack.name);
-    const uploader = pack.owners?.[0]?.displayName || '';
-    const q = searchQuery.toLowerCase();
-    
-    return (
-      (base && base.toLowerCase().includes(q)) ||
-      (level && level.toLowerCase().includes(q)) ||
-      (uploader && uploader.toLowerCase().includes(q)) ||
-      (pack.name && pack.name.toLowerCase().includes(q))
-    );
-  });
-
-  const displayPacks = sortPacks(filteredPacks);
+  const displayPacks = useMemo(() => {
+    const filtered = packs.filter((pack) => {
+      if (!searchQuery) return true;
+      const { base, level } = parseName(pack.name);
+      const uploader = pack.owners?.[0]?.displayName || '';
+      const q = searchQuery.toLowerCase();
+      
+      return (
+        (base && base.toLowerCase().includes(q)) ||
+        (level && level.toLowerCase().includes(q)) ||
+        (uploader && uploader.toLowerCase().includes(q)) ||
+        (pack.name && pack.name.toLowerCase().includes(q))
+      );
+    });
+    return sortPacks(filtered);
+  }, [packs, searchQuery]);
 
   return (
     <div className="tab-fade-in" style={{ paddingBottom: '40px' }}>
@@ -218,8 +228,8 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
           <input
             type="text"
             placeholder="제목, 난이도, 업로더로 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
             style={{
               width: '100%',
               padding: '10px 12px 10px 38px',
@@ -259,15 +269,15 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                   boxShadow: 'var(--shadow)',
                   padding: '10px',
                   display: 'flex',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                   justifyContent: 'space-between',
                   gap: '8px',
                 }}
               >
                 {/* 왼쪽 정보 영역 */}
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: '0 1 auto', minWidth: 0 }}>
                       {base}
                     </div>
                     {pack.owners?.[0]?.me && (
@@ -288,7 +298,7 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                   </div>
                   
                   {/* 메타 데이터 한 줄 표시 */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
                     {badge && (
                       <span style={{
                         fontSize: '9px', fontWeight: '700', padding: '2px 5px',
@@ -299,28 +309,28 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                       </span>
                     )}
                     {count && (
-                      <span style={{ fontSize: '10px', color: 'var(--ink-soft)', fontWeight: '600', flexShrink: 0 }}>
+                      <span style={{ fontSize: '10px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', flexShrink: 0 }}>
                         {count}문장
                       </span>
                     )}
                     {pack.owners?.[0]?.displayName && (
-                      <span style={{ fontSize: '10px', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '2px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        <i className="material-symbols-outlined" style={{ fontSize: '11px', flexShrink: 0 }}>person</i>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{pack.owners[0].displayName}</span>
+                      <span style={{ fontSize: '10px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '4px', flex: '0 1 auto', minWidth: 0 }}>
+                        <i className="material-symbols-outlined" style={{ fontSize: '12px', color: 'var(--teal)', flexShrink: 0 }}>person</i>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pack.owners[0].displayName}</span>
                       </span>
                     )}
                   </div>
                 </div>
 
                 {/* 오른쪽 버튼들 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, marginTop: '-2px' }}>
                   <button
                     onClick={() => handleDownload(pack)}
                     disabled={!!loadingId}
                     title={`${base} 적용`}
                     style={{
-                      width: '32px', height: '32px',
-                      borderRadius: '10px', border: 'none',
+                      width: '24px', height: '24px',
+                      borderRadius: '7px', border: 'none',
                       background: isDown ? '#FED7AA' : '#F97316',
                       color: '#fff',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -328,7 +338,7 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                       transition: 'background 0.15s',
                     }}
                   >
-                    <i className="material-symbols-outlined" style={{ fontSize: '16px', animation: isDown ? 'spin 1s linear infinite' : 'none' }}>
+                    <i className="material-symbols-outlined" style={{ fontSize: '14px', animation: isDown ? 'spin 1s linear infinite' : 'none' }}>
                       {isDown ? 'autorenew' : 'play_arrow'}
                     </i>
                   </button>
