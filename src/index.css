@@ -45,6 +45,7 @@
   --amber:#5E6E72;
   --amber-tint:#EAEEEE;
   --shadow: 0 1px 2px rgba(22,38,42,0.05);
+  --save-btn-text: #ffffff;
 }
 .dark, [data-mode="dark"]{
   --ink:#F5EDE7;
@@ -58,6 +59,7 @@
   --amber:#A99787;
   --amber-tint:#2A211C;
   --shadow: 0 1px 2px rgba(0,0,0,0.3);
+  --save-btn-text: #431407;
 }
 
 body{

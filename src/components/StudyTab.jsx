@@ -728,7 +728,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {user?.accessToken && (
-            <button onClick={(e) => { e.stopPropagation(); onSavePack?.(); }} style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px', border: 'none', background: 'var(--teal)', color: '#431407', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+            <button onClick={(e) => { e.stopPropagation(); onSavePack?.(); }} style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px', border: 'none', background: 'var(--teal)', color: 'var(--save-btn-text)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
               <i className="material-symbols-outlined" style={{ fontSize: '16px', color: 'inherit' }}>save</i>
               보관함에 저장
             </button>
