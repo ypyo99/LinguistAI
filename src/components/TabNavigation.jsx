@@ -2,8 +2,8 @@ const TABS = [
   { id: 'study', label: '학습', icon: 'headphones' },
   { id: 'roleplay', label: '프리토킹', icon: 'record_voice_over' },
   { id: 'quiz', label: '퀴즈', icon: 'sports_esports' },
-  { id: 'library', label: '보관함', icon: 'inventory_2' },
-  { id: 'store', label: '스토어', icon: 'storefront' },
+  { id: 'library', label: '내 자료', icon: 'inventory_2' },
+  { id: 'store', label: '공유 자료', icon: 'storefront' },
   { id: 'create', label: '생성', icon: 'note_add' }
 ];
 
