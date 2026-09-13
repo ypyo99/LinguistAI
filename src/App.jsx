@@ -81,15 +81,22 @@ function App() {
     { en: 'Excuse me, where is the nearest train station?', ko: '실례합니다, 가장 가까운 기차역이 어디에 있나요?', vocab: { "nearest": "가장 가까운", "station": "기차역", "where": "어디에" } },
     { en: 'I would like to book a table for two at 7 PM.', ko: '저녁 7시에 두 명 자리 예약하고 싶습니다.', vocab: { "book": "예약하다", "table": "테이블, 자리", "would like": "~하고 싶다" } },
     { en: 'Could you please speak a little slower?', ko: '조금만 더 천천히 말씀해 주시겠어요?', vocab: { "speak": "말하다", "slower": "더 천천히", "little": "조금" } },
+    { en: 'How much does this cost?', ko: '이것은 얼마인가요?', vocab: { "cost": "비용이 들다", "how much": "얼마" } },
+    { en: 'Can I get a glass of water, please?', ko: '물 한 잔 주시겠어요?', vocab: { "glass": "잔", "water": "물", "get": "받다" } },
+    { en: 'What do you recommend on the menu?', ko: '메뉴에서 어떤 것을 추천하시나요?', vocab: { "recommend": "추천하다", "menu": "메뉴" } },
+    { en: 'I am looking for a pharmacy.', ko: '약국을 찾고 있습니다.', vocab: { "looking for": "~을 찾다", "pharmacy": "약국" } },
+    { en: 'Do you take credit cards?', ko: '신용카드 받으시나요?', vocab: { "take": "받다", "credit cards": "신용카드" } },
+    { en: 'What time is check-out?', ko: '체크아웃 시간이 언제인가요?', vocab: { "check-out": "체크아웃", "what time": "몇 시" } },
+    { en: 'I have a reservation under the name John.', ko: '존이라는 이름으로 예약했습니다.', vocab: { "reservation": "예약", "under the name": "~의 이름으로" } },
   ]);
   
   const [packTitle, setPackTitle] = usePersistentState('linguist-pack-title', '');
-  const actualPackTitle = packTitle === '기본 학습 데이터 3개' ? '' : packTitle;
+  const actualPackTitle = (packTitle === '기본 학습 데이터 3개' || packTitle === '기본 학습 데이터 10개') ? '' : packTitle;
   
   // 기존에 잘못 저장된 "-50개 50개" 와 같은 중복 개수 표기 제거
   const cleanedTitle = actualPackTitle.replace(/(-\d+개?) \d+개$/, '$1');
   
-  const displayTitle = cleanedTitle || (sentences.length === 3 ? '기본 학습 데이터' : `저장된 학습 데이터 ${sentences.length}개`);
+  const displayTitle = cleanedTitle || (sentences.length === 10 || sentences.length === 3 ? '기본 학습 데이터' : `저장된 학습 데이터 ${sentences.length}개`);
   const [studiedIndices, setStudiedIndices] = usePersistentState('linguist-studied-indices', []);
   const [favorites, setFavorites] = usePersistentState('linguist-study-favorites', []);
   const [savedPacks, setSavedPacks] = usePersistentState('linguist-saved-packs', []);

@@ -349,3 +349,37 @@ export async function savePack(accessToken, pack, _driveFiles = [], folderId = n
 
   return uploadPack(accessToken, resolvedFolderId, pack, existingFileId);
 }
+
+/**
+ * 팩을 스토어 드라이브 폴더에 업로드합니다.
+ * 스토어 폴더가 없으면 생성하고, 같은 제목의 파일이 있으면 덮어씁니다.
+ */
+export async function uploadToStore(accessToken, pack, forceOverwrite = false) {
+  const linguistFolderId = await getOrCreateFolder(accessToken, null, 'LinguistAI');
+  const storeFolderId = await getOrCreateFolder(accessToken, linguistFolderId, '스토어');
+
+  const safeTitle = (pack.title || pack.id)
+    .replace(/[\/\\:*?"<>|]/g, '_')
+    .trim()
+    .slice(0, 50);
+  const fileName = `${safeTitle}.json`;
+
+  const q = `name='${fileName.replace(/'/g, "\\'")}' and '${storeFolderId}' in parents and trashed=false`;
+  const res = await fetchWithAuth(
+    `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id,owners(me))`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  await checkResponse(res, '파일 검색 실패');
+  const data = await res.json();
+  const existingFile = data.files?.[0];
+  const existingFileId = existingFile?.id ?? null;
+  const isMine = existingFile?.owners?.[0]?.me;
+
+  if (existingFileId && isMine && !forceOverwrite) {
+    const err = new Error('ALREADY_EXISTS');
+    err.code = 'ALREADY_EXISTS';
+    throw err;
+  }
+
+  return uploadPack(accessToken, storeFolderId, pack, existingFileId);
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { loadAllPacks, deletePackFile, updatePackTitleAndContent } from '../utils/googleDrive';
+import { loadAllPacks, deletePackFile, updatePackTitleAndContent, uploadToStore } from '../utils/googleDrive';
 
 // 난이도 뱃지 (DataTab과 동일)
 const LEVEL_BADGE = {
@@ -43,6 +43,7 @@ export default function LibraryTab({
   const [editingPackId, setEditingPackId] = useState(null);
   const [editTitleText, setEditTitleText] = useState('');
   const [savingTitleId, setSavingTitleId] = useState(null);
+  const [uploadingStoreId, setUploadingStoreId] = useState(null);
 
   const isLoggedIn = !!(user?.accessToken);
 
@@ -157,6 +158,39 @@ export default function LibraryTab({
       document.body.appendChild(a); a.click(); a.remove();
     } catch (e) {
       alert('다운로드 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleUploadToStore = async (pack, force = false) => {
+    if (!isLoggedIn) {
+      alert('스토어에 업로드하려면 로그인이 필요합니다.');
+      return;
+    }
+    if (!force) {
+      if (!confirm('스토어에 업로드하시겠습니까?')) return;
+    }
+    
+    setUploadingStoreId(pack.id);
+    try {
+      await uploadToStore(user.accessToken, pack, force);
+      alert('스토어에 추가되었습니다.');
+      setUploadingStoreId(null);
+    } catch (err) {
+      if (err.code === 'ALREADY_EXISTS') {
+        setUploadingStoreId(null);
+        setTimeout(() => {
+          if (confirm('동일한 자료가 스토어에 있습니다. 덮어쓰시겠습니까?')) {
+            handleUploadToStore(pack, true);
+          }
+        }, 10);
+      } else {
+        setUploadingStoreId(null);
+        if (err.code === 'TOKEN_EXPIRED' || err.code === 'SCOPE_INSUFFICIENT') {
+          onTokenExpired?.(err.code);
+        } else {
+          alert(`업로드 중 오류가 발생했습니다: ${err.message}`);
+        }
+      }
     }
   };
 
@@ -344,6 +378,23 @@ export default function LibraryTab({
                     }}
                   >
                     <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>download</i>
+                  </button>
+                  {/* 스토어 업로드 */}
+                  <button
+                    onClick={() => handleUploadToStore(pack)}
+                    disabled={uploadingStoreId === pack.id}
+                    title="스토어에 업로드"
+                    style={{
+                      width: '30px', height: '30px',
+                      borderRadius: '9px', border: '1px solid var(--line)',
+                      background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: uploadingStoreId === pack.id ? 'wait' : 'pointer',
+                    }}
+                  >
+                    <i className="material-symbols-outlined" style={{ fontSize: '15px', animation: uploadingStoreId === pack.id ? 'spin 1s linear infinite' : 'none' }}>
+                      {uploadingStoreId === pack.id ? 'autorenew' : 'share'}
+                    </i>
                   </button>
                   {/* 삭제 */}
                   <button
