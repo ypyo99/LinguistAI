@@ -3,6 +3,7 @@ import { usePersistentState } from '../hooks/usePersistentState';
 import { getStoreFolderId, deletePackFile } from '../utils/googleDrive';
 import { showAuthAlert } from '../utils/authAlert';
 import { DebouncedInput } from './DebouncedInput';
+import LongPressButton from './LongPressButton';
 
 // 난이도 뱃지 스타일
 const LEVEL_BADGE = {
@@ -36,6 +37,7 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
   const [error, setError] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortType, setSortType] = useState('latest');
   const searchDebounceRef = useRef(null);
 
   const fetchFiles = async () => {
@@ -46,7 +48,7 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
       const folderId = await getStoreFolderId(user.accessToken);
       if (!folderId) { setPacks([]); setLoading(false); return; }
       const res = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folderId}' in parents and trashed=false`)}&orderBy=name&fields=files(id,name,description,owners(displayName,me))`,
+        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folderId}' in parents and trashed=false`)}&fields=files(id,name,description,owners(displayName,me),createdTime)`,
         { headers: { Authorization: `Bearer ${user.accessToken}` } }
       );
       if (res.status === 401) {
@@ -130,7 +132,19 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
   };
 
 
-  const sortPacks = (packs) => [...packs].sort((a, b) => {
+  const sortPacks = (packsToSort, type) => [...packsToSort].sort((a, b) => {
+    if (type === 'latest') {
+      const timeA = new Date(a.createdTime || 0).getTime();
+      const timeB = new Date(b.createdTime || 0).getTime();
+      const timeDiff = timeB - timeA;
+      if (timeDiff !== 0) return timeDiff;
+    } else if (type === 'author') {
+      const authorA = a.owners?.[0]?.displayName || '';
+      const authorB = b.owners?.[0]?.displayName || '';
+      const authorDiff = authorA.localeCompare(authorB);
+      if (authorDiff !== 0) return authorDiff;
+    }
+
     const titleA = a.name || '', titleB = b.name || '';
     const baseA = titleA.replace(/\.json$/i, '').replace(/\.txt$/i, '').replace(/초급|중급|고급/g, '').trim();
     const baseB = titleB.replace(/\.json$/i, '').replace(/\.txt$/i, '').replace(/초급|중급|고급/g, '').trim();
@@ -155,8 +169,8 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
         (pack.name && pack.name.toLowerCase().includes(q))
       );
     });
-    return sortPacks(filtered);
-  }, [packs, searchQuery]);
+    return sortPacks(filtered, sortType);
+  }, [packs, searchQuery, sortType]);
 
   if (!user) {
     return (
@@ -216,26 +230,52 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
 
       {/* 검색 바 */}
       {!loading && !error && packs.length > 0 && (
-        <div style={{ marginBottom: '16px', position: 'relative' }}>
-          <i className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '18px', color: 'var(--ink-soft)' }}>search</i>
-          <DebouncedInput
-            type="text"
-            placeholder="제목, 난이도, 업로더로 검색..."
-            value={searchQuery}
-            onChange={(val) => setSearchQuery(val)}
-            debounceTime={200}
+        <div style={{ marginBottom: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <i className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '18px', color: 'var(--ink-soft)' }}>search</i>
+            <DebouncedInput
+              type="text"
+              placeholder="제목, 난이도, 업로더로 검색..."
+              value={searchQuery}
+              onChange={(val) => setSearchQuery(val)}
+              debounceTime={200}
+              style={{
+                width: '100%',
+                padding: '10px 12px 10px 38px',
+                borderRadius: '12px',
+                border: '1px solid var(--line)',
+                background: 'var(--surface)',
+                color: 'var(--ink)',
+                fontSize: '14px',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+          <button
+            onClick={() => {
+              const types = ['latest', 'name', 'author'];
+              const currentIndex = types.indexOf(sortType);
+              setSortType(types[(currentIndex + 1) % types.length]);
+            }}
             style={{
-              width: '100%',
-              padding: '10px 12px 10px 38px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '10px 12px',
               borderRadius: '12px',
               border: '1px solid var(--line)',
               background: 'var(--surface)',
               color: 'var(--ink)',
               fontSize: '14px',
-              outline: 'none',
-              boxSizing: 'border-box'
+              cursor: 'pointer',
+              flexShrink: 0,
+              whiteSpace: 'nowrap'
             }}
-          />
+          >
+            <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>sort</i>
+            {sortType === 'latest' ? '최신' : sortType === 'name' ? '이름순' : '저자순'}
+          </button>
         </div>
       )}
 
@@ -274,20 +314,13 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                     <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: '0 1 auto', minWidth: 0 }}>
                       {base}
                     </div>
-                    {pack.owners?.[0]?.me && (
-                      <button
-                        onClick={() => handleDeleteStorePack(pack)}
-                        disabled={!!loadingId}
-                        title="공유 자료함에서 삭제"
-                        style={{
-                          width: '24px', height: '24px', flexShrink: 0,
-                          borderRadius: '6px', border: 'none', background: 'transparent',
-                          color: '#EF4444', cursor: loadingId ? 'wait' : 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
-                        }}
-                      >
-                        <i className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</i>
-                      </button>
+                    {pack.createdTime && (
+                      <div style={{ fontSize: '10px', color: 'var(--ink-soft)', flexShrink: 0, fontWeight: '500', marginLeft: '2px' }}>
+                        {(() => {
+                          const d = new Date(pack.createdTime);
+                          return `${d.getFullYear().toString().slice(2)}.${String(d.getMonth()+1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+                        })()}
+                      </div>
                     )}
                   </div>
                   
@@ -318,6 +351,22 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
 
                 {/* 오른쪽 버튼들 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, marginTop: '-2px' }}>
+                  {pack.owners?.[0]?.me && (
+                    <LongPressButton
+                      onLongPress={() => handleDeleteStorePack(pack)}
+                      onClick={() => alert('삭제하려면 휴지통 아이콘을 길게 누르세요.')}
+                      disabled={!!loadingId}
+                      title="길게 눌러서 공유 자료함에서 삭제"
+                      style={{
+                        width: '24px', height: '24px', flexShrink: 0,
+                        borderRadius: '6px', border: 'none', background: 'transparent',
+                        color: '#EF4444', cursor: loadingId ? 'wait' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                      }}
+                    >
+                      <i className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</i>
+                    </LongPressButton>
+                  )}
                   <button
                     onClick={() => handleDownload(pack)}
                     disabled={!!loadingId}

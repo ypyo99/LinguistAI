@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loadAllPacks, deletePackFile, updatePackTitleAndContent, uploadToStore } from '../utils/googleDrive';
+import LongPressButton from './LongPressButton';
 
 // 난이도 뱃지 (DataTab과 동일)
 const LEVEL_BADGE = {
@@ -397,9 +398,10 @@ export default function LibraryTab({
                     </i>
                   </button>
                   {/* 삭제 */}
-                  <button
-                    onClick={() => handleDeletePack(pack)}
-                    title="삭제"
+                  <LongPressButton
+                    onLongPress={() => handleDeletePack(pack)}
+                    onClick={() => alert('삭제하려면 휴지통 아이콘을 길게 누르세요.')}
+                    title="길게 눌러서 삭제"
                     style={{
                       width: '30px', height: '30px',
                       borderRadius: '9px', border: '1px solid var(--line)',
@@ -409,7 +411,7 @@ export default function LibraryTab({
                     }}
                   >
                     <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>delete</i>
-                  </button>
+                  </LongPressButton>
                 </div>
               </div>
             );
