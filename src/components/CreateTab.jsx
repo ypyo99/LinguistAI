@@ -7,6 +7,7 @@ const DIFFICULTY_MAP = { '초급': 'beginner (A1-A2)', '중급': 'intermediate (
 
 export default function CreateTab({ apiKey, onGenerate }) {
   const [topic, setTopic] = usePersistentState('linguist-create-topic', '');
+  const [inputTopic, setInputTopic] = useState(topic || '');
   const [difficulty, setDifficulty] = usePersistentState('linguist-create-difficulty', '초급');
   const [availableModels, setAvailableModels] = useState([]);
 
@@ -72,6 +73,22 @@ export default function CreateTab({ apiKey, onGenerate }) {
   const [preview, setPreview] = usePersistentState('linguist-create-preview', []);
   const [previewQuestions, setPreviewQuestions] = usePersistentState('linguist-create-preview-questions', []);
   const [packTitle, setPackTitle] = usePersistentState('linguist-create-packtitle', '');
+  const [inputTitle, setInputTitle] = useState(packTitle || '');
+
+  // IME 버벅임 해결을 위한 입력값 디바운스
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTopic(inputTopic);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [inputTopic]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPackTitle(inputTitle);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [inputTitle]);
 
   const getDifficultyRule = (diff) => {
     switch (diff) {
@@ -328,11 +345,12 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
   };
 
   useEffect(() => {
-    if (!manualText.trim()) return;
-    
-    try {
-      // First try to parse as an object { sentences: [], roleplayQuestions: [] } (New manual prompt format)
-      const objMatch = manualText.match(/\{[\s\S]*\}/);
+    const timer = setTimeout(() => {
+      if (!manualText.trim()) return;
+      
+      try {
+        // First try to parse as an object { sentences: [], roleplayQuestions: [] } (New manual prompt format)
+        const objMatch = manualText.match(/\{[\s\S]*\}/);
       if (objMatch) {
         try {
           const parsedObj = JSON.parse(objMatch[0]);
@@ -362,6 +380,9 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
     } catch (e) {
       // 입력 중이거나 유효하지 않은 JSON일 때는 무시
     }
+    }, 500); // 무거운 JSON 파싱으로 인한 IME 버벅임을 방지하기 위해 0.5초 디바운스
+    
+    return () => clearTimeout(timer);
   }, [manualText]);
 
   const handleApply = () => {
@@ -421,8 +442,8 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
                 id="packTitle"
                 placeholder="예: 비즈니스 미팅, 식당 예약..."
                 type="text"
-                value={packTitle}
-                onChange={e => setPackTitle(e.target.value)}
+                value={inputTitle}
+                onChange={e => setInputTitle(e.target.value)}
               />
             </div>
 
@@ -436,8 +457,8 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
                 id="topic"
                 placeholder="예: 비즈니스 미팅, 여행, 음식 주문..."
                 type="text"
-                value={topic}
-                onChange={e => setTopic(e.target.value)}
+                value={inputTopic}
+                onChange={e => setInputTopic(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleGenerate()}
               />
             </div>
