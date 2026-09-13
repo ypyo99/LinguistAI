@@ -495,7 +495,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
   const getStyleEn = () => {
     if (isWaiting || currentSpeakingLang === 'en') {
-      return { textShadow: '0 2px 5px rgba(0,0,0,0.4)', opacity: 1, color: '#fff', transition: 'all 0.3s' };
+      return { fontWeight: 'bold', opacity: 1, color: '#000', transition: 'all 0.3s' };
     }
     if (currentSpeakingLang === 'ko') {
       return { opacity: 0.6, transition: 'all 0.3s' };
@@ -505,7 +505,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
   const getStyleKo = () => {
     if (currentSpeakingLang === 'ko') {
-      return { textShadow: '0 2px 5px rgba(0,0,0,0.4)', fontWeight: 'bold', opacity: 1, color: '#fff', transition: 'all 0.3s' };
+      return { fontWeight: 'bold', opacity: 1, color: '#000', transition: 'all 0.3s' };
     }
     if (isWaiting || currentSpeakingLang === 'en') {
       return { opacity: 0.6, transition: 'all 0.3s' };
@@ -728,7 +728,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {user?.accessToken && (
-            <button onClick={(e) => { e.stopPropagation(); onSavePack?.(); }} style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px', border: 'none', background: 'var(--teal)', color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+            <button onClick={(e) => { e.stopPropagation(); onSavePack?.(); }} style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px', border: 'none', background: 'var(--teal)', color: '#431407', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
               <i className="material-symbols-outlined" style={{ fontSize: '16px', color: 'inherit' }}>save</i>
               보관함에 저장
             </button>
