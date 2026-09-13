@@ -238,7 +238,7 @@ export default function QuizTab({ sentences }) {
       <div className="flex flex-col items-center justify-center h-full p-8 text-center text-amber">
         <i className="material-symbols-outlined text-6xl mb-4">inventory_2</i>
         <h2 className="text-xl font-bold mb-2">데이터가 없습니다</h2>
-        <p>학습할 문장을 먼저 생성하거나 스토어에서 가져와주세요.</p>
+        <p>학습할 문장을 먼저 생성하거나 공유 자료함에서 가져와주세요.</p>
       </div>
     );
   }

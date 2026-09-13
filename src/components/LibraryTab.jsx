@@ -163,23 +163,23 @@ export default function LibraryTab({
 
   const handleUploadToStore = async (pack, force = false) => {
     if (!isLoggedIn) {
-      alert('스토어에 업로드하려면 로그인이 필요합니다.');
+      alert('공유 자료함에 업로드하려면 로그인이 필요합니다.');
       return;
     }
     if (!force) {
-      if (!confirm('스토어에 업로드하시겠습니까?')) return;
+      if (!confirm('공유 자료함에 업로드하시겠습니까?')) return;
     }
     
     setUploadingStoreId(pack.id);
     try {
       await uploadToStore(user.accessToken, pack, force);
-      alert('스토어에 추가되었습니다.');
+      alert('공유 자료함에 추가되었습니다.');
       setUploadingStoreId(null);
     } catch (err) {
       if (err.code === 'ALREADY_EXISTS') {
         setUploadingStoreId(null);
         setTimeout(() => {
-          if (confirm('동일한 자료가 스토어에 있습니다. 덮어쓰시겠습니까?')) {
+          if (confirm('동일한 자료가 공유 자료함에 있습니다. 덮어쓰시겠습니까?')) {
             handleUploadToStore(pack, true);
           }
         }, 10);
@@ -379,11 +379,11 @@ export default function LibraryTab({
                   >
                     <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>download</i>
                   </button>
-                  {/* 스토어 업로드 */}
+                  {/* 공유 자료함 업로드 */}
                   <button
                     onClick={() => handleUploadToStore(pack)}
                     disabled={uploadingStoreId === pack.id}
-                    title="스토어에 업로드"
+                    title="공유 자료함에 업로드"
                     style={{
                       width: '30px', height: '30px',
                       borderRadius: '9px', border: '1px solid var(--line)',

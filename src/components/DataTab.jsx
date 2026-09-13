@@ -118,12 +118,12 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
   };
 
   const handleDeleteStorePack = async (pack) => {
-    if (!confirm('이 자료를 스토어에서 정말 삭제하시겠습니까?')) return;
+    if (!confirm('이 자료를 공유 자료함에서 정말 삭제하시겠습니까?')) return;
     setLoadingId(pack.id);
     try {
       await deletePackFile(user.accessToken, pack.id);
       setPacks(packs.filter(p => p.id !== pack.id));
-      alert('스토어에서 삭제되었습니다.');
+      alert('공유 자료함에서 삭제되었습니다.');
     } catch (err) {
       if (err.code === 'TOKEN_EXPIRED' || err.code === 'SCOPE_INSUFFICIENT') {
         showAuthAlert(err.code, setUser);
@@ -284,7 +284,7 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                       <button
                         onClick={() => handleDeleteStorePack(pack)}
                         disabled={!!loadingId}
-                        title="스토어에서 삭제"
+                        title="공유 자료함에서 삭제"
                         style={{
                           width: '24px', height: '24px', flexShrink: 0,
                           borderRadius: '6px', border: 'none', background: 'transparent',
