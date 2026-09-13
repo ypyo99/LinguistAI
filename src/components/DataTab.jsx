@@ -193,7 +193,7 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
         <img src={user.picture} alt="profile" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: '14px', fontWeight: '700', color: '#EA580C' }}>{user.name}님 환영합니다!</div>
-          <div style={{ fontSize: '12px', color: '#9A3412' }}>프리미엄 학습 데이터를 적용하세요.</div>
+          <div style={{ fontSize: '12px', color: '#9A3412' }}>다른 학습자가 만든 데이터를 적용하세요.</div>
         </div>
         <button 
           onClick={fetchFiles}
