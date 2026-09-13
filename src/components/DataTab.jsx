@@ -303,14 +303,15 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                   boxShadow: 'var(--shadow)',
                   padding: '10px',
                   display: 'flex',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between',
+                  flexDirection: 'column',
                   gap: '8px',
                 }}
               >
-                {/* 왼쪽 정보 영역 */}
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
+                {/* 첫 번째 줄: 제목, 날짜, 버튼들 */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
+                  
+                  {/* 제목 & 날짜 */}
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: '0 1 auto', minWidth: 0 }}>
                       {base}
                     </div>
@@ -323,68 +324,68 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                       </div>
                     )}
                   </div>
-                  
-                  {/* 메타 데이터 한 줄 표시 */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
-                    {badge && (
-                      <span style={{
-                        fontSize: '9px', fontWeight: '700', padding: '2px 5px',
-                        borderRadius: '20px', background: badge.bg, color: badge.color,
-                        flexShrink: 0,
-                      }}>
-                        {level}
-                      </span>
+
+                  {/* 오른쪽 버튼들 */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                    {pack.owners?.[0]?.me && (
+                      <LongPressButton
+                        onLongPress={() => handleDeleteStorePack(pack)}
+                        onClick={() => alert('삭제하려면 휴지통 아이콘을 길게 누르세요.')}
+                        disabled={!!loadingId}
+                        title="길게 눌러서 공유 자료함에서 삭제"
+                        style={{
+                          width: '24px', height: '24px', flexShrink: 0,
+                          borderRadius: '6px', border: 'none', background: 'transparent',
+                          color: '#EF4444', cursor: loadingId ? 'wait' : 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                        }}
+                      >
+                        <i className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</i>
+                      </LongPressButton>
                     )}
-                    {count && (
-                      <span style={{ fontSize: '10px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', flexShrink: 0 }}>
-                        {count}
-                      </span>
-                    )}
-                    {pack.owners?.[0]?.displayName && (
-                      <span style={{ fontSize: '9px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', display: 'flex', alignItems: 'flex-start', gap: '2px', marginLeft: 'auto', flex: '1 1 auto', minWidth: 0 }}>
-                        <i className="material-symbols-outlined" style={{ fontSize: '11px', color: 'var(--teal)', flexShrink: 0, marginTop: '1px' }}>person</i>
-                        <span style={{ wordBreak: 'keep-all', lineHeight: '1.2' }}>{pack.owners[0].displayName}</span>
-                      </span>
-                    )}
+                    <button
+                      onClick={() => handleDownload(pack)}
+                      disabled={!!loadingId}
+                      title={`${base} 적용`}
+                      style={{
+                        width: '24px', height: '24px',
+                        borderRadius: '7px', border: 'none',
+                        background: isDown ? '#FED7AA' : '#F97316',
+                        color: '#fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: loadingId ? 'wait' : 'pointer',
+                        transition: 'background 0.15s',
+                      }}
+                    >
+                      <i className="material-symbols-outlined" style={{ fontSize: '14px', animation: isDown ? 'spin 1s linear infinite' : 'none' }}>
+                        {isDown ? 'autorenew' : 'play_arrow'}
+                      </i>
+                    </button>
                   </div>
                 </div>
 
-                {/* 오른쪽 버튼들 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, marginTop: '-2px' }}>
-                  {pack.owners?.[0]?.me && (
-                    <LongPressButton
-                      onLongPress={() => handleDeleteStorePack(pack)}
-                      onClick={() => alert('삭제하려면 휴지통 아이콘을 길게 누르세요.')}
-                      disabled={!!loadingId}
-                      title="길게 눌러서 공유 자료함에서 삭제"
-                      style={{
-                        width: '24px', height: '24px', flexShrink: 0,
-                        borderRadius: '6px', border: 'none', background: 'transparent',
-                        color: '#EF4444', cursor: loadingId ? 'wait' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
-                      }}
-                    >
-                      <i className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</i>
-                    </LongPressButton>
+                {/* 두 번째 줄: 메타 데이터 (난이도, 문장 수, 저자) */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
+                  {badge && (
+                    <span style={{
+                      fontSize: '9px', fontWeight: '700', padding: '2px 5px',
+                      borderRadius: '20px', background: badge.bg, color: badge.color,
+                      flexShrink: 0,
+                    }}>
+                      {level}
+                    </span>
                   )}
-                  <button
-                    onClick={() => handleDownload(pack)}
-                    disabled={!!loadingId}
-                    title={`${base} 적용`}
-                    style={{
-                      width: '24px', height: '24px',
-                      borderRadius: '7px', border: 'none',
-                      background: isDown ? '#FED7AA' : '#F97316',
-                      color: '#fff',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: loadingId ? 'wait' : 'pointer',
-                      transition: 'background 0.15s',
-                    }}
-                  >
-                    <i className="material-symbols-outlined" style={{ fontSize: '14px', animation: isDown ? 'spin 1s linear infinite' : 'none' }}>
-                      {isDown ? 'autorenew' : 'play_arrow'}
-                    </i>
-                  </button>
+                  {count && (
+                    <span style={{ fontSize: '10px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', flexShrink: 0 }}>
+                      {count}
+                    </span>
+                  )}
+                  {pack.owners?.[0]?.displayName && (
+                    <span style={{ fontSize: '9px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '2px', flex: '1 1 auto', minWidth: 0 }}>
+                      <i className="material-symbols-outlined" style={{ fontSize: '11px', color: 'var(--teal)', flexShrink: 0 }}>person</i>
+                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pack.owners[0].displayName}</span>
+                    </span>
+                  )}
                 </div>
               </div>
             );
