@@ -6,6 +6,11 @@
     "CapacitorUpdater": {
       "autoUpdate": true,
       "appId": "com.linguistai.app"
+    },
+    "GoogleAuth": {
+      "scopes": ["profile", "email", "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive.readonly", "https://www.googleapis.com/auth/drive"],
+      "serverClientId": "686267885768-dbfrdhospkatu04hvsc5mbu5n6gnjapd.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
     }
   }
 }

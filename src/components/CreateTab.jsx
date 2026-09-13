@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { Capacitor } from '@capacitor/core';
 import { Clipboard } from '@capacitor/clipboard';
+import { DebouncedInput, DebouncedTextarea } from './DebouncedInput';
 
 const DIFFICULTY_MAP = { '초급': 'beginner (A1-A2)', '중급': 'intermediate (B1-B2)', '고급': 'advanced (C1-C2)' };
 
@@ -437,13 +438,14 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
               <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="packTitle">
                 제목 <span className="opacity-60">(비워두면 프롬프트 기반 자동 생성)</span>
               </label>
-              <input
+              <DebouncedInput
                 className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring placeholder:text-outline-variant dark:placeholder:text-on-dark-surface-variant transition-colors duration-200 text-sm sm:text-base"
                 id="packTitle"
                 placeholder="예: 비즈니스 미팅, 식당 예약..."
                 type="text"
                 value={inputTitle}
-                onChange={e => setInputTitle(e.target.value)}
+                onChange={val => setInputTitle(val)}
+                debounceTime={200}
               />
             </div>
 
@@ -452,14 +454,15 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
               <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="topic">
                 프롬프트 <span className="opacity-60">(비워두면 일상 회화)</span>
               </label>
-              <input
+              <DebouncedInput
                 className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring placeholder:text-outline-variant dark:placeholder:text-on-dark-surface-variant transition-colors duration-200 text-sm sm:text-base"
                 id="topic"
                 placeholder="예: 비즈니스 미팅, 여행, 음식 주문..."
                 type="text"
                 value={inputTopic}
-                onChange={e => setInputTopic(e.target.value)}
+                onChange={val => setInputTopic(val)}
                 onKeyDown={e => e.key === 'Enter' && handleGenerate()}
+                debounceTime={200}
               />
             </div>
 
@@ -628,10 +631,11 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
                         붙여넣기
                       </button>
                     </div>
-                    <textarea
+                    <DebouncedTextarea
                       className="w-full h-32 p-3 rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring font-mono text-sm sm:text-base resize-y"
                       value={manualText}
-                      onChange={e => setManualText(e.target.value)}
+                      onChange={val => setManualText(val)}
+                      debounceTime={200}
                     />
                   </div>
                 </div>

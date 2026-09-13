@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { getStoreFolderId, deletePackFile } from '../utils/googleDrive';
 import { showAuthAlert } from '../utils/authAlert';
+import { DebouncedInput } from './DebouncedInput';
 
 // 난이도 뱃지 스타일
 const LEVEL_BADGE = {
@@ -34,16 +35,8 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
-  const [inputValue, setInputValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // 한글 입력(IME) 시 버벅임 및 자음/모음 분리 방지를 위한 디바운스
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchQuery(inputValue);
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [inputValue]);
+  const searchDebounceRef = useRef(null);
 
   const fetchFiles = async () => {
     if (!user || !user.accessToken) return;
@@ -137,20 +130,6 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
   };
 
 
-  if (!user) {
-    return (
-      <div className="tab-fade-in" style={{ padding: '40px 20px', textAlign: 'center' }}>
-        <i className="material-symbols-outlined" style={{ fontSize: '64px', color: 'var(--amber)', marginBottom: '16px' }}>lock</i>
-        <h2 className="section-heading" style={{ fontSize: '20px' }}>프리미엄 학습 데이터</h2>
-        <p className="section-sub" style={{ fontSize: '14px', lineHeight: '1.6', marginTop: '12px' }}>
-          LinguistAI를 구매하신 프리미엄 회원이신가요?<br/>
-          <strong>우측 상단의 사람 아이콘을 눌러 구글 계정으로 로그인</strong>하면<br/>
-          고품질 영어 학습 팩을 다운로드할 수 있습니다.
-        </p>
-      </div>
-    );
-  }
-
   const sortPacks = (packs) => [...packs].sort((a, b) => {
     const titleA = a.name || '', titleB = b.name || '';
     const baseA = titleA.replace(/\.json$/i, '').replace(/\.txt$/i, '').replace(/초급|중급|고급/g, '').trim();
@@ -178,6 +157,20 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
     });
     return sortPacks(filtered);
   }, [packs, searchQuery]);
+
+  if (!user) {
+    return (
+      <div className="tab-fade-in" style={{ padding: '40px 20px', textAlign: 'center' }}>
+        <i className="material-symbols-outlined" style={{ fontSize: '64px', color: 'var(--amber)', marginBottom: '16px' }}>lock</i>
+        <h2 className="section-heading" style={{ fontSize: '20px' }}>프리미엄 학습 데이터</h2>
+        <p className="section-sub" style={{ fontSize: '14px', lineHeight: '1.6', marginTop: '12px' }}>
+          LinguistAI를 구매하신 프리미엄 회원이신가요?<br/>
+          <strong>우측 상단의 사람 아이콘을 눌러 구글 계정으로 로그인</strong>하면<br/>
+          고품질 영어 학습 팩을 다운로드할 수 있습니다.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="tab-fade-in" style={{ paddingBottom: '40px' }}>
@@ -225,17 +218,18 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
       {!loading && !error && packs.length > 0 && (
         <div style={{ marginBottom: '16px', position: 'relative' }}>
           <i className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '18px', color: 'var(--ink-soft)' }}>search</i>
-          <input
+          <DebouncedInput
             type="text"
             placeholder="제목, 난이도, 업로더로 검색..."
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            value={searchQuery}
+            onChange={(val) => setSearchQuery(val)}
+            debounceTime={200}
             style={{
               width: '100%',
               padding: '10px 12px 10px 38px',
               borderRadius: '12px',
               border: '1px solid var(--line)',
-              background: 'var(--surface-container-lowest)',
+              background: 'var(--surface)',
               color: 'var(--ink)',
               fontSize: '14px',
               outline: 'none',
@@ -310,12 +304,12 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                     )}
                     {count && (
                       <span style={{ fontSize: '10px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', flexShrink: 0 }}>
-                        {count}문장
+                        {count}
                       </span>
                     )}
                     {pack.owners?.[0]?.displayName && (
-                      <span style={{ fontSize: '10px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '4px', flex: '0 1 auto', minWidth: 0 }}>
-                        <i className="material-symbols-outlined" style={{ fontSize: '12px', color: 'var(--teal)', flexShrink: 0 }}>person</i>
+                      <span style={{ fontSize: '9px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '4px', flex: '0 1 auto', minWidth: 0 }}>
+                        <i className="material-symbols-outlined" style={{ fontSize: '11px', color: 'var(--teal)', flexShrink: 0 }}>person</i>
                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pack.owners[0].displayName}</span>
                       </span>
                     )}
