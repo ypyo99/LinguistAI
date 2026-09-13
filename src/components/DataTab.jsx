@@ -341,9 +341,9 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                       </span>
                     )}
                     {pack.owners?.[0]?.displayName && (
-                      <span style={{ fontSize: '9px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '4px', flex: '0 1 auto', minWidth: 0 }}>
-                        <i className="material-symbols-outlined" style={{ fontSize: '11px', color: 'var(--teal)', flexShrink: 0 }}>person</i>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pack.owners[0].displayName}</span>
+                      <span style={{ fontSize: '9px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', display: 'flex', alignItems: 'flex-start', gap: '2px', marginLeft: 'auto', flex: '1 1 auto', minWidth: 0 }}>
+                        <i className="material-symbols-outlined" style={{ fontSize: '11px', color: 'var(--teal)', flexShrink: 0, marginTop: '1px' }}>person</i>
+                        <span style={{ wordBreak: 'keep-all', lineHeight: '1.2' }}>{pack.owners[0].displayName}</span>
                       </span>
                     )}
                   </div>
