@@ -312,8 +312,16 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                   
                   {/* 제목 & 날짜 */}
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: '0 1 auto', minWidth: 0 }}>
-                      {base}
+                    <div 
+                      onClick={() => {
+                        if (!loadingId && window.confirm(`'${base}${level ? `-${level}` : ''}' 학습자료를 불러올까요?`)) {
+                          handleDownload(pack);
+                        }
+                      }}
+                      style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: '0 1 auto', minWidth: 0, cursor: loadingId ? 'wait' : 'pointer' }}
+                      title="클릭하여 학습자료 불러오기"
+                    >
+                      {base} {isDown && <i className="material-symbols-outlined" style={{ fontSize: '13px', animation: 'spin 1s linear infinite', verticalAlign: 'middle', marginLeft: '4px' }}>autorenew</i>}
                     </div>
                     {pack.createdTime && (
                       <div style={{ fontSize: '10px', color: 'var(--ink-soft)', flexShrink: 0, fontWeight: '500', marginLeft: '2px' }}>
@@ -343,24 +351,6 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                         <i className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</i>
                       </LongPressButton>
                     )}
-                    <button
-                      onClick={() => handleDownload(pack)}
-                      disabled={!!loadingId}
-                      title={`${base} 적용`}
-                      style={{
-                        width: '24px', height: '24px',
-                        borderRadius: '7px', border: 'none',
-                        background: isDown ? '#FED7AA' : '#F97316',
-                        color: '#fff',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: loadingId ? 'wait' : 'pointer',
-                        transition: 'background 0.15s',
-                      }}
-                    >
-                      <i className="material-symbols-outlined" style={{ fontSize: '14px', animation: isDown ? 'spin 1s linear infinite' : 'none' }}>
-                        {isDown ? 'autorenew' : 'play_arrow'}
-                      </i>
-                    </button>
                   </div>
                 </div>
 

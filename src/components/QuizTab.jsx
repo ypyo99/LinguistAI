@@ -21,12 +21,15 @@ function cleanWord(word) {
 
 export default function QuizTab({ sentences }) {
   const [quizData, setQuizData] = useState(null);
+  const [quizHistory, setQuizHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   const [selectedAnswer, setSelectedAnswer] = useState(null); // 'correct', 'wrong', or null
   const [shake, setShake] = useState(false);
   const [score, setScore] = useState(0);
   const [quizMode, setQuizMode] = useState('mixed'); // 'mixed', 'sentence', 'vocab'
+  const touchStartX = React.useRef(null);
 
-  const generateQuiz = () => {
+  const generateQuiz = (resetHistory = false) => {
     if (!sentences || sentences.length === 0) return;
 
     // 1. Filter sentences based on mode if necessary
@@ -78,14 +81,20 @@ export default function QuizTab({ sentences }) {
       
       const options = shuffleArray(Array.from(optionsSet));
 
-      setQuizData({
+      const newQuiz = {
         quizType: 'vocab-meaning',
         ko: sentenceObj.ko,
         en: sentenceObj.en,
         targetVocab,
         answer: answerMeaning,
         options,
+      };
+      setQuizHistory(prev => {
+        const idx = resetHistory ? -1 : historyIndex;
+        return [...prev.slice(0, idx + 1), newQuiz];
       });
+      setHistoryIndex(prev => resetHistory ? 0 : prev + 1);
+      setQuizData(newQuiz);
       setSelectedAnswer(null);
       setShake(false);
       return;
@@ -199,21 +208,66 @@ export default function QuizTab({ sentences }) {
 
     const options = shuffleArray(Array.from(optionsSet));
 
-    setQuizData({
+    const newQuiz = {
       quizType: 'fill-in-the-blank',
       ko: sentenceObj.ko,
       en: sentenceObj.en,
       segments,
       answer: targetWordClean,
       options,
+    };
+    setQuizHistory(prev => {
+      const idx = resetHistory ? -1 : historyIndex;
+      return [...prev.slice(0, idx + 1), newQuiz];
     });
+    setHistoryIndex(prev => resetHistory ? 0 : prev + 1);
+    setQuizData(newQuiz);
     setSelectedAnswer(null);
     setShake(false);
   };
 
+  const handleNext = () => {
+    if (historyIndex < quizHistory.length - 1) {
+      setHistoryIndex(prev => prev + 1);
+      setQuizData(quizHistory[historyIndex + 1]);
+      setSelectedAnswer(null);
+      setShake(false);
+    } else {
+      generateQuiz();
+    }
+  };
+
+  const handlePrev = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(prev => prev - 1);
+      setQuizData(quizHistory[historyIndex - 1]);
+      setSelectedAnswer(null);
+      setShake(false);
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        handleNext(); // Swipe left -> next
+      } else {
+        handlePrev(); // Swipe right -> prev
+      }
+    }
+    touchStartX.current = null;
+  };
+
   useEffect(() => {
     if (sentences && sentences.length > 0) {
-      generateQuiz();
+      generateQuiz(true);
     }
   }, [sentences, quizMode]);
 
@@ -280,12 +334,6 @@ export default function QuizTab({ sentences }) {
           </button>
         </div>
 
-        {/* Skip Button */}
-        <button onClick={generateQuiz} className="text-xs sm:text-sm text-ink-soft flex items-center justify-center gap-0.5 sm:gap-1 bg-white dark:bg-dark-surface px-2 sm:px-3 py-1.5 sm:py-2 rounded-full shadow-sm whitespace-nowrap flex-shrink-0">
-          <i className="material-symbols-outlined text-[14px] sm:text-[18px]">skip_next</i>
-          <span className="hidden sm:inline">건너뛰기</span>
-          <span className="sm:hidden">패스</span>
-        </button>
       </div>
 
       {/* Main Question Area */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTTS } from '../hooks/useTTS';
 
 // ── 하위 호환 정규화: string 배열 → { question, modelAnswer } 배열 ──────────
@@ -24,6 +24,21 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
 
   const { speak: ttsSpeak, stop: ttsStop } = useTTS(ttsApiKey);
 
+  const [isStopped, setIsStopped] = useState(false);
+  const isStoppedRef = useRef(false);
+
+  useEffect(() => {
+    setIsStopped(false);
+    isStoppedRef.current = false;
+  }, [currentQIndex, phase]);
+
+  const toggleStop = () => {
+    const next = !isStoppedRef.current;
+    isStoppedRef.current = next;
+    setIsStopped(next);
+    if (next) ttsStop();
+  };
+
   const currentItem = shuffledQuestions[currentQIndex];
 
   // ── 질문 단계: 3번 읽기 완료 후 타이머 시작 ────────────────────────────────
@@ -38,18 +53,38 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
       // 1. 질문 3번 읽기
       for (let i = 0; i < 3; i++) {
         if (isCancelled) return;
+        
+        while (isStoppedRef.current && !isCancelled) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        if (isCancelled) return;
+
         await ttsSpeak(currentItem.question, 'en-US', 1.0);
+        
         if (i < 2 && !isCancelled) {
-          await new Promise(resolve => setTimeout(resolve, 800));
+          let waited = 0;
+          while (waited < 800 && !isCancelled) {
+             if (!isStoppedRef.current) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                waited += 100;
+             } else {
+                await new Promise(resolve => setTimeout(resolve, 100));
+             }
+          }
         }
       }
       if (isCancelled) return;
+
+      while (isStoppedRef.current && !isCancelled) {
+         await new Promise(resolve => setTimeout(resolve, 200));
+      }
 
       // 2. 읽기 완료 후 타이머 시작
       setTimeLeft(answerSeconds);
       setTotalTime(answerSeconds);
 
       timer = setInterval(() => {
+        if (isStoppedRef.current) return;
         setTimeLeft(prev => {
           if (prev <= 1) {
             clearInterval(timer);
@@ -78,13 +113,32 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
     const playAndAdvance = async () => {
       await new Promise(resolve => setTimeout(resolve, 600));
       if (isCancelled) return;
+
+      while (isStoppedRef.current && !isCancelled) {
+         await new Promise(resolve => setTimeout(resolve, 200));
+      }
+      if (isCancelled) return;
+
       if (currentItem?.modelAnswer) {
         await ttsSpeak(currentItem.modelAnswer, 'en-US', 0.95);
       } else {
         // 모범답안 없으면 2초 대기 후 진행
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        let waited = 0;
+        while (waited < 2000 && !isCancelled) {
+           if (!isStoppedRef.current) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+              waited += 100;
+           } else {
+              await new Promise(resolve => setTimeout(resolve, 100));
+           }
+        }
       }
       if (isCancelled) return;
+
+      while (isStoppedRef.current && !isCancelled) {
+         await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
       // TTS 종료 후 1초 텀을 두고 자동으로 다음 질문 이동
       await new Promise(resolve => setTimeout(resolve, 1000));
       if (!isCancelled) {
@@ -104,8 +158,8 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
     };
   }, [phase, currentQIndex, done, ttsSpeak, ttsStop, currentItem, shuffledQuestions.length]);
 
-  // ── 건너뛰기 (수동) ───────────────────────────────────────────────────────
-  const handleSkip = () => {
+  // ── 이전/다음 및 스와이프 기능 ───────────────────────────────────────────
+  const handleNext = () => {
     ttsStop();
     if (currentQIndex < shuffledQuestions.length - 1) {
       setCurrentQIndex(q => q + 1);
@@ -113,6 +167,34 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
     } else {
       setDone(true);
     }
+  };
+
+  const handlePrev = () => {
+    ttsStop();
+    if (currentQIndex > 0) {
+      setCurrentQIndex(q => q - 1);
+      setPhase('question');
+    }
+  };
+
+  const touchStartX = useRef(null);
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        handleNext(); // 왼쪽으로 스와이프 (다음)
+      } else {
+        handlePrev(); // 오른쪽으로 스와이프 (이전)
+      }
+    }
+    touchStartX.current = null;
   };
 
   const progress = Math.round((currentQIndex / shuffledQuestions.length) * 100);
@@ -155,18 +237,24 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
         ) : phase === 'question' ? (
           /* ── 질문 단계 ── */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '800px', gap: '32px' }}>
-            <div style={{
-              background: '#f97316',
+            <div 
+              onClick={toggleStop}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              style={{
+              background: isStopped ? '#475569' : '#f97316',
               color: 'white',
               padding: '20px 24px',
               borderRadius: '24px',
-              boxShadow: '0 10px 25px -5px rgba(249, 115, 22, 0.4)',
+              boxShadow: isStopped ? 'none' : '0 10px 25px -5px rgba(249, 115, 22, 0.4)',
               width: '100%',
               textAlign: 'center',
               fontSize: '22px',
               fontWeight: 'bold',
               lineHeight: '1.4',
-              wordBreak: 'keep-all'
+              wordBreak: 'keep-all',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
             }}>
               {currentItem?.question}
             </div>
@@ -231,19 +319,25 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
             </div>
 
             {/* 모범답안 본문 */}
-            <div style={{
-              background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-              border: '2px solid #86efac',
-              color: '#166534',
+            <div 
+              onClick={toggleStop}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              style={{
+              background: isStopped ? '#475569' : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+              border: isStopped ? '2px solid #334155' : '2px solid #86efac',
+              color: isStopped ? 'white' : '#166534',
               padding: '20px 24px',
               borderRadius: '24px',
-              boxShadow: '0 8px 20px -4px rgba(34, 197, 94, 0.2)',
+              boxShadow: isStopped ? 'none' : '0 8px 20px -4px rgba(34, 197, 94, 0.2)',
               width: '100%',
               textAlign: 'center',
               fontSize: '20px',
               fontWeight: 'bold',
               lineHeight: '1.6',
               wordBreak: 'keep-all',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
             }}>
               {currentItem?.modelAnswer || '(모범답안 없음)'}
             </div>

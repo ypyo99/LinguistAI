@@ -203,7 +203,7 @@ function App() {
       try {
         await savePack(user.accessToken, packToSave);
         if (!currentPackId) setCurrentPackId(packToSave.id);
-        alert('구글 드라이브 보관함에 저장되었습니다!');
+        alert('구글 드라이브 내자료함에 저장되었습니다!');
       } catch (err) {
         if (err.code === 'TOKEN_EXPIRED') {
           showAuthAlert(err.code, setUser);
@@ -219,7 +219,7 @@ function App() {
             ? { ...p, title: displayTitle, sentences, favorites, studiedIndices }
             : p
         ));
-        alert('현재 보관함에 덮어쓰기 저장되었습니다!');
+        alert('현재 내자료함에 덮어쓰기 저장되었습니다!');
       } else {
         const newPack = {
           id: Date.now().toString(),
@@ -232,7 +232,7 @@ function App() {
         };
         setSavedPacks(prev => [newPack, ...prev]);
         setCurrentPackId(newPack.id);
-        alert('보관함에 저장되었습니다!');
+        alert('내자료함에 저장되었습니다!');
       }
     }
   };

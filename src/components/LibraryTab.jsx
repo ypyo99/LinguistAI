@@ -270,8 +270,8 @@ export default function LibraryTab({
           <i className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--amber)', marginBottom: '16px' }}>inventory_2</i>
           <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6' }}>
             {isLoggedIn
-              ? <>구글 드라이브 보관함이 비어있습니다.<br/>학습 탭에서 <strong>[보관함에 저장]</strong> 버튼을 눌러 데이터를 보관해 보세요.</>
-              : <>보관함에 저장된 학습 데이터가 없습니다.<br/>학습 탭에서 <strong>[보관함에 저장]</strong> 버튼을 눌러 데이터를 보관해 보세요.</>
+              ? <>구글 드라이브 내자료함이 비어있습니다.<br/>학습 탭에서 <strong>[내자료함에 저장]</strong> 버튼을 눌러 데이터를 보관해 보세요.</>
+              : <>내자료함에 저장된 학습 데이터가 없습니다.<br/>학습 탭에서 <strong>[내자료함에 저장]</strong> 버튼을 눌러 데이터를 보관해 보세요.</>
             }
           </p>
         </div>
@@ -319,9 +319,13 @@ export default function LibraryTab({
                   />
                 ) : (
                   <div 
-                    onClick={() => handleTitleEdit(pack, base)}
+                    onClick={() => {
+                      if (window.confirm(`'${base || pack.title}${level ? `-${level}` : ''}' 학습자료를 불러올까요?`)) {
+                        handleLoadPack(pack);
+                      }
+                    }}
                     style={{ fontSize: '14px', fontWeight: '700', color: 'var(--ink)', lineHeight: '1.3', wordBreak: 'keep-all', cursor: 'pointer' }}
-                    title="클릭하여 제목 수정"
+                    title="클릭하여 학습자료 불러오기"
                   >
                     {base || pack.title} {savingTitleId === pack.id && <i className="material-symbols-outlined" style={{ fontSize: '14px', animation: 'spin 1s linear infinite', verticalAlign: 'middle' }}>autorenew</i>}
                   </div>
@@ -352,20 +356,6 @@ export default function LibraryTab({
 
                 {/* 버튼 행 */}
                 <div style={{ display: 'flex', gap: '5px', marginTop: 'auto', justifyContent: 'flex-end' }}>
-                  {/* 학습 시작 */}
-                  <button
-                    onClick={() => handleLoadPack(pack)}
-                    title="학습 시작"
-                    style={{
-                      width: '30px', height: '30px',
-                      borderRadius: '9px', border: 'none',
-                      background: '#F97316', color: '#fff',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <i className="material-symbols-outlined" style={{ fontSize: '16px' }}>play_arrow</i>
-                  </button>
                   {/* JSON 다운로드 */}
                   <button
                     onClick={() => handleDownloadPack(pack)}
