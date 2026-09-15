@@ -241,11 +241,13 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
           /* ── 질문 단계 ── */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '800px', gap: '32px' }}>
             <div 
-              onMouseDown={(e) => handlePointerDown(e.clientX)}
+              onMouseDown={(e) => { e.preventDefault(); handlePointerDown(e.clientX); }}
               onMouseUp={(e) => handlePointerUp(e.clientX)}
+              onMouseLeave={(e) => handlePointerUp(e.clientX)}
               onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
               onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
               style={{
+              userSelect: 'none',
               background: isStopped ? '#475569' : '#f97316',
               color: 'white',
               padding: '20px 24px',
@@ -324,11 +326,13 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
 
             {/* 모범답안 본문 */}
             <div 
-              onMouseDown={(e) => handlePointerDown(e.clientX)}
+              onMouseDown={(e) => { e.preventDefault(); handlePointerDown(e.clientX); }}
               onMouseUp={(e) => handlePointerUp(e.clientX)}
+              onMouseLeave={(e) => handlePointerUp(e.clientX)}
               onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
               onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
               style={{
+              userSelect: 'none',
               background: isStopped ? '#475569' : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
               border: isStopped ? '2px solid #334155' : '2px solid #86efac',
               color: isStopped ? 'white' : '#166534',

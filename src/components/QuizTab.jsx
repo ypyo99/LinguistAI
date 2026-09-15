@@ -383,8 +383,9 @@ export default function QuizTab({ sentences }) {
               })()}
             </p>
             <div 
-              onMouseDown={(e) => handlePointerDown(e.clientX)}
+              onMouseDown={(e) => { e.preventDefault(); handlePointerDown(e.clientX); }}
               onMouseUp={(e) => handlePointerUp(e.clientX)}
+              onMouseLeave={(e) => handlePointerUp(e.clientX)}
               onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
               onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
               className={`quiz-sentence-box cursor-pointer select-none bg-white dark:bg-dark-surface p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
@@ -403,8 +404,9 @@ export default function QuizTab({ sentences }) {
             </p>
             
             <div 
-              onMouseDown={(e) => handlePointerDown(e.clientX)}
+              onMouseDown={(e) => { e.preventDefault(); handlePointerDown(e.clientX); }}
               onMouseUp={(e) => handlePointerUp(e.clientX)}
+              onMouseLeave={(e) => handlePointerUp(e.clientX)}
               onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
               onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
               className={`quiz-sentence-box cursor-pointer select-none bg-white dark:bg-dark-surface p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
