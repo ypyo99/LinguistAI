@@ -178,21 +178,24 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
   };
 
   const touchStartX = useRef(null);
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
+
+  const handlePointerDown = (clientX) => {
+    touchStartX.current = clientX;
   };
 
-  const handleTouchEnd = (e) => {
+  const handlePointerUp = (clientX) => {
     if (touchStartX.current === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX.current - touchEndX;
+    const diff = touchStartX.current - clientX;
 
     if (Math.abs(diff) > 50) {
       if (diff > 0) {
-        handleNext(); // 왼쪽으로 스와이프 (다음)
+        handleNext(); // 왼쪽으로 스와이프/드래그 (다음)
       } else {
-        handlePrev(); // 오른쪽으로 스와이프 (이전)
+        handlePrev(); // 오른쪽으로 스와이프/드래그 (이전)
       }
+    } else if (Math.abs(diff) < 5) {
+      // 제자리 클릭(탭)인 경우
+      toggleStop();
     }
     touchStartX.current = null;
   };
@@ -238,9 +241,10 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
           /* ── 질문 단계 ── */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '800px', gap: '32px' }}>
             <div 
-              onClick={toggleStop}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
+              onMouseDown={(e) => handlePointerDown(e.clientX)}
+              onMouseUp={(e) => handlePointerUp(e.clientX)}
+              onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
+              onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
               style={{
               background: isStopped ? '#475569' : '#f97316',
               color: 'white',
@@ -320,9 +324,10 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
 
             {/* 모범답안 본문 */}
             <div 
-              onClick={toggleStop}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
+              onMouseDown={(e) => handlePointerDown(e.clientX)}
+              onMouseUp={(e) => handlePointerUp(e.clientX)}
+              onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
+              onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
               style={{
               background: isStopped ? '#475569' : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
               border: isStopped ? '2px solid #334155' : '2px solid #86efac',

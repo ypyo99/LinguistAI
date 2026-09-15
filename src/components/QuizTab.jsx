@@ -246,14 +246,13 @@ export default function QuizTab({ sentences }) {
     }
   };
 
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
+  const handlePointerDown = (clientX) => {
+    touchStartX.current = clientX;
   };
 
-  const handleTouchEnd = (e) => {
+  const handlePointerUp = (clientX) => {
     if (touchStartX.current === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX.current - touchEndX;
+    const diff = touchStartX.current - clientX;
 
     if (Math.abs(diff) > 40) {
       if (diff > 0) {
@@ -383,7 +382,12 @@ export default function QuizTab({ sentences }) {
                 });
               })()}
             </p>
-            <div className={`quiz-sentence-box bg-white dark:bg-dark-surface p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
+            <div 
+              onMouseDown={(e) => handlePointerDown(e.clientX)}
+              onMouseUp={(e) => handlePointerUp(e.clientX)}
+              onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
+              onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
+              className={`quiz-sentence-box cursor-pointer select-none bg-white dark:bg-dark-surface p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
               ${selectedAnswer === 'correct' ? 'border-green-400 bg-green-50 shadow-green-100 dark:bg-green-900/30 dark:border-green-500' : 'border-teal-tint'}
               transition-colors duration-300`}>
               <div className="text-base sm:text-lg md:text-xl font-bold text-ink-soft mb-2">이 문장에서 밑줄 친 단어의 뜻은?</div>
@@ -398,7 +402,12 @@ export default function QuizTab({ sentences }) {
               {quizData.ko}
             </p>
             
-            <div className={`quiz-sentence-box bg-white dark:bg-dark-surface p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
+            <div 
+              onMouseDown={(e) => handlePointerDown(e.clientX)}
+              onMouseUp={(e) => handlePointerUp(e.clientX)}
+              onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
+              onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
+              className={`quiz-sentence-box cursor-pointer select-none bg-white dark:bg-dark-surface p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
               ${selectedAnswer === 'correct' ? 'border-green-400 bg-green-50 shadow-green-100 dark:bg-green-900/30 dark:border-green-500' : 'border-teal-tint'}
               transition-colors duration-300`}>
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-ink leading-relaxed md:leading-tight tracking-tight flex flex-wrap justify-center items-center gap-x-2 gap-y-3">
