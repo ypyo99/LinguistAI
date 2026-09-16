@@ -101,6 +101,15 @@ export default function CreateTab({ apiKey, onGenerate }) {
     }
   };
 
+  const getQuestionLengthRule = (diff) => {
+    switch (diff) {
+      case '초급': return '- Question length: Very short and simple (1 sentence maximum).';
+      case '중급': return '- Question length: Moderate (1-2 sentences), providing a little context.';
+      case '고급': return '- Question length: Detailed and elaborate (2-3 sentences), asking for in-depth opinions or complex scenarios.';
+      default: return '';
+    }
+  };
+
   const generatedPrompt = `Generate exactly ${count} English learning sentences for a Korean learner.
 Topic: "${topic || '일상 회화'}"
 Level: ${DIFFICULTY_MAP[difficulty]}
@@ -126,6 +135,7 @@ Also generate exactly 10 open-ended English roleplay questions that:
 - Encourage free-talking answers (not yes/no)
 - Progress from simpler to more complex
 - Sound natural and conversational
+${getQuestionLengthRule(difficulty)}
 
 Return ONLY a valid JSON object containing both "sentences" and "roleplayQuestions". No markdown fences, no explanation.
 Format:
@@ -153,6 +163,7 @@ Generate exactly 10 open-ended English questions that:
 - Progress from simpler to more complex
 - Are appropriate for ${DIFFICULTY_MAP[difficulty]} level learners
 - Sound natural and conversational
+${getQuestionLengthRule(difficulty)}
 
 For each question, also provide a model answer that:
 - Is appropriate for ${DIFFICULTY_MAP[difficulty]} level (${getDifficultyRule(difficulty).replace('- STRICT RULE: ', '')})

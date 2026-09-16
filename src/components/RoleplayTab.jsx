@@ -58,7 +58,15 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
         }
         if (isCancelled) return;
 
-        await ttsSpeak(currentItem.question, 'en-US', 1.0);
+        try {
+          // 최대 15초 대기 후 실패 처리하여 무한 멈춤 방지
+          await Promise.race([
+            ttsSpeak(currentItem.question, 'en-US', 1.0),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('TTS Timeout')), 15000))
+          ]);
+        } catch (err) {
+          console.warn("TTS Playback skipped or failed:", err);
+        }
         
         if (i < 2 && !isCancelled) {
           let waited = 0;
@@ -87,11 +95,15 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
         setTimeLeft(prev => {
           if (prev <= 1) {
             clearInterval(timer);
-            if (currentQIndex < shuffledQuestions.length - 1) {
-              setCurrentQIndex(currentQIndex + 1);
-            } else {
-              setDone(true);
-            }
+            // React 상태 업데이트 함수(prev => ...) 내부에서 다른 상태를 변경하면 무시될 수 있으므로 setTimeout으로 분리
+            setTimeout(() => {
+              ttsStop();
+              if (currentQIndex < shuffledQuestions.length - 1) {
+                setCurrentQIndex(q => q + 1);
+              } else {
+                setDone(true);
+              }
+            }, 0);
             return 0;
           }
           return prev - 1;
