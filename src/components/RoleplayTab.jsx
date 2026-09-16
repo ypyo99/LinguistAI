@@ -75,7 +75,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
                 await new Promise(resolve => setTimeout(resolve, 100));
                 waited += 100;
              } else {
-                await new Promise(resolve => setTimeout(resolve, 100));
+                break; // 정지된 경우 잔여 딜레이를 무시하고 다음 사이클의 대기 상태로 즉시 진입
              }
           }
         }
@@ -203,12 +203,12 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
           /* ── 질문 단계 ── */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '800px', gap: '32px' }}>
             <div 
-              onMouseDown={(e) => { e.preventDefault(); handlePointerDown(e.clientX); }}
-              onMouseUp={(e) => handlePointerUp(e.clientX)}
-              onMouseLeave={(e) => handlePointerUp(e.clientX)}
-              onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
-              onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
+              onPointerDown={(e) => handlePointerDown(e.clientX)}
+              onPointerUp={(e) => handlePointerUp(e.clientX)}
+              onPointerLeave={(e) => handlePointerUp(e.clientX)}
+              onPointerCancel={(e) => handlePointerUp(e.clientX)}
               style={{
+              touchAction: 'pan-y', // 기본 제스처 충돌 방지 및 수직 스크롤 허용
               userSelect: 'none',
               background: isStopped ? '#475569' : '#f97316',
               color: 'white',
