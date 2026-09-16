@@ -215,33 +215,28 @@ export default function LibraryTab({
       {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
         <h2 className="section-heading" style={{ fontSize: '20px', margin: 0 }}>내 학습 데이터</h2>
-        {isLoggedIn && (
+      </div>
+
+      {/* 드라이브 경로 배너 */}
+      {isLoggedIn && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: '#FFF7ED', border: '1px solid #FDBA74',
+          borderRadius: '10px', padding: '8px 12px', marginBottom: '14px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#F97316', fontWeight: 'bold' }}>
+            <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>folder</i>
+            내 드라이브 › LinguistAI › 보관함
+          </div>
           <button
             onClick={loadFromDrive}
             disabled={driveLoading}
             style={{
-              padding: '4px 10px', borderRadius: '8px', border: '1px solid var(--line)',
-              background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)',
-              display: 'flex', alignItems: 'center', cursor: driveLoading ? 'wait' : 'pointer',
-              fontSize: '12px', gap: '4px'
+              background: 'transparent', border: 'none', color: '#EA580C', cursor: driveLoading ? 'wait' : 'pointer', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: driveLoading ? 0.5 : 1
             }}
           >
-            <i className="material-symbols-outlined" style={{ fontSize: '14px', animation: driveLoading ? 'spin 1s linear infinite' : 'none' }}>refresh</i>
-            새로고침
+            <i className="material-symbols-outlined" style={{ fontSize: '20px', animation: driveLoading ? 'spin 1s linear infinite' : 'none' }}>refresh</i>
           </button>
-        )}
-      </div>
-
-      {/* 드라이브 경로 배너 */}
-      {isLoggedIn && !driveLoading && !driveError && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          background: '#FFF7ED', border: '1px solid #FDBA74',
-          borderRadius: '10px', padding: '8px 12px', marginBottom: '14px',
-          fontSize: '12px', color: '#F97316', fontWeight: 'bold'
-        }}>
-          <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>folder</i>
-          내 드라이브 › LinguistAI › 보관함
         </div>
       )}
 
@@ -297,119 +292,119 @@ export default function LibraryTab({
                   gap: '8px',
                 }}
               >
-                {/* 제목 */}
-                {editingPackId === pack.id ? (
-                  <input
-                    autoFocus
-                    value={editTitleText}
-                    onChange={(e) => setEditTitleText(e.target.value)}
-                    onBlur={() => handleTitleSave(pack)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleTitleSave(pack);
-                      if (e.key === 'Escape') setEditingPackId(null);
-                    }}
-                    disabled={savingTitleId === pack.id}
-                    style={{
-                      fontSize: '14px', fontWeight: '700', color: 'var(--ink)', 
-                      lineHeight: '1.3', width: '100%', 
-                      background: 'var(--surface-container-lowest)', 
-                      border: '1px solid var(--amber)', borderRadius: '6px', 
-                      padding: '2px 6px', outline: 'none'
-                    }}
-                  />
-                ) : (
+                {/* 제목 및 즐겨찾기 */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                  {editingPackId === pack.id ? (
+                    <input
+                      autoFocus
+                      value={editTitleText}
+                      onChange={(e) => setEditTitleText(e.target.value)}
+                      onBlur={() => handleTitleSave(pack)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleTitleSave(pack);
+                        if (e.key === 'Escape') setEditingPackId(null);
+                      }}
+                      disabled={savingTitleId === pack.id}
+                      style={{
+                        fontSize: '14px', fontWeight: '700', color: 'var(--ink)', 
+                        lineHeight: '1.3', width: '100%', 
+                        background: 'var(--surface-container-lowest)', 
+                        border: '1px solid var(--amber)', borderRadius: '6px', 
+                        padding: '2px 6px', outline: 'none'
+                      }}
+                    />
+                  ) : (
+                    <div 
+                      onClick={() => {
+                        if (window.confirm(`'${base || pack.title}${level ? `-${level}` : ''}' 학습자료를 불러올까요?`)) {
+                          handleLoadPack(pack);
+                        }
+                      }}
+                      style={{ fontSize: '14px', fontWeight: '700', color: 'var(--ink)', lineHeight: '1.3', wordBreak: 'keep-all', cursor: 'pointer' }}
+                      title="클릭하여 학습자료 불러오기"
+                    >
+                      {base || pack.title} {savingTitleId === pack.id && <i className="material-symbols-outlined" style={{ fontSize: '14px', animation: 'spin 1s linear infinite', verticalAlign: 'middle' }}>autorenew</i>}
+                    </div>
+                  )}
+                  <span style={{ fontSize: '11px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0, marginTop: '2px' }}>
+                    <i className="material-symbols-outlined" style={{ fontSize: '14px', color: 'var(--teal)' }}>star</i>
+                    {pack.favorites?.length || 0}
+                  </span>
+                </div>
+
+                {/* 하단 행: 뱃지 + 문장 수 및 액션 버튼들 */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                   <div 
                     onClick={() => {
                       if (window.confirm(`'${base || pack.title}${level ? `-${level}` : ''}' 학습자료를 불러올까요?`)) {
                         handleLoadPack(pack);
                       }
                     }}
-                    style={{ fontSize: '14px', fontWeight: '700', color: 'var(--ink)', lineHeight: '1.3', wordBreak: 'keep-all', cursor: 'pointer' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', cursor: 'pointer', flex: 1 }}
                     title="클릭하여 학습자료 불러오기"
                   >
-                    {base || pack.title} {savingTitleId === pack.id && <i className="material-symbols-outlined" style={{ fontSize: '14px', animation: 'spin 1s linear infinite', verticalAlign: 'middle' }}>autorenew</i>}
+                    {badge && (
+                      <span style={{
+                        fontSize: '10px', fontWeight: '700', padding: '2px 7px',
+                        borderRadius: '20px', background: badge.bg, color: badge.color,
+                      }}>
+                        {level}
+                      </span>
+                    )}
+                    {count && (
+                      <span style={{ fontSize: '11px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600' }}>{count}문장</span>
+                    )}
                   </div>
-                )}
 
-                {/* 뱃지 + 문장 수 + 즐겨찾기 */}
-                <div 
-                  onClick={() => {
-                    if (window.confirm(`'${base || pack.title}${level ? `-${level}` : ''}' 학습자료를 불러올까요?`)) {
-                      handleLoadPack(pack);
-                    }
-                  }}
-                  style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', cursor: 'pointer' }}
-                  title="클릭하여 학습자료 불러오기"
-                >
-                  {badge && (
-                    <span style={{
-                      fontSize: '10px', fontWeight: '700', padding: '2px 7px',
-                      borderRadius: '20px', background: badge.bg, color: badge.color,
-                    }}>
-                      {level}
-                    </span>
-                  )}
-                  {count && (
-                    <span style={{ fontSize: '11px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600' }}>{count}문장</span>
-                  )}
-                  <span style={{ fontSize: '11px', color: 'var(--ink)', opacity: 0.9, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px', marginLeft: 'auto' }}>
-                    <i className="material-symbols-outlined" style={{ fontSize: '14px', color: 'var(--teal)' }}>star</i>
-                    {pack.favorites?.length || 0}
-                  </span>
-                  {isLoggedIn && (
-                    <i className="material-symbols-outlined" style={{ fontSize: '14px', color: 'var(--teal)' }} title="구글 드라이브에 저장됨">cloud_done</i>
-                  )}
-                </div>
-
-
-                {/* 버튼 행 */}
-                <div style={{ display: 'flex', gap: '5px', marginTop: 'auto', justifyContent: 'flex-end' }}>
-                  {/* JSON 다운로드 */}
-                  <button
-                    onClick={() => handleDownloadPack(pack)}
-                    title="JSON 파일로 저장"
-                    style={{
-                      width: '30px', height: '30px',
-                      borderRadius: '9px', border: '1px solid var(--line)',
-                      background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>download</i>
-                  </button>
-                  {/* 공유 자료함 업로드 */}
-                  <button
-                    onClick={() => handleUploadToStore(pack)}
-                    disabled={uploadingStoreId === pack.id}
-                    title="공유 자료함에 업로드"
-                    style={{
-                      width: '30px', height: '30px',
-                      borderRadius: '9px', border: '1px solid var(--line)',
-                      background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: uploadingStoreId === pack.id ? 'wait' : 'pointer',
-                    }}
-                  >
-                    <i className="material-symbols-outlined" style={{ fontSize: '15px', animation: uploadingStoreId === pack.id ? 'spin 1s linear infinite' : 'none' }}>
-                      {uploadingStoreId === pack.id ? 'autorenew' : 'share'}
-                    </i>
-                  </button>
-                  {/* 삭제 */}
-                  <LongPressButton
-                    onLongPress={() => handleDeletePack(pack)}
-                    onClick={() => alert('삭제하려면 휴지통 아이콘을 길게 누르세요.')}
-                    title="길게 눌러서 삭제"
-                    style={{
-                      width: '30px', height: '30px',
-                      borderRadius: '9px', border: '1px solid var(--line)',
-                      background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>delete</i>
-                  </LongPressButton>
+                  {/* 버튼 행 */}
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    {/* JSON 다운로드 */}
+                    <button
+                      onClick={() => handleDownloadPack(pack)}
+                      title="JSON 파일로 저장"
+                      style={{
+                        width: '30px', height: '30px',
+                        borderRadius: '9px', border: '1px solid var(--line)',
+                        background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>download</i>
+                    </button>
+                    {/* 공유 자료함 업로드 */}
+                    <button
+                      onClick={() => handleUploadToStore(pack)}
+                      disabled={uploadingStoreId === pack.id}
+                      title="공유 자료함에 업로드"
+                      style={{
+                        width: '30px', height: '30px',
+                        borderRadius: '9px', border: '1px solid var(--line)',
+                        background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: uploadingStoreId === pack.id ? 'wait' : 'pointer',
+                      }}
+                    >
+                      <i className="material-symbols-outlined" style={{ fontSize: '15px', animation: uploadingStoreId === pack.id ? 'spin 1s linear infinite' : 'none' }}>
+                        {uploadingStoreId === pack.id ? 'autorenew' : 'share'}
+                      </i>
+                    </button>
+                    {/* 삭제 */}
+                    <LongPressButton
+                      onLongPress={() => handleDeletePack(pack)}
+                      onClick={() => alert('삭제하려면 휴지통 아이콘을 길게 누르세요.')}
+                      title="길게 눌러서 삭제"
+                      style={{
+                        width: '30px', height: '30px',
+                        borderRadius: '9px', border: '1px solid var(--line)',
+                        background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>delete</i>
+                    </LongPressButton>
+                  </div>
                 </div>
               </div>
             );

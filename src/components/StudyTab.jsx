@@ -268,7 +268,8 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       }
       const actualRate = lang === 'ko-KR' ? 1.0 : rate;
       setCurrentSpeakingLang(lang === 'ko-KR' ? 'ko' : 'en');
-      await ttsSpeak(text, lang, actualRate);
+      const textToSpeak = lang === 'ko-KR' ? text.replace(/\//g, '') : text;
+      await ttsSpeak(textToSpeak, lang, actualRate);
       if (stopRef.current) {
         setCurrentSpeakingLang(null);
         return;
@@ -343,8 +344,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       let unplayed = validIndices.filter(idx => !playedInCycle.has(idx));
       
       if (unplayed.length === 0) {
-        playedInCycle.clear();
-        unplayed = [...validIndices];
+        break;
       }
 
       let nextIdx;

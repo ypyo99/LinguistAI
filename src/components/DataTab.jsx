@@ -30,7 +30,7 @@ function parseName(rawName) {
 
 const DIFFICULTY_MAP = { '초급': 'beginner (A1-A2)', '중급': 'intermediate (B1-B2)', '고급': 'advanced (C1-C2)' };
 
-export default function DataTab({ apiKey, setUser: appSetUser, setSentences, setPackTitle, setStudiedIndices, setCurrentPackId, setFavorites, setRoleplayQuestions }) {
+export default function DataTab({ isActive, apiKey, setUser: appSetUser, setSentences, setPackTitle, setStudiedIndices, setCurrentPackId, setFavorites, setRoleplayQuestions }) {
   const [user, setUser] = usePersistentState('linguist-user', null);
   const [packs, setPacks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -68,9 +68,11 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
   };
 
   useEffect(() => {
-    fetchFiles();
+    if (isActive) {
+      fetchFiles();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, isActive]);
 
   const handleDownload = async (pack) => {
     if (!user || !user.accessToken || loadingId) return;
@@ -200,7 +202,7 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
           disabled={loading}
           style={{ background: 'transparent', border: 'none', color: '#EA580C', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: loading ? 0.5 : 1 }}
         >
-          <i className="material-symbols-outlined" style={{ fontSize: '24px', animation: loading ? 'spin 1s linear infinite' : 'none' }}>refresh</i>
+          <i className="material-symbols-outlined" style={{ fontSize: '20px', animation: loading ? 'spin 1s linear infinite' : 'none' }}>refresh</i>
         </button>
       </div>
 
