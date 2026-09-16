@@ -631,7 +631,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const handleTouchMove = (e) => {
     if (!touchStartRef.current) return;
     const diff = touchStartRef.current - e.targetTouches[0].clientX;
-    if (Math.abs(diff) > 10) {
+    if (Math.abs(diff) > 20) {
       isSwiping.current = true;
     }
   };
@@ -641,9 +641,9 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     const touchEndClientX = e.changedTouches[0].clientX;
     const distance = touchStartRef.current - touchEndClientX;
     
-    if (distance > 50) {
+    if (distance > 120) {
       handleNextSentence();
-    } else if (distance < -50) {
+    } else if (distance < -120) {
       handlePrevSentence();
     }
     touchStartRef.current = null;

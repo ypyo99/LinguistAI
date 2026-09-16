@@ -254,7 +254,7 @@ export default function QuizTab({ sentences }) {
     if (touchStartX.current === null) return;
     const diff = touchStartX.current - clientX;
 
-    if (Math.abs(diff) > 40) {
+    if (Math.abs(diff) > 120) {
       if (diff > 0) {
         handleNext(); // Swipe left -> next
       } else {

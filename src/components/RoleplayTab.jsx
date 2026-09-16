@@ -153,7 +153,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
     if (touchStartX.current === null) return;
     const diff = touchStartX.current - clientX;
 
-    if (Math.abs(diff) > 50) {
+    if (Math.abs(diff) > 120) {
       if (diff > 0) {
         handleNext(); // 왼쪽으로 스와이프/드래그 (다음)
       } else {
