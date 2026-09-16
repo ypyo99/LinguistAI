@@ -295,7 +295,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
                 )}
               </div>
               <div style={{ color: 'var(--on-surface-variant, #64748b)', fontSize: '15px', fontWeight: '500' }}>
-                {timeLeft === 0 ? '질문 읽는 중...' : '답변할 시간!'}
+                {isStopped ? '일시 정지됨' : (timeLeft === 0 ? '질문 읽는 중...' : '답변할 시간!')}
               </div>
             </div>
           </div>
