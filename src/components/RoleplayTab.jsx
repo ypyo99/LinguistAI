@@ -14,7 +14,6 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
   const normalized = normalizeQuestions(questions);
   const [shuffledQuestions] = useState(() => [...normalized].sort(() => Math.random() - 0.5));
   const [currentQIndex, setCurrentQIndex] = useState(0);
-  const [phase, setPhase] = useState('question'); // 'question' | 'modelAnswer'
   const [done, setDone] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTime, setTotalTime] = useState(1);
@@ -30,7 +29,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
   useEffect(() => {
     setIsStopped(false);
     isStoppedRef.current = false;
-  }, [currentQIndex, phase]);
+  }, [currentQIndex]);
 
   const toggleStop = () => {
     const next = !isStoppedRef.current;
@@ -43,7 +42,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
 
   // ── 질문 단계: 3번 읽기 완료 후 타이머 시작 ────────────────────────────────
   useEffect(() => {
-    if (done || phase !== 'question') return;
+    if (done) return;
     if (!currentItem) return;
 
     let isCancelled = false;
@@ -88,7 +87,11 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
         setTimeLeft(prev => {
           if (prev <= 1) {
             clearInterval(timer);
-            setPhase('modelAnswer');
+            if (currentQIndex < shuffledQuestions.length - 1) {
+              setCurrentQIndex(currentQIndex + 1);
+            } else {
+              setDone(true);
+            }
             return 0;
           }
           return prev - 1;
@@ -103,67 +106,15 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
       if (timer) clearInterval(timer);
       ttsStop();
     };
-  }, [currentQIndex, phase, done, ttsSpeak, ttsStop, currentItem, answerSeconds]);
+  }, [currentQIndex, done, ttsSpeak, ttsStop, currentItem, answerSeconds, shuffledQuestions.length]);
 
-  // ── 모범답안 단계: TTS 읽어주기 → 자동으로 다음 질문 이동 ────────────────────
-  useEffect(() => {
-    if (done || phase !== 'modelAnswer') return;
 
-    let isCancelled = false;
-    const playAndAdvance = async () => {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      if (isCancelled) return;
-
-      while (isStoppedRef.current && !isCancelled) {
-         await new Promise(resolve => setTimeout(resolve, 200));
-      }
-      if (isCancelled) return;
-
-      if (currentItem?.modelAnswer) {
-        await ttsSpeak(currentItem.modelAnswer, 'en-US', 0.95);
-      } else {
-        // 모범답안 없으면 2초 대기 후 진행
-        let waited = 0;
-        while (waited < 2000 && !isCancelled) {
-           if (!isStoppedRef.current) {
-              await new Promise(resolve => setTimeout(resolve, 100));
-              waited += 100;
-           } else {
-              await new Promise(resolve => setTimeout(resolve, 100));
-           }
-        }
-      }
-      if (isCancelled) return;
-
-      while (isStoppedRef.current && !isCancelled) {
-         await new Promise(resolve => setTimeout(resolve, 200));
-      }
-
-      // TTS 종료 후 1초 텀을 두고 자동으로 다음 질문 이동
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      if (!isCancelled) {
-        if (currentQIndex < shuffledQuestions.length - 1) {
-          setCurrentQIndex(q => q + 1);
-          setPhase('question');
-        } else {
-          setDone(true);
-        }
-      }
-    };
-    playAndAdvance();
-
-    return () => {
-      isCancelled = true;
-      ttsStop();
-    };
-  }, [phase, currentQIndex, done, ttsSpeak, ttsStop, currentItem, shuffledQuestions.length]);
 
   // ── 이전/다음 및 스와이프 기능 ───────────────────────────────────────────
   const handleNext = () => {
     ttsStop();
     if (currentQIndex < shuffledQuestions.length - 1) {
       setCurrentQIndex(q => q + 1);
-      setPhase('question');
     } else {
       setDone(true);
     }
@@ -173,7 +124,6 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
     ttsStop();
     if (currentQIndex > 0) {
       setCurrentQIndex(q => q - 1);
-      setPhase('question');
     }
   };
 
@@ -210,12 +160,12 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
           <i className="material-symbols-outlined">arrow_back</i>
         </button>
         <div className="rp-chat-header-icon">
-          <i className="material-symbols-outlined">{phase === 'modelAnswer' ? 'lightbulb' : 'quiz'}</i>
+          <i className="material-symbols-outlined">quiz</i>
         </div>
         <div className="rp-chat-header-info">
           <div className="rp-chat-header-hint" style={{ fontSize: '15px', fontWeight: '500', color: 'var(--ink)' }}>
             Q {Math.min(currentQIndex + 1, shuffledQuestions.length)} / {shuffledQuestions.length}
-            {' · '}{phase === 'modelAnswer' ? '모범답안' : 'English free-talking'}
+            {' · '}English free-talking
           </div>
         </div>
       </div>
@@ -237,7 +187,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
             </button>
           </div>
 
-        ) : phase === 'question' ? (
+        ) : (
           /* ── 질문 단계 ── */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '800px', gap: '32px' }}>
             <div 
@@ -295,71 +245,11 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
                 )}
               </div>
               <div style={{ color: 'var(--on-surface-variant, #64748b)', fontSize: '15px', fontWeight: '500' }}>
-                {isStopped ? '일시 정지됨' : (timeLeft === 0 ? '질문 읽는 중...' : '답변할 시간!')}
+                {isStopped ? <span style={{ animation: 'pulse 1.2s ease-in-out infinite' }}>일시 정지됨</span> : (timeLeft === 0 ? '질문 읽는 중...' : '답변할 시간!')}
               </div>
             </div>
-          </div>
+            
 
-        ) : (
-          /* ── 모범답안 단계 ── */
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '800px', gap: '20px' }}>
-            {/* 질문 (작게) */}
-            <div style={{
-              background: 'var(--surface-variant, #f1f5f9)',
-              color: 'var(--on-surface-variant, #64748b)',
-              padding: '12px 18px',
-              borderRadius: '16px',
-              width: '100%',
-              textAlign: 'center',
-              fontSize: '15px',
-              fontWeight: '500',
-              lineHeight: '1.4',
-            }}>
-              {currentItem?.question}
-            </div>
-
-            {/* 모범답안 레이블 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontWeight: '600', fontSize: '14px' }}>
-              <i className="material-symbols-outlined" style={{ fontSize: '20px' }}>lightbulb</i>
-              모범답안
-            </div>
-
-            {/* 모범답안 본문 */}
-            <div 
-              onMouseDown={(e) => { e.preventDefault(); handlePointerDown(e.clientX); }}
-              onMouseUp={(e) => handlePointerUp(e.clientX)}
-              onMouseLeave={(e) => handlePointerUp(e.clientX)}
-              onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
-              onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
-              style={{
-              userSelect: 'none',
-              background: isStopped ? '#475569' : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-              border: isStopped ? '2px solid #334155' : '2px solid #86efac',
-              color: isStopped ? 'white' : '#166534',
-              padding: '20px 24px',
-              borderRadius: '24px',
-              boxShadow: isStopped ? 'none' : '0 8px 20px -4px rgba(34, 197, 94, 0.2)',
-              width: '100%',
-              textAlign: 'center',
-              fontSize: '20px',
-              fontWeight: 'bold',
-              lineHeight: '1.6',
-              wordBreak: 'keep-all',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease'
-            }}>
-              {currentItem?.modelAnswer || '(모범답안 없음)'}
-            </div>
-
-            {/* 건너뛰기 버튼 */}
-            <button
-              className="btn-orange"
-              onClick={handleSkip}
-              style={{ padding: '10px 24px', borderRadius: '14px', fontSize: '14px', fontWeight: '600', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.8 }}
-            >
-              <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>skip_next</i>
-              {currentQIndex < shuffledQuestions.length - 1 ? '건너뛰기' : '완료'}
-            </button>
           </div>
         )}
       </div>
@@ -445,11 +335,7 @@ export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], rolepla
               </div>
               <div className="rp-hiw-step">
                 <span className="rp-hiw-num">3</span>
-                <span>30초 후 모범답안이 표시되고 읽어줍니다</span>
-              </div>
-              <div className="rp-hiw-step">
-                <span className="rp-hiw-num">4</span>
-                <span>모범답안 확인 후 다음 질문으로 넘어가세요</span>
+                <span>시간이 초과되거나 스와이프하면 다음 질문으로 넘어갑니다</span>
               </div>
             </div>
           </div>

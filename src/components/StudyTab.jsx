@@ -837,7 +837,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
             {isPaused ? (
               <>
                 <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>pause_circle</i>
-                일시 정지됨
+                <span style={{ animation: 'pulse 1.2s ease-in-out infinite' }}>일시 정지됨</span>
               </>
             ) : isWaiting ? (
               <>
