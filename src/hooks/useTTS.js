@@ -208,7 +208,16 @@ export function useTTS(ttsApiKey = '', voiceEn = 'en-US-Neural2-C', voiceKo = 'k
     return () => {};
   }, []);
 
+  const stopResolverRef = useRef(null);
+
   const stop = useCallback(async () => {
+    // 1. 현재 대기 중인(await) TTS 프로미스를 즉시 강제 종료(resolve)시킴
+    if (stopResolverRef.current) {
+      stopResolverRef.current();
+      stopResolverRef.current = null;
+    }
+
+    // 2. 실제 오디오 재생 소스 정지
     if (currentSourceRef.current) {
       try { currentSourceRef.current.stop(); } catch (_) {}
       currentSourceRef.current = null;
@@ -222,23 +231,34 @@ export function useTTS(ttsApiKey = '', voiceEn = 'en-US-Neural2-C', voiceKo = 'k
 
   const speak = useCallback(
     async (text, lang, rate = 1.0) => {
-      stop();
-      if (ttsApiKey && (lang === 'ko-KR' || lang === 'en-US' || lang === 'en')) {
-        const voiceName = lang === 'ko-KR' ? voiceKo : voiceEn;
-        const normalizedLang = lang === 'en' ? 'en-US' : lang;
-        try {
-          await googleTTSSpeak(text, normalizedLang, rate, ttsApiKey, voiceName, audioCtxRef, currentSourceRef, setTtsStatus);
-          return;
-        } catch (e) {
-          console.warn('[TTS] Google Cloud TTS 실패, 웹/네이티브 API로 폴백:', e.message);
+      stop(); // 이전 재생 취소
+
+      const internalSpeak = async () => {
+        if (ttsApiKey && (lang === 'ko-KR' || lang === 'en-US' || lang === 'en')) {
+          const voiceName = lang === 'ko-KR' ? voiceKo : voiceEn;
+          const normalizedLang = lang === 'en' ? 'en-US' : lang;
+          try {
+            await googleTTSSpeak(text, normalizedLang, rate, ttsApiKey, voiceName, audioCtxRef, currentSourceRef, setTtsStatus);
+            return;
+          } catch (e) {
+            console.warn('[TTS] Google Cloud TTS 실패, 웹/네이티브 API로 폴백:', e.message);
+          }
         }
-      }
-      
-      if (Capacitor.isNativePlatform()) {
-        return nativeSpeechSpeak(text, lang, rate, setTtsStatus, lang === 'ko-KR' ? voiceKo : voiceEn);
-      } else {
-        return webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus, lang === 'ko-KR' ? voiceKo : voiceEn);
-      }
+        
+        if (Capacitor.isNativePlatform()) {
+          return nativeSpeechSpeak(text, lang, rate, setTtsStatus, lang === 'ko-KR' ? voiceKo : voiceEn);
+        } else {
+          return webSpeechSpeak(text, lang, rate, voiceCache, setTtsStatus, lang === 'ko-KR' ? voiceKo : voiceEn);
+        }
+      };
+
+      // 실제 재생 함수와 정지 신호 함수를 경쟁(race)시켜, 정지가 눌리면 즉각 resolve 하도록 처리
+      return Promise.race([
+        internalSpeak(),
+        new Promise(resolve => {
+          stopResolverRef.current = resolve;
+        })
+      ]);
     },
     [stop, ttsApiKey, voiceEn, voiceKo]
   );
