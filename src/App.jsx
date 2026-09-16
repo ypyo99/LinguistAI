@@ -58,6 +58,14 @@ function App() {
     prevUserRef.current = user;
   }, [user, activeTab, setActiveTab]);
 
+  // 앱 시작 시 구글 로그인이 안 된 상태라면 무조건 '학습(study)' 탭을 보여줍니다.
+  useEffect(() => {
+    const currentUser = JSON.parse(localStorage.getItem('linguist-user'));
+    if (!currentUser) {
+      setActiveTab('study');
+    }
+  }, []);
+
   // ── 토큰 갱신 이벤트 리스너 ──────────────────────────────
   useEffect(() => {
     const handleTokenRefresh = (e) => {
