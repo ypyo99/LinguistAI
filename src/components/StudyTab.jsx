@@ -918,7 +918,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                 >
                   <div 
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginTop: '2px', cursor: 'pointer' }}
-                    onClick={() => handlePlayOne(idx)}
+                    onClick={() => handlePlayAll(idx)}
                   >
                     {isCompleted ? (
                       <i className="material-symbols-outlined" style={{ color: 'var(--teal)', fontSize: '24px' }}>check_circle</i>
@@ -926,7 +926,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                       <div className="turn-index">{idx + 1}</div>
                     )}
                   </div>
-                  <div className="turn-body" onClick={() => handlePlayOne(idx)} style={{ cursor: 'pointer' }}>
+                  <div className="turn-body" onClick={() => handlePlayAll(idx)} style={{ cursor: 'pointer' }}>
                     {langOrder === 'ko-en' ? (
                       <>
                         <div className="turn-en" style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
@@ -953,7 +953,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                     <button onClick={toggleFavorite} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isFavorite ? 'var(--teal)' : 'var(--amber)' }}>
                       <i className="material-symbols-outlined" style={{ fontVariationSettings: isFavorite ? "'FILL' 1" : "'FILL' 0", fontSize: '22px' }}>star</i>
                     </button>
-                    <button onClick={() => handlePlayOne(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isThis ? 'var(--teal)' : 'var(--amber)' }}>
+                    <button onClick={() => handlePlayAll(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isThis ? 'var(--teal)' : 'var(--amber)' }}>
                       <i className="material-symbols-outlined" style={{ fontSize: '22px' }}>play_circle</i>
                     </button>
                   </div>
