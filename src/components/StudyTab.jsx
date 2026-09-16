@@ -594,7 +594,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
   const renderKoText = (text) => {
     if (currentSpeakingLang !== 'ko' || activeKoWordIdx === -1) {
-      return text ? text.replace(/\//g, ' ').replace(/\s+/g, ' ') : text;
+      return text;
     }
     const chunks = text.split('/');
     
