@@ -27,7 +27,6 @@ export default function QuizTab({ sentences }) {
   const [shake, setShake] = useState(false);
   const [score, setScore] = useState(0);
   const [quizMode, setQuizMode] = useState('mixed'); // 'mixed', 'sentence', 'vocab'
-  const touchStartX = React.useRef(null);
 
   const generateQuiz = (resetHistory = false) => {
     if (!sentences || sentences.length === 0) return;
