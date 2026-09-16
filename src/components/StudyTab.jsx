@@ -622,16 +622,19 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
   const isSwiping = useRef(false);
   const touchStartRef = useRef(null);
+  const touchStartYRef = useRef(null);
 
   const handleTouchStart = (e) => {
     isSwiping.current = false;
     touchStartRef.current = e.targetTouches[0].clientX;
+    touchStartYRef.current = e.targetTouches[0].clientY;
   };
 
   const handleTouchMove = (e) => {
     if (!touchStartRef.current) return;
-    const diff = touchStartRef.current - e.targetTouches[0].clientX;
-    if (Math.abs(diff) > 20) {
+    const diffX = touchStartRef.current - e.targetTouches[0].clientX;
+    const diffY = touchStartYRef.current - e.targetTouches[0].clientY;
+    if (Math.abs(diffX) > 20 && Math.abs(diffX) > Math.abs(diffY)) {
       isSwiping.current = true;
     }
   };
@@ -639,14 +642,19 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const handleTouchEnd = (e) => {
     if (!touchStartRef.current) return;
     const touchEndClientX = e.changedTouches[0].clientX;
-    const distance = touchStartRef.current - touchEndClientX;
+    const touchEndClientY = e.changedTouches[0].clientY;
+    const distanceX = touchStartRef.current - touchEndClientX;
+    const distanceY = touchStartYRef.current - touchEndClientY;
     
-    if (distance > 120) {
-      handleNextSentence();
-    } else if (distance < -120) {
-      handlePrevSentence();
+    if (Math.abs(distanceX) > 120 && Math.abs(distanceX) > Math.abs(distanceY)) {
+      if (distanceX > 0) {
+        handleNextSentence();
+      } else {
+        handlePrevSentence();
+      }
     }
     touchStartRef.current = null;
+    touchStartYRef.current = null;
   };
 
   const onNowPlayingClick = (e) => {

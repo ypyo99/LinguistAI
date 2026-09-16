@@ -144,26 +144,31 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
   };
 
   const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
 
-  const handlePointerDown = (clientX) => {
-    touchStartX.current = clientX;
+  const handlePointerDown = (e) => {
+    touchStartX.current = e.clientX;
+    touchStartY.current = e.clientY;
   };
 
-  const handlePointerUp = (clientX) => {
+  const handlePointerUp = (e) => {
     if (touchStartX.current === null) return;
-    const diff = touchStartX.current - clientX;
+    const diffX = touchStartX.current - e.clientX;
+    const diffY = touchStartY.current - e.clientY;
 
-    if (Math.abs(diff) > 120) {
-      if (diff > 0) {
+    // 수평 이동(diffX)이 120px 이상이면서 수직 이동(diffY)보다 큰 경우에만 스와이프로 인정 (수직 스크롤 오작동 방지)
+    if (Math.abs(diffX) > 120 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
         handleNext(); // 왼쪽으로 스와이프/드래그 (다음)
       } else {
         handlePrev(); // 오른쪽으로 스와이프/드래그 (이전)
       }
-    } else if (Math.abs(diff) < 20) {
+    } else if (Math.abs(diffX) < 20 && Math.abs(diffY) < 20) {
       // 제자리 클릭(탭)인 경우 (모바일 터치 흔들림 보정)
       toggleStop();
     }
     touchStartX.current = null;
+    touchStartY.current = null;
   };
 
   const progress = Math.round((currentQIndex / shuffledQuestions.length) * 100);
@@ -207,10 +212,10 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
           /* ── 질문 단계 ── */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '800px', gap: '32px' }}>
             <div 
-              onPointerDown={(e) => handlePointerDown(e.clientX)}
-              onPointerUp={(e) => handlePointerUp(e.clientX)}
-              onPointerLeave={(e) => handlePointerUp(e.clientX)}
-              onPointerCancel={(e) => handlePointerUp(e.clientX)}
+              onPointerDown={(e) => handlePointerDown(e)}
+              onPointerUp={(e) => handlePointerUp(e)}
+              onPointerLeave={(e) => handlePointerUp(e)}
+              onPointerCancel={(e) => handlePointerUp(e)}
               style={{
               touchAction: 'pan-y', // 기본 제스처 충돌 방지 및 수직 스크롤 허용
               userSelect: 'none',

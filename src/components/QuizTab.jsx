@@ -246,22 +246,28 @@ export default function QuizTab({ sentences }) {
     }
   };
 
-  const handlePointerDown = (clientX) => {
-    touchStartX.current = clientX;
+  const touchStartX = React.useRef(null);
+  const touchStartY = React.useRef(null);
+
+  const handlePointerDown = (e) => {
+    touchStartX.current = e.clientX;
+    touchStartY.current = e.clientY;
   };
 
-  const handlePointerUp = (clientX) => {
+  const handlePointerUp = (e) => {
     if (touchStartX.current === null) return;
-    const diff = touchStartX.current - clientX;
+    const diffX = touchStartX.current - e.clientX;
+    const diffY = touchStartY.current - e.clientY;
 
-    if (Math.abs(diff) > 120) {
-      if (diff > 0) {
+    if (Math.abs(diffX) > 120 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
         handleNext(); // Swipe left -> next
       } else {
         handlePrev(); // Swipe right -> prev
       }
     }
     touchStartX.current = null;
+    touchStartY.current = null;
   };
 
   useEffect(() => {
@@ -383,11 +389,11 @@ export default function QuizTab({ sentences }) {
               })()}
             </p>
             <div 
-              onMouseDown={(e) => { e.preventDefault(); handlePointerDown(e.clientX); }}
-              onMouseUp={(e) => handlePointerUp(e.clientX)}
-              onMouseLeave={(e) => handlePointerUp(e.clientX)}
-              onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
-              onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
+              onPointerDown={(e) => handlePointerDown(e)}
+              onPointerUp={(e) => handlePointerUp(e)}
+              onPointerLeave={(e) => handlePointerUp(e)}
+              onPointerCancel={(e) => handlePointerUp(e)}
+              style={{ touchAction: 'pan-y' }}
               className={`quiz-sentence-box cursor-pointer select-none bg-white dark:bg-dark-surface p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
               ${selectedAnswer === 'correct' ? 'border-green-400 bg-green-50 shadow-green-100 dark:bg-green-900/30 dark:border-green-500' : 'border-teal-tint'}
               transition-colors duration-300`}>
@@ -404,11 +410,11 @@ export default function QuizTab({ sentences }) {
             </p>
             
             <div 
-              onMouseDown={(e) => { e.preventDefault(); handlePointerDown(e.clientX); }}
-              onMouseUp={(e) => handlePointerUp(e.clientX)}
-              onMouseLeave={(e) => handlePointerUp(e.clientX)}
-              onTouchStart={(e) => handlePointerDown(e.touches[0].clientX)}
-              onTouchEnd={(e) => handlePointerUp(e.changedTouches[0].clientX)}
+              onPointerDown={(e) => handlePointerDown(e)}
+              onPointerUp={(e) => handlePointerUp(e)}
+              onPointerLeave={(e) => handlePointerUp(e)}
+              onPointerCancel={(e) => handlePointerUp(e)}
+              style={{ touchAction: 'pan-y' }}
               className={`quiz-sentence-box cursor-pointer select-none bg-white dark:bg-dark-surface p-5 sm:p-8 md:p-10 rounded-3xl shadow-lg border-2 w-full text-center
               ${selectedAnswer === 'correct' ? 'border-green-400 bg-green-50 shadow-green-100 dark:bg-green-900/30 dark:border-green-500' : 'border-teal-tint'}
               transition-colors duration-300`}>
