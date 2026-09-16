@@ -155,8 +155,8 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
       } else {
         handlePrev(); // 오른쪽으로 스와이프/드래그 (이전)
       }
-    } else if (Math.abs(diff) < 5) {
-      // 제자리 클릭(탭)인 경우
+    } else if (Math.abs(diff) < 20) {
+      // 제자리 클릭(탭)인 경우 (모바일 터치 흔들림 보정)
       toggleStop();
     }
     touchStartX.current = null;
