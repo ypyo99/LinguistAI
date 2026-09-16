@@ -101,6 +101,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const [speed, setSpeed]       = usePersistentState('linguist-study-speed', 'normal');
   const [mode, setMode]         = usePersistentState('linguist-study-mode', 'sequential');
   const [langOrder, setLangOrder] = usePersistentState('linguist-study-lang', 'en-ko');
+  const [korWordOrder, setKorWordOrder] = usePersistentState('linguist-study-kor-order', '한국어순');
   const [repeat, setRepeat]     = usePersistentState('linguist-study-repeat', 1);
   const [voiceEn, setVoiceEn]   = usePersistentState('linguist-voice-en', 'en-US-Neural2-C');
   const [voiceKo, setVoiceKo]   = usePersistentState('linguist-voice-ko', 'ko-KR-Neural2-C');
@@ -144,11 +145,11 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     };
   }, []);
 
-  const settingsRef = useRef({ speed, mode, repeat, langOrder, voiceEn, voiceKo });
-  const prevSettingsRef = useRef({ speed, mode, repeat, langOrder, voiceEn, voiceKo });
+  const settingsRef = useRef({ speed, mode, repeat, langOrder, korWordOrder, voiceEn, voiceKo });
+  const prevSettingsRef = useRef({ speed, mode, repeat, langOrder, korWordOrder, voiceEn, voiceKo });
   useEffect(() => {
-    settingsRef.current = { speed, mode, repeat, langOrder, voiceEn, voiceKo };
-  }, [speed, mode, repeat, langOrder, voiceEn, voiceKo]);
+    settingsRef.current = { speed, mode, repeat, langOrder, korWordOrder, voiceEn, voiceKo };
+  }, [speed, mode, repeat, langOrder, korWordOrder, voiceEn, voiceKo]);
 
   // 재생 설정 패널 자동 닫기 (30초, 드롭다운 선택 중에는 중단)
   const [isFocusedInSettings, setIsFocusedInSettings] = useState(false);
@@ -212,9 +213,10 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   useEffect(() => {
     if (currentSpeakingLang === 'ko' && (currentIdx !== null || singleIdx !== null)) {
       const sentence = sentences[currentIdx !== null ? currentIdx : singleIdx];
-      if (sentence && sentence.ko) {
-        const chunks = sentence.ko.split('/');
-        const textLen = sentence.ko.replace(/\//g, '').length;
+      const koText = sentence ? (settingsRef.current.korWordOrder === '영어순' && sentence.ko_en_order ? sentence.ko_en_order : sentence.ko) : '';
+      if (koText) {
+        const chunks = koText.split('/');
+        const textLen = koText.replace(/\//g, '').length;
         
         if (chunks.length > 0 && textLen > 0) {
           const estDuration = (textLen * 130);
@@ -252,9 +254,10 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
   // ── TTS 헬퍼 (useTTS 훅 위임) ────────────────────────
   const speakSentence = useCallback(async (sentence, rate, stopRef, repeatIndex = 0) => {
+    const koText = settingsRef.current.korWordOrder === '영어순' && sentence.ko_en_order ? sentence.ko_en_order : sentence.ko;
     let pairs = settingsRef.current.langOrder === 'en-ko'
-      ? [{ text: sentence.en, lang: 'en-US' }, { text: sentence.ko, lang: 'ko-KR' }]
-      : [{ text: sentence.ko, lang: 'ko-KR' }, { text: sentence.en, lang: 'en-US' }];
+      ? [{ text: sentence.en, lang: 'en-US' }, { text: koText, lang: 'ko-KR' }]
+      : [{ text: koText, lang: 'ko-KR' }, { text: sentence.en, lang: 'en-US' }];
 
     // 한국어 문장은 첫 번째 재생(repeatIndex === 0)에서만 재생하고 이후 반복에서는 제외
     if (repeatIndex > 0) {
@@ -268,7 +271,12 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       }
       const actualRate = lang === 'ko-KR' ? 1.0 : rate;
       setCurrentSpeakingLang(lang === 'ko-KR' ? 'ko' : 'en');
-      const textToSpeak = lang === 'ko-KR' ? text.replace(/\//g, '') : text;
+      let textToSpeak = text;
+      if (lang === 'ko-KR') {
+        textToSpeak = settingsRef.current.korWordOrder === '영어순' 
+          ? text.replace(/\//g, '... ') 
+          : text.replace(/\//g, '');
+      }
       await ttsSpeak(textToSpeak, lang, actualRate);
       if (stopRef.current) {
         setCurrentSpeakingLang(null);
@@ -453,10 +461,11 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       prev.mode !== mode ||
       prev.repeat !== repeat ||
       prev.langOrder !== langOrder ||
+      prev.korWordOrder !== korWordOrder ||
       prev.voiceEn !== voiceEn ||
       prev.voiceKo !== voiceKo
     ) {
-      prevSettingsRef.current = { speed, mode, repeat, langOrder, voiceEn, voiceKo };
+      prevSettingsRef.current = { speed, mode, repeat, langOrder, korWordOrder, voiceEn, voiceKo };
       
       // 설정이 바뀌면 현재 읽고 있는 위치에서 즉시 재시작하여 새 설정 적용
       if (isPlaying && currentIdx !== null) {
@@ -465,7 +474,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
         handlePlayOne(singleIdx);
       }
     }
-  }, [speed, mode, repeat, langOrder, voiceEn, voiceKo, isPlaying, currentIdx, singleIdx, handlePlayAll, handlePlayOne]);
+  }, [speed, mode, repeat, langOrder, korWordOrder, voiceEn, voiceKo, isPlaying, currentIdx, singleIdx, handlePlayAll, handlePlayOne]);
 
   const activeIdx = currentIdx !== null ? currentIdx : singleIdx;
   const activeSentence = activeIdx !== null ? sentences[activeIdx] : null;
@@ -584,7 +593,9 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   };
 
   const renderKoText = (text) => {
-    if (currentSpeakingLang !== 'ko' || activeKoWordIdx === -1) return text;
+    if (currentSpeakingLang !== 'ko' || activeKoWordIdx === -1) {
+      return text ? text.replace(/\//g, ' ').replace(/\s+/g, ' ') : text;
+    }
     const chunks = text.split('/');
     
     return chunks.map((chunk, i) => {
@@ -712,6 +723,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               <option value="ko-en">한국어 ➔ 영어</option>
             </AutoWidthSelect>
           </div>
+
           <div className="row">
             <span>반복</span>
             <AutoWidthSelect
@@ -804,6 +816,17 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               )}
             </AutoWidthSelect>
           </div>
+          <div className="row">
+            <span>한국어 어순</span>
+            <AutoWidthSelect
+              value={korWordOrder}
+              onChange={e => setKorWordOrder(e.target.value)}
+              className="settings-select"
+            >
+              <option value="한국어순">한국어순</option>
+              <option value="영어순">영어순</option>
+            </AutoWidthSelect>
+          </div>
           </div>
         </div>
       </div>
@@ -872,13 +895,13 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
           {langOrder === 'ko-en' ? (
             <>
-              <div className="now-playing-ko" style={getStyleKo()}>{renderKoText(activeSentence.ko)}</div>
+              <div className="now-playing-ko" style={getStyleKo()}>{renderKoText((korWordOrder === '영어순' && activeSentence.ko_en_order) ? activeSentence.ko_en_order : activeSentence.ko)}</div>
               <div className="now-playing-en" style={getStyleEn()}>{activeSentence.en}</div>
             </>
           ) : (
             <>
               <div className="now-playing-en" style={getStyleEn()}>{activeSentence.en}</div>
-              <div className="now-playing-ko" style={getStyleKo()}>{renderKoText(activeSentence.ko)}</div>
+              <div className="now-playing-ko" style={getStyleKo()}>{renderKoText((korWordOrder === '영어순' && activeSentence.ko_en_order) ? activeSentence.ko_en_order : activeSentence.ko)}</div>
             </>
           )}
         </div>
@@ -938,7 +961,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                     {langOrder === 'ko-en' ? (
                       <>
                         <div className="turn-en" style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
-                          {s.ko}
+                          {(korWordOrder === '영어순' && s.ko_en_order) ? s.ko_en_order : s.ko}
                         </div>
                         <div className="turn-ko-row">
                           <div className="turn-ko-bar"></div>
@@ -952,7 +975,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                         </div>
                         <div className="turn-ko-row">
                           <div className="turn-ko-bar"></div>
-                          <div className="turn-ko">{s.ko}</div>
+                          <div className="turn-ko">{(korWordOrder === '영어순' && s.ko_en_order) ? s.ko_en_order : s.ko}</div>
                         </div>
                       </>
                     )}
@@ -1073,13 +1096,13 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
             {activeSentence ? (
               langOrder === 'ko-en' ? (
                 <>
-                  <div className="commute-text-ko" style={getStyleCommuteKo()}>{activeSentence.ko}</div>
+                  <div className="commute-text-ko" style={getStyleCommuteKo()}>{(korWordOrder === '영어순' && activeSentence.ko_en_order) ? activeSentence.ko_en_order : activeSentence.ko}</div>
                   <div className="commute-text-en" style={getStyleCommuteEn()}>{activeSentence.en}</div>
                 </>
               ) : (
                 <>
                   <div className="commute-text-en" style={getStyleCommuteEn()}>{activeSentence.en}</div>
-                  <div className="commute-text-ko" style={getStyleCommuteKo()}>{activeSentence.ko}</div>
+                  <div className="commute-text-ko" style={getStyleCommuteKo()}>{(korWordOrder === '영어순' && activeSentence.ko_en_order) ? activeSentence.ko_en_order : activeSentence.ko}</div>
                 </>
               )
             ) : (

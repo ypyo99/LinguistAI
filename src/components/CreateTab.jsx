@@ -49,7 +49,6 @@ export default function CreateTab({ apiKey, onGenerate }) {
   }, [apiKey]);
 
   const [count, setCount] = usePersistentState('linguist-create-count', 10);
-  const [korOrder, setKorOrder] = usePersistentState('linguist-create-kor-order', '한국어순');
   const [model, setModel] = usePersistentState('linguist-create-model', 'gemini-3.1-flash');
   const [customModel, setCustomModel] = usePersistentState('linguist-create-custom-model', '');
   const [inputMode, setInputMode] = usePersistentState('linguist-create-input-mode', 'api');
@@ -116,10 +115,12 @@ Level: ${DIFFICULTY_MAP[difficulty]}
 Rules:
 - Each sentence must be natural, practical, and appropriate for the context.
 ${getDifficultyRule(difficulty)}
-${korOrder === '영어순' ? '- Korean translation must be translated in the exact English word order. You MUST insert a slash ( / ) between each Korean chunk (e.g. 너는 / 살 수 있다 / 티머니 카드를 / 어느 편의점에서나).' : '- Korean translation must be accurate and natural.'}
+- Create two versions of the Korean translation:
+  1. "ko": accurate and natural Korean translation in natural Korean word order (MUST NOT include /).
+  2. "ko_en_order": Korean translation in the exact English word order. You MUST insert a slash ( / ) between each Korean chunk (e.g. 너는 / 살 수 있다 / 티머니 카드를 / 어느 편의점에서나).
 - Extract 2-3 key words from the English sentence and provide their contextual Korean meaning in a "vocab" object.
 - Return ONLY a valid JSON array, no markdown fences, no explanation.
-Format: [{"en":"English sentence here","ko":"Korean translation here","vocab":{"word1":"meaning1", "word2":"meaning2"}}]`;
+Format: [{"en":"English sentence here","ko":"Korean translation here","ko_en_order":"Korean translation in English order with slashes here","vocab":{"word1":"meaning1", "word2":"meaning2"}}]`;
 
   const manualPrompt = `Generate exactly ${count} English learning sentences for a Korean learner.
 Topic: "${topic || '일상 회화'}"
@@ -127,7 +128,9 @@ Level: ${DIFFICULTY_MAP[difficulty]}
 Rules for sentences:
 - Each sentence must be natural, practical, and appropriate for the context.
 ${getDifficultyRule(difficulty)}
-${korOrder === '영어순' ? '- Korean translation must be translated in the exact English word order. You MUST insert a slash ( / ) between each Korean chunk (e.g. 너는 / 살 수 있다 / 티머니 카드를 / 어느 편의점에서나).' : '- Korean translation must be accurate and natural.'}
+- Create two versions of the Korean translation:
+  1. "ko": accurate and natural Korean translation in natural Korean word order (MUST NOT include /).
+  2. "ko_en_order": Korean translation in the exact English word order. You MUST insert a slash ( / ) between each Korean chunk (e.g. 너는 / 살 수 있다 / 티머니 카드를 / 어느 편의점에서나).
 - Extract 2-3 key words from the English sentence and provide their contextual Korean meaning in a "vocab" object.
 
 Also generate exactly 10 open-ended English roleplay questions that:
@@ -141,7 +144,7 @@ Return ONLY a valid JSON object containing both "sentences" and "roleplayQuestio
 Format:
 {
   "sentences": [
-    {"en":"English sentence here","ko":"Korean translation here","vocab":{"word1":"meaning1", "word2":"meaning2"}}
+    {"en":"English sentence here","ko":"Korean translation here","ko_en_order":"Korean translation in English order with slashes here","vocab":{"word1":"meaning1", "word2":"meaning2"}}
   ],
   "roleplayQuestions": [
     "Question 1?",
@@ -479,7 +482,7 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
             </div>
 
             {/* 설정 옵션들 */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-md">
+            <div className="grid grid-cols-2 gap-2 sm:gap-md">
               <div className="flex flex-col gap-1 sm:gap-base">
                 <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="difficulty">
                   난이도
@@ -506,20 +509,6 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
                   onChange={e => setCount(Number(e.target.value))}
                 >
                   {[10, 20, 30, 40, 50].map(n => <option key={n} value={n}>{n}개</option>)}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1 sm:gap-base">
-                <label className="text-xs sm:text-label-sm font-medium text-on-surface-variant dark:text-on-dark-surface-variant" htmlFor="korOrder">
-                  해석 방식
-                </label>
-                <select
-                  className="w-full h-10 sm:h-11 px-3 sm:px-md rounded-lg border border-outline-variant dark:border-outline bg-surface-container-lowest dark:bg-dark-bg text-on-surface dark:text-on-dark-surface input-focus-ring transition-colors duration-200 text-xs sm:text-base"
-                  id="korOrder"
-                  value={korOrder}
-                  onChange={e => setKorOrder(e.target.value)}
-                >
-                  <option>한국어순</option>
-                  <option>영어순</option>
                 </select>
               </div>
             </div>

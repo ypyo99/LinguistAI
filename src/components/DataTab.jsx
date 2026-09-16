@@ -115,6 +115,10 @@ export default function DataTab({ isActive, apiKey, setUser: appSetUser, setSent
   };
 
   const handleDeleteStorePack = async (pack) => {
+    if (!pack.owners?.[0]?.me) {
+      alert('자신이 만든 학습자료만 삭제할 수 있습니다.');
+      return;
+    }
     if (!confirm('이 자료를 공유 자료함에서 정말 삭제하시겠습니까?')) return;
     setLoadingId(pack.id);
     try {
