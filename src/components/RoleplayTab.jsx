@@ -49,6 +49,8 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
     let timer = null;
 
     const runQuestionPhase = async () => {
+      setTimeLeft(0); // 질문을 읽는 동안에는 항상 스피커 아이콘('질문 읽는 중...')이 표시되도록 타이머 초기화
+
       // 1. 질문 3번 읽기
       for (let i = 0; i < 3; i++) {
         if (isCancelled) return;
@@ -59,13 +61,15 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
         if (isCancelled) return;
 
         try {
-          // 최대 15초 대기 후 실패 처리하여 무한 멈춤 방지
-          await Promise.race([
-            ttsSpeak(currentItem.question, 'en-US', 1.0),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('TTS Timeout')), 15000))
-          ]);
+          await ttsSpeak(currentItem.question, 'en-US', 1.0);
         } catch (err) {
           console.warn("TTS Playback skipped or failed:", err);
+        }
+
+        // 재생 도중 정지(Pause)된 경우, 해당 횟수의 나래이션을 끝까지 듣지 못한 것이므로
+        // 루프 카운트(i)를 1 감소시켜 재생 재개 시 현재 문장을 처음부터 다시 읽어주도록 합니다.
+        if (isStoppedRef.current) {
+          i--;
         }
         
         if (i < 2 && !isCancelled) {
