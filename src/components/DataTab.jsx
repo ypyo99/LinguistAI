@@ -355,7 +355,15 @@ export default function DataTab({ apiKey, setUser: appSetUser, setSentences, set
                 </div>
 
                 {/* 두 번째 줄: 메타 데이터 (난이도, 문장 수, 저자) */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
+                <div 
+                  onClick={() => {
+                    if (!loadingId && window.confirm(`'${base}${level ? `-${level}` : ''}' 학습자료를 불러올까요?`)) {
+                      handleDownload(pack);
+                    }
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', cursor: loadingId ? 'wait' : 'pointer' }}
+                  title="클릭하여 학습자료 불러오기"
+                >
                   {badge && (
                     <span style={{
                       fontSize: '9px', fontWeight: '700', padding: '2px 5px',

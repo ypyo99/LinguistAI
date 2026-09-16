@@ -332,7 +332,15 @@ export default function LibraryTab({
                 )}
 
                 {/* 뱃지 + 문장 수 + 즐겨찾기 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                <div 
+                  onClick={() => {
+                    if (window.confirm(`'${base || pack.title}${level ? `-${level}` : ''}' 학습자료를 불러올까요?`)) {
+                      handleLoadPack(pack);
+                    }
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', cursor: 'pointer' }}
+                  title="클릭하여 학습자료 불러오기"
+                >
                   {badge && (
                     <span style={{
                       fontSize: '10px', fontWeight: '700', padding: '2px 7px',

@@ -173,6 +173,8 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const [currentRate, setCurrentRate] = useState(1.0);     // 현재 재생 배속
   const [currentSpeakingLang, setCurrentSpeakingLang] = useState(null); // 'en' or 'ko'
   const [isWaiting, setIsWaiting]     = useState(false);   // 따라 말하기 인터벌 대기 중 여부
+  const [activeKoWordIdx, setActiveKoWordIdx] = useState(-1);
+  const [isPaused, setIsPaused] = useState(false);
 
   const shouldStop = useRef(false);
   const singleStop = useRef(false);
@@ -198,6 +200,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       setCurrentIdx(null);
       setSingleIdx(null);
       setIsWaiting(false);
+      setIsPaused(false);
       if (isCommuteMode) setIsCommuteMode(false);
     }
   }, [isActive]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -206,6 +209,46 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     if (!isPlaying && singleIdx === null) setCurrentSpeakingLang(null);
   }, [isPlaying, singleIdx]);
 
+  useEffect(() => {
+    if (currentSpeakingLang === 'ko' && (currentIdx !== null || singleIdx !== null)) {
+      const sentence = sentences[currentIdx !== null ? currentIdx : singleIdx];
+      if (sentence && sentence.ko) {
+        const chunks = sentence.ko.split('/');
+        const textLen = sentence.ko.replace(/\//g, '').length;
+        
+        if (chunks.length > 0 && textLen > 0) {
+          const estDuration = (textLen * 130);
+          
+          setActiveKoWordIdx(0);
+          
+          let accumulatedTime = 0;
+          const timeouts = [];
+          
+          for (let i = 0; i < chunks.length; i++) {
+            const chunkLen = chunks[i].length;
+            const chunkTime = (chunkLen / textLen) * estDuration;
+            accumulatedTime += chunkTime;
+            
+            if (i < chunks.length - 1) {
+              const timeout = setTimeout(() => {
+                setActiveKoWordIdx(i + 1);
+              }, accumulatedTime);
+              timeouts.push(timeout);
+            }
+          }
+          
+          return () => {
+            timeouts.forEach(clearTimeout);
+            setActiveKoWordIdx(-1);
+          };
+        } else {
+          setActiveKoWordIdx(-1);
+        }
+      }
+    } else {
+      setActiveKoWordIdx(-1);
+    }
+  }, [currentSpeakingLang, currentIdx, singleIdx, sentences]);
 
   // ── TTS 헬퍼 (useTTS 훅 위임) ────────────────────────
   const speakSentence = useCallback(async (sentence, rate, stopRef, repeatIndex = 0) => {
@@ -256,6 +299,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       setIsPlaying(false);
       setCurrentIdx(null);
       setIsWaiting(false);
+      setIsPaused(false);
       return;
     }
     if (sentences.length === 0) return;
@@ -272,6 +316,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     const isCancelled = () => playRunId.current !== currentRun || shouldStop.current;
     const localStopRef = { get current() { return isCancelled(); } };
 
+    setIsPaused(false);
     setIsPlaying(true);
 
     let validIndicesForInit = onlyFavorites 
@@ -360,17 +405,18 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   }, [isPlaying, sentences, mode, speakSentence, setStudiedIndices, favorites]);
 
   // ── 개별 재생 ──────────────────────────────────────
-  const handlePlayOne = useCallback(async (idx) => {
+  const handlePlayOne = useCallback(async (idx, isResume = false) => {
     if (isPlaying) {
       handlePlayAll(idx);
       return;
     }
 
     // 이미 재생 중인 항목 클릭 → 정지
-    if (singleIdx === idx) {
+    if (!isResume && singleIdx === idx && !isPaused) {
       singleStop.current = true;
       ttsStop();
       setSingleIdx(null);
+      setIsPaused(false);
       return;
     }
     // 이전 재생 중단
@@ -378,6 +424,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     ttsStop();
     await delay(50);
     singleStop.current = false;
+    setIsPaused(false);
 
     setSingleIdx(idx);
 
@@ -390,31 +437,13 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       if (!singleStop.current && r < settingsRef.current.repeat - 1) await delay(300);
     }
 
-    if (!singleStop.current && setStudiedIndices) {
-      setStudiedIndices(prev => prev.includes(idx) ? prev : [...prev, idx]);
+    if (!singleStop.current) {
+      if (setStudiedIndices) setStudiedIndices(prev => prev.includes(idx) ? prev : [...prev, idx]);
+      setSingleIdx(null);
     }
+  }, [singleIdx, sentences, speakSentence, isPlaying, isPaused, handlePlayAll, setStudiedIndices]);
 
-    setSingleIdx(null);
-  }, [singleIdx, sentences, speakSentence, isPlaying, handlePlayAll, setStudiedIndices]);
 
-  // ── 단일 언어 재생 (리스트에서 텍스트 직접 터치 시) ──────────────────
-  const handlePlaySingleLang = useCallback(async (text, lang, e) => {
-    if (e) e.stopPropagation();
-    
-    shouldStop.current = true;
-    singleStop.current = true;
-    ttsStop();
-    playRunId.current++;
-    setIsPlaying(false);
-    setCurrentIdx(null);
-    setSingleIdx(null);
-    
-    await delay(50);
-    
-    setCurrentSpeakingLang(lang === 'ko-KR' ? 'ko' : 'en');
-    await ttsSpeak(text, lang, 1.0);
-    setCurrentSpeakingLang(null);
-  }, [ttsSpeak, ttsStop]);
 
   // ── 설정 변경 시 즉시 반영 ──────────────────────────
   useEffect(() => {
@@ -477,25 +506,66 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     }
   }, [activeIdx, handlePlayAll]);
 
-  const handleTogglePlay = useCallback(() => {
+  const handleNextSentence = useCallback(() => {
+    if (activeIdx === null || sentences.length === 0) return;
+    let validIndices = isPlayingFavoritesRef.current && favoritesRef.current ? favoritesRef.current : sentences.map((_, i) => i);
+    if (validIndices.length === 0) return;
+    const currentListIdx = validIndices.indexOf(activeIdx);
+    let nextListIdx = currentListIdx + 1;
+    if (nextListIdx >= validIndices.length) nextListIdx = 0;
+    const nextIdx = validIndices[nextListIdx];
+    
     if (isPlaying) {
-      shouldStop.current = true;
-      playRunId.current++;
-      ttsStop();
-      setIsPlaying(false);
-      setCurrentIdx(null);
+      handlePlayAll(nextIdx);
     } else {
+      handlePlayOne(nextIdx);
+    }
+  }, [activeIdx, sentences, isPlaying, handlePlayAll, handlePlayOne]);
+
+  const handlePrevSentence = useCallback(() => {
+    if (activeIdx === null || sentences.length === 0) return;
+    let validIndices = isPlayingFavoritesRef.current && favoritesRef.current ? favoritesRef.current : sentences.map((_, i) => i);
+    if (validIndices.length === 0) return;
+    const currentListIdx = validIndices.indexOf(activeIdx);
+    let prevListIdx = currentListIdx - 1;
+    if (prevListIdx < 0) prevListIdx = validIndices.length - 1;
+    const prevIdx = validIndices[prevListIdx];
+    
+    if (isPlaying) {
+      handlePlayAll(prevIdx);
+    } else {
+      handlePlayOne(prevIdx);
+    }
+  }, [activeIdx, sentences, isPlaying, handlePlayAll, handlePlayOne]);
+
+  const handleTogglePlay = useCallback(() => {
+    if (isPaused) {
+      setIsPaused(false);
       if (activeIdx !== null) {
-        handlePlayAll(activeIdx);
+        if (singleIdx !== null) {
+          handlePlayOne(singleIdx, true);
+        } else {
+          handlePlayAll(activeIdx);
+        }
       } else {
         handlePlayAll();
       }
+    } else {
+      if (isPlaying || singleIdx !== null) {
+        shouldStop.current = true;
+        singleStop.current = true;
+        playRunId.current++;
+        ttsStop();
+        setIsPlaying(false);
+        setIsPaused(true);
+        setIsWaiting(false);
+      }
     }
-  }, [isPlaying, activeIdx, handlePlayAll, ttsStop]);
+  }, [isPlaying, isPaused, singleIdx, activeIdx, handlePlayAll, handlePlayOne, ttsStop]);
 
   const getStyleEn = () => {
     if (isWaiting || currentSpeakingLang === 'en') {
-      return { fontWeight: 'bold', opacity: 1, color: '#000', transition: 'all 0.3s' };
+      return { fontWeight: 'bold', opacity: 1, color: '#FFFFFF', transition: 'all 0.3s' };
     }
     if (currentSpeakingLang === 'ko') {
       return { opacity: 0.6, transition: 'all 0.3s' };
@@ -505,12 +575,86 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
   const getStyleKo = () => {
     if (currentSpeakingLang === 'ko') {
-      return { fontWeight: 'bold', opacity: 1, color: '#000', transition: 'all 0.3s' };
+      return { fontWeight: 'bold', opacity: 1, color: '#FFFFFF', transition: 'all 0.3s' };
     }
     if (isWaiting || currentSpeakingLang === 'en') {
       return { opacity: 0.6, transition: 'all 0.3s' };
     }
     return { transition: 'all 0.3s' }; // default
+  };
+
+  const renderKoText = (text) => {
+    if (currentSpeakingLang !== 'ko' || activeKoWordIdx === -1) return text;
+    const chunks = text.split('/');
+    
+    return chunks.map((chunk, i) => {
+      const isHighlighted = i === activeKoWordIdx;
+      
+      const leadingSpaceMatch = chunk.match(/^\s*/);
+      const trailingSpaceMatch = chunk.match(/\s*$/);
+      const leadingSpace = leadingSpaceMatch ? leadingSpaceMatch[0] : '';
+      const trailingSpace = trailingSpaceMatch ? trailingSpaceMatch[0] : '';
+      const trimmed = chunk.trim();
+
+      return (
+        <span key={i}>
+          {leadingSpace}
+          <span 
+            style={isHighlighted ? { 
+              backgroundColor: '#FFFFFF', 
+              color: '#EA580C', 
+              padding: '2px 4px', 
+              margin: '0 0px',
+              borderRadius: '4px',
+              transition: 'background-color 0.1s, color 0.1s'
+            } : {
+              transition: 'background-color 0.3s, color 0.3s'
+            }}
+          >
+            {trimmed}
+          </span>
+          {trailingSpace}
+          {i < chunks.length - 1 && <span>/</span>}
+        </span>
+      );
+    });
+  };
+
+  const isSwiping = useRef(false);
+  const touchStartRef = useRef(null);
+
+  const handleTouchStart = (e) => {
+    isSwiping.current = false;
+    touchStartRef.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchStartRef.current) return;
+    const diff = touchStartRef.current - e.targetTouches[0].clientX;
+    if (Math.abs(diff) > 10) {
+      isSwiping.current = true;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartRef.current) return;
+    const touchEndClientX = e.changedTouches[0].clientX;
+    const distance = touchStartRef.current - touchEndClientX;
+    
+    if (distance > 50) {
+      handleNextSentence();
+    } else if (distance < -50) {
+      handlePrevSentence();
+    }
+    touchStartRef.current = null;
+  };
+
+  const onNowPlayingClick = (e) => {
+    if (isSwiping.current) {
+      isSwiping.current = false;
+      return;
+    }
+    handleTogglePlay();
   };
 
   const getStyleCommuteEn = () => {
@@ -681,9 +825,21 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
       </div>
 
       {activeSentence && (
-        <div className="now-playing">
+        <div 
+          className="now-playing"
+          onClick={onNowPlayingClick}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ cursor: 'pointer', userSelect: 'none' }}
+        >
           <div className="now-playing-header">
-            {isWaiting ? (
+            {isPaused ? (
+              <>
+                <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>pause_circle</i>
+                일시 정지됨
+              </>
+            ) : isWaiting ? (
               <>
                 <i className="material-symbols-outlined" style={{ fontSize: '18px', color: '#FFFFFF', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>record_voice_over</i>
                 <span style={{ color: '#FFFFFF', fontWeight: 'bold', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>따라 말해보세요!</span>
@@ -692,7 +848,6 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               <>
                 <i className="material-symbols-outlined" style={{ fontSize: '18px' }}>volume_up</i>
                 현재 재생 중
-
               </>
             )}
             {settingsRef.current.repeat > 1 && !isWaiting && (
@@ -709,13 +864,13 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
           {langOrder === 'ko-en' ? (
             <>
-              <div className="now-playing-ko" style={getStyleKo()}>{activeSentence.ko}</div>
+              <div className="now-playing-ko" style={getStyleKo()}>{renderKoText(activeSentence.ko)}</div>
               <div className="now-playing-en" style={getStyleEn()}>{activeSentence.en}</div>
             </>
           ) : (
             <>
               <div className="now-playing-en" style={getStyleEn()}>{activeSentence.en}</div>
-              <div className="now-playing-ko" style={getStyleKo()}>{activeSentence.ko}</div>
+              <div className="now-playing-ko" style={getStyleKo()}>{renderKoText(activeSentence.ko)}</div>
             </>
           )}
         </div>
@@ -774,20 +929,20 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                   <div className="turn-body" onClick={() => handlePlayOne(idx)} style={{ cursor: 'pointer' }}>
                     {langOrder === 'ko-en' ? (
                       <>
-                        <div className="turn-en" onClick={(e) => handlePlaySingleLang(s.ko, 'ko-KR', e)} style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
+                        <div className="turn-en" style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
                           {s.ko}
                         </div>
-                        <div className="turn-ko-row" onClick={(e) => handlePlaySingleLang(s.en, 'en-US', e)}>
+                        <div className="turn-ko-row">
                           <div className="turn-ko-bar"></div>
                           <div className="turn-ko">{s.en}</div>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="turn-en" onClick={(e) => handlePlaySingleLang(s.en, 'en-US', e)} style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
+                        <div className="turn-en" style={{ color: isThis ? 'var(--teal-deep)' : 'inherit' }}>
                           {s.en}
                         </div>
-                        <div className="turn-ko-row" onClick={(e) => handlePlaySingleLang(s.ko, 'ko-KR', e)}>
+                        <div className="turn-ko-row">
                           <div className="turn-ko-bar"></div>
                           <div className="turn-ko">{s.ko}</div>
                         </div>
@@ -931,7 +1086,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               </button>
               <button className="commute-btn" onClick={handleTogglePlay}>
                 <i className="material-symbols-outlined">
-                  {isPlaying ? "pause_circle" : "play_circle"}
+                  {(isPlaying || (singleIdx !== null && !isPaused)) ? "pause_circle" : "play_circle"}
                 </i>
               </button>
               <button className="commute-btn" onClick={handleNext}>
