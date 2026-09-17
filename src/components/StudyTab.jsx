@@ -254,23 +254,37 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
 
   // ── TTS 헬퍼 (useTTS 훅 위임) ────────────────────────
   const speakSentence = useCallback(async (sentence, rate, stopRef, repeatIndex = 0) => {
-    const koText = settingsRef.current.korWordOrder === '영어순' && sentence.ko_en_order ? sentence.ko_en_order : sentence.ko;
-    let pairs = settingsRef.current.langOrder === 'en-ko'
-      ? [{ text: sentence.en, lang: 'en-US' }, { text: koText, lang: 'ko-KR' }]
-      : [{ text: koText, lang: 'ko-KR' }, { text: sentence.en, lang: 'en-US' }];
+    const isRoleplay = sentence.type === 'roleplay';
+    const koText = settingsRef.current.korWordOrder === '영어순' && sentence.ko_en_order && !isRoleplay ? sentence.ko_en_order : sentence.ko;
+    
+    let pairs = [];
+    if (isRoleplay) {
+      pairs = [{ text: sentence.en, lang: 'en-US', isRoleplayAns: false }];
+      if (sentence.ko) {
+        pairs.push({ text: sentence.ko, lang: 'en-US', isRoleplayAns: true });
+      }
+    } else {
+      pairs = settingsRef.current.langOrder === 'en-ko'
+        ? [{ text: sentence.en, lang: 'en-US' }, { text: koText, lang: 'ko-KR' }]
+        : [{ text: koText, lang: 'ko-KR' }, { text: sentence.en, lang: 'en-US' }];
+    }
 
     // 한국어 문장은 첫 번째 재생(repeatIndex === 0)에서만 재생하고 이후 반복에서는 제외
-    if (repeatIndex > 0) {
+    if (repeatIndex > 0 && !isRoleplay) {
       pairs = pairs.filter(p => p.lang !== 'ko-KR');
     }
 
-    for (const { text, lang } of pairs) {
+    for (const { text, lang, isRoleplayAns } of pairs) {
       if (stopRef.current) {
         setCurrentSpeakingLang(null);
         return;
       }
       const actualRate = lang === 'ko-KR' ? 1.0 : rate;
-      setCurrentSpeakingLang(lang === 'ko-KR' ? 'ko' : 'en');
+      if (isRoleplay) {
+        setCurrentSpeakingLang(isRoleplayAns ? 'roleplay-ans' : 'roleplay-q');
+      } else {
+        setCurrentSpeakingLang(lang === 'ko-KR' ? 'ko' : 'en');
+      }
       let textToSpeak = text;
       if (lang === 'ko-KR') {
         textToSpeak = settingsRef.current.korWordOrder === '영어순' 
@@ -714,6 +728,20 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     return { transition: 'all 0.3s' };
   };
 
+  const getStyleCommuteRoleplayQ = () => {
+    if (currentSpeakingLang === 'roleplay-q') {
+      return { opacity: 1, color: '#FFFFFF', transform: 'scale(1.02)' };
+    }
+    return { opacity: 0.6, color: '#a1a1aa' };
+  };
+
+  const getStyleCommuteRoleplayAns = () => {
+    if (currentSpeakingLang === 'roleplay-ans') {
+      return { opacity: 1, color: '#FFFFFF', transform: 'scale(1.02)' };
+    }
+    return { opacity: 0.6, color: '#a1a1aa' };
+  };
+
   return (
     <div className="tab-fade-in">
       <div
@@ -1110,8 +1138,20 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
               )}
             </div>
           </div>
-          <div className="commute-content" style={{ filter: `brightness(${commuteBrightness})` }}>
+          <div className="commute-content" style={{ filter: `brightness(${commuteBrightness})`, overflowY: 'auto' }}>
             {activeSentence ? (
+              activeSentence.type === 'roleplay' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', alignItems: 'center', width: '100%' }}>
+                  <div className="commute-text-en" style={{ ...getStyleCommuteRoleplayQ(), fontSize: '26px', transition: 'all 0.3s' }}>
+                    {activeSentence.en}
+                  </div>
+                  {activeSentence.ko && (
+                    <div className="commute-text-en" style={{ ...getStyleCommuteRoleplayAns(), fontSize: '18px', fontWeight: '400', transition: 'all 0.3s' }}>
+                      {activeSentence.ko}
+                    </div>
+                  )}
+                </div>
+              ) : (
               langOrder === 'ko-en' ? (
                 <>
                   <div className="commute-text-ko" style={getStyleCommuteKo()}>{(korWordOrder === '영어순' && activeSentence.ko_en_order) ? activeSentence.ko_en_order : activeSentence.ko}</div>
@@ -1122,6 +1162,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                   <div className="commute-text-en" style={getStyleCommuteEn()}>{activeSentence.en}</div>
                   <div className="commute-text-ko" style={getStyleCommuteKo()}>{(korWordOrder === '영어순' && activeSentence.ko_en_order) ? activeSentence.ko_en_order : activeSentence.ko}</div>
                 </>
+              )
               )
             ) : (
               <div className="commute-text-ko" style={{ color: '#888' }}>재생 대기 중...</div>
