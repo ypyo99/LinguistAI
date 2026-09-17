@@ -303,31 +303,64 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
         throw new Error((errData && errData.error && errData.error.message) || `HTTP ${res.status}`);
       }
 
-      // JSON 추출 (마크다운 코드블록 제거 포함)
-      const jsonMatch = fullText.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
+      // JSON 추출 (마크다운 코드블록 제거 및 정확한 JSON 배열 범위 탐색)
+      let jsonTarget = '';
+      const startBracket = fullText.indexOf('[');
+      if (startBracket !== -1) {
+        let depth = 0;
+        let inString = false;
+        let escape = false;
+        for (let i = startBracket; i < fullText.length; i++) {
+          const char = fullText[i];
+          if (escape) {
+            escape = false;
+            continue;
+          }
+          if (char === '\\') {
+            escape = true;
+            continue;
+          }
+          if (char === '"') {
+            inString = !inString;
+            continue;
+          }
+          if (!inString) {
+            if (char === '[') depth++;
+            else if (char === ']') {
+              depth--;
+              if (depth === 0) {
+                jsonTarget = fullText.substring(startBracket, i + 1);
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if (!jsonTarget) {
+        const jsonMatch = fullText.match(/\[[\s\S]*\]/);
+        jsonTarget = jsonMatch ? jsonMatch[0] : '';
+      }
+
+      if (!jsonTarget) {
         console.error("AI Response FullText:", fullText);
         throw new Error(`응답에서 JSON 형식을 찾을 수 없습니다.\nAI 응답 내용: ${fullText.slice(0, 100)}...`);
       }
 
       let parsed = [];
       try {
-        parsed = JSON.parse(jsonMatch[0]);
+        parsed = JSON.parse(jsonTarget);
       } catch (e) {
-        console.warn("Standard JSON parse failed:", e.message, "Attempting recovery...");
-        
         // 1. 에러 위치(position) 이전까지만 잘라서 다시 시도 (뒤에 쓰레기값이 붙은 경우)
         const posMatch = e.message.match(/position (\d+)/);
         if (posMatch) {
           const pos = parseInt(posMatch[1], 10);
           try {
-            parsed = JSON.parse(jsonMatch[0].substring(0, pos).trim());
-          } catch (e2) {
-            console.warn("Recovery by substring failed.");
-          }
+            parsed = JSON.parse(jsonTarget.substring(0, pos).trim());
+          } catch (e2) {}
         }
         
-        // 2. 그래도 안되면 텍스트 전체에서 개별 문장 객체({ "en":..., "ko":... })만 무식하게 추출
+        // 2. 그래도 안되면 텍스트 전체에서 개별 문장 객체({ "en":..., "ko":... })만 추출
         if (!parsed || !Array.isArray(parsed) || parsed.length === 0) {
           const matches = fullText.match(/\{[\s\S]*?\}/g) || [];
           for (const m of matches) {

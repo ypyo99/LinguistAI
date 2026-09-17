@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { loadAllPacks, deletePackFile, updatePackTitleAndContent, uploadToStore } from '../utils/googleDrive';
 import LongPressButton from './LongPressButton';
 
@@ -48,24 +48,50 @@ export default function LibraryTab({
 
   const isLoggedIn = !!(user?.accessToken);
 
+  const onTokenExpiredRef = useRef(onTokenExpired);
+  useEffect(() => { onTokenExpiredRef.current = onTokenExpired; }, [onTokenExpired]);
+
+  const setSavedPacksRef = useRef(setSavedPacks);
+  useEffect(() => { setSavedPacksRef.current = setSavedPacks; }, [setSavedPacks]);
+
   const loadFromDrive = useCallback(async () => {
     if (!user?.accessToken) return;
     setDriveLoading(true);
     setDriveError(null);
     try {
-      const { packs, driveFiles: files, folderId } = await loadAllPacks(user.accessToken);
+      const { packs, driveFiles: files } = await loadAllPacks(user.accessToken);
       setDrivePacks(packs);
       setDriveFiles(files);
+      // 구글 드라이브의 자료를 로컬 스토리지(savedPacks)에도 항상 동기화/백업
+      if (setSavedPacksRef.current && packs.length > 0) {
+        setSavedPacksRef.current(prevLocal => {
+          const updated = [...(prevLocal || [])];
+          let changed = false;
+          for (const dp of packs) {
+            const idx = updated.findIndex(p => p.id === dp.id || (p.title && p.title === dp.title));
+            if (idx >= 0) {
+              if (JSON.stringify(updated[idx]) !== JSON.stringify(dp)) {
+                updated[idx] = { ...updated[idx], ...dp };
+                changed = true;
+              }
+            } else {
+              updated.push(dp);
+              changed = true;
+            }
+          }
+          return changed ? updated : prevLocal;
+        });
+      }
     } catch (err) {
       if (err.code === 'TOKEN_EXPIRED' || err.code === 'SCOPE_INSUFFICIENT') {
-        onTokenExpired?.(err.code);
+        onTokenExpiredRef.current?.(err.code);
       } else {
         setDriveError(err.message);
       }
     } finally {
       setDriveLoading(false);
     }
-  }, [user?.accessToken, onTokenExpired]);
+  }, [user?.accessToken]);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -75,7 +101,8 @@ export default function LibraryTab({
       setDriveFiles([]);
       setDriveError(null);
     }
-  }, [isLoggedIn, loadFromDrive]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, user?.accessToken]);
 
   const handleLoadPack = (pack) => {
     setSentences(pack.sentences || []);
@@ -101,8 +128,10 @@ export default function LibraryTab({
       }
       setDrivePacks((prev) => prev.filter((p) => p.id !== pack.id));
       setDriveFiles((prev) => prev.filter((f) => f.packId !== pack.id));
-    } else {
-      setSavedPacks((prev) => prev.filter((p) => p.id !== pack.id));
+    }
+    // 로그인/비로그인 공통으로 로컬 스토리지(savedPacks)에서도 삭제
+    if (setSavedPacks) {
+      setSavedPacks((prev) => prev.filter((p) => p.id !== pack.id && p.title !== pack.title));
     }
   };
 
@@ -134,8 +163,10 @@ export default function LibraryTab({
           await updatePackTitleAndContent(user.accessToken, fileEntry.fileId, newTitle, updatedPack);
         }
         setDrivePacks(prev => prev.map(p => p.id === pack.id ? updatedPack : p));
-      } else {
-        setSavedPacks(prev => prev.map(p => p.id === pack.id ? updatedPack : p));
+      }
+      // 로그인/비로그인 공통으로 로컬 스토리지(savedPacks)에도 제목 변경 반영
+      if (setSavedPacks) {
+        setSavedPacks(prev => prev.map(p => (p.id === pack.id || p.title === pack.title) ? updatedPack : p));
       }
     } catch (err) {
       if (err.code === 'TOKEN_EXPIRED' || err.code === 'SCOPE_INSUFFICIENT') {
@@ -207,7 +238,10 @@ export default function LibraryTab({
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
 
-  const displayPacks = sortPacks(isLoggedIn ? drivePacks : savedPacks);
+  const rawPacks = isLoggedIn
+    ? (drivePacks.length > 0 ? drivePacks : savedPacks)
+    : savedPacks;
+  const displayPacks = sortPacks(rawPacks);
 
   return (
     <div className="tab-fade-in" style={{ paddingBottom: '40px' }}>
@@ -217,20 +251,21 @@ export default function LibraryTab({
         <h2 className="section-heading" style={{ fontSize: '20px', margin: 0 }}>내 학습 데이터</h2>
       </div>
 
-      {/* 드라이브 경로 배너 */}
-      {isLoggedIn && (
+      {/* 드라이브 경로 배너 또는 로컬 보관함 배너 */}
+      {isLoggedIn ? (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: '#FFF7ED', border: '1px solid #FDBA74',
           borderRadius: '10px', padding: '8px 12px', marginBottom: '14px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#F97316', fontWeight: 'bold' }}>
-            <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>folder</i>
-            내 드라이브 › LinguistAI › 보관함
+            <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>cloud_sync</i>
+            내 드라이브 › LinguistAI › 보관함 (로컬 동시 저장됨)
           </div>
           <button
             onClick={loadFromDrive}
             disabled={driveLoading}
+            title="드라이브에서 새로고침"
             style={{
               background: 'transparent', border: 'none', color: '#EA580C', cursor: driveLoading ? 'wait' : 'pointer', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: driveLoading ? 0.5 : 1
             }}
@@ -238,10 +273,21 @@ export default function LibraryTab({
             <i className="material-symbols-outlined" style={{ fontSize: '20px', animation: driveLoading ? 'spin 1s linear infinite' : 'none' }}>refresh</i>
           </button>
         </div>
+      ) : (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'var(--surface-variant, #f8fafc)', border: '1px solid var(--outline-variant, #e2e8f0)',
+          borderRadius: '10px', padding: '8px 12px', marginBottom: '14px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--on-surface-variant, #64748b)', fontWeight: '600' }}>
+            <i className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--amber)' }}>smartphone</i>
+            기기 로컬 보관함 (구글 로그인 시 클라우드와 자동 동기화)
+          </div>
+        </div>
       )}
 
-      {/* 로딩 */}
-      {isLoggedIn && driveLoading && (
+      {/* 로딩 (화면에 표시할 로컬 자료가 없을 때만 전체 로딩 인디케이터 표시) */}
+      {isLoggedIn && driveLoading && displayPacks.length === 0 && (
         <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--ink-soft)' }}>
           <i className="material-symbols-outlined" style={{ fontSize: '32px', animation: 'spin 1s linear infinite' }}>autorenew</i>
           <p style={{ marginTop: '12px', fontSize: '14px' }}>구글 드라이브에서 불러오는 중...</p>
@@ -372,23 +418,25 @@ export default function LibraryTab({
                     >
                       <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>download</i>
                     </button>
-                    {/* 공유 자료함 업로드 */}
-                    <button
-                      onClick={() => handleUploadToStore(pack)}
-                      disabled={uploadingStoreId === pack.id}
-                      title="공유 자료함에 업로드"
-                      style={{
-                        width: '30px', height: '30px',
-                        borderRadius: '9px', border: '1px solid var(--line)',
-                        background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: uploadingStoreId === pack.id ? 'wait' : 'pointer',
-                      }}
-                    >
-                      <i className="material-symbols-outlined" style={{ fontSize: '15px', animation: uploadingStoreId === pack.id ? 'spin 1s linear infinite' : 'none' }}>
-                        {uploadingStoreId === pack.id ? 'autorenew' : 'share'}
-                      </i>
-                    </button>
+                    {/* 공유 자료함 업로드 (구글 로그인 시에만 노출) */}
+                    {isLoggedIn && (
+                      <button
+                        onClick={() => handleUploadToStore(pack)}
+                        disabled={uploadingStoreId === pack.id}
+                        title="공유 자료함에 업로드"
+                        style={{
+                          width: '30px', height: '30px',
+                          borderRadius: '9px', border: '1px solid var(--line)',
+                          background: 'var(--surface-container-lowest)', color: 'var(--ink-soft)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: uploadingStoreId === pack.id ? 'wait' : 'pointer',
+                        }}
+                      >
+                        <i className="material-symbols-outlined" style={{ fontSize: '15px', animation: uploadingStoreId === pack.id ? 'spin 1s linear infinite' : 'none' }}>
+                          {uploadingStoreId === pack.id ? 'autorenew' : 'share'}
+                        </i>
+                      </button>
+                    )}
                     {/* 삭제 */}
                     <LongPressButton
                       onLongPress={() => handleDeletePack(pack)}

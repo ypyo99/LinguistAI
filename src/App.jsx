@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { usePersistentState } from './hooks/usePersistentState';
 import { savePack } from './utils/googleDrive';
@@ -51,17 +51,17 @@ function App() {
       setActiveTab('library');
     } else if (prevUser && !user) {
       // User just logged out
-      if (activeTab === 'store' || activeTab === 'library') {
+      if (activeTab === 'store') {
         setActiveTab('study');
       }
     }
     prevUserRef.current = user;
   }, [user, activeTab, setActiveTab]);
 
-  // 앱 시작 시 구글 로그인이 안 된 상태라면 무조건 '학습(study)' 탭을 보여줍니다.
+  // 앱 시작 시 구글 로그인이 안 된 상태에서 store 탭인 경우에만 '학습' 탭으로 이동
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem('linguist-user'));
-    if (!currentUser) {
+    if (!currentUser && activeTab === 'store') {
       setActiveTab('study');
     }
   }, []);
@@ -215,63 +215,52 @@ function App() {
   const handleSavePack = async () => {
     if (sentences.length === 0) return;
 
-    if (user?.accessToken) {
-      // ── 구글 드라이브에 저장 ──────────────────────────────────
-      const pack = currentPackId
-        ? savedPacks.find(p => p.id === currentPackId) || {
-            id: currentPackId,
-            title: displayTitle,
-            sentences,
-            favorites,
-            studiedIndices,
-            createdAt: new Date().toISOString()
-          }
-        : {
-            id: Date.now().toString(),
-            title: displayTitle,
-            sentences,
-            favorites,
-            studiedIndices,
-            createdAt: new Date().toISOString()
-          };
-
-      // 현재 내용으로 pack 갱신
-      const packToSave = { ...pack, title: displayTitle, sentences, favorites, studiedIndices, roleplayQuestions };
-
-      try {
-        await savePack(user.accessToken, packToSave);
-        if (!currentPackId) setCurrentPackId(packToSave.id);
-        alert('구글 드라이브 내자료함에 저장되었습니다!');
-      } catch (err) {
-        if (err.code === 'TOKEN_EXPIRED') {
-          showAuthAlert(err.code, setUser);
-        } else {
-          alert(`저장 중 오류가 발생했습니다: ${err.message}`);
+    // 1. 저장할 pack 데이터 객체 준비
+    const pack = currentPackId
+      ? savedPacks.find(p => p.id === currentPackId) || {
+          id: currentPackId,
+          title: displayTitle,
+          sentences,
+          favorites,
+          studiedIndices,
+          createdAt: new Date().toISOString()
         }
-      }
-    } else {
-      // ── 로컬 저장소에 저장 (비로그인) ───────────────────────
-      if (currentPackId) {
-        setSavedPacks(prev => prev.map(p =>
-          p.id === currentPackId
-            ? { ...p, title: displayTitle, sentences, favorites, studiedIndices }
-            : p
-        ));
-        alert('현재 내자료함에 덮어쓰기 저장되었습니다!');
-      } else {
-        const newPack = {
+      : {
           id: Date.now().toString(),
           title: displayTitle,
           sentences,
           favorites,
           studiedIndices,
-          roleplayQuestions,
           createdAt: new Date().toISOString()
         };
-        setSavedPacks(prev => [newPack, ...prev]);
-        setCurrentPackId(newPack.id);
-        alert('내자료함에 저장되었습니다!');
+
+    const packToSave = { ...pack, title: displayTitle, sentences, favorites, studiedIndices, roleplayQuestions };
+
+    // 2. 로컬 스토리지(savedPacks)에 무조건 동시 저장
+    setSavedPacks(prev => {
+      const exists = prev.some(p => p.id === packToSave.id);
+      if (exists) {
+        return prev.map(p => p.id === packToSave.id ? packToSave : p);
+      } else {
+        return [packToSave, ...prev];
       }
+    });
+    if (!currentPackId) setCurrentPackId(packToSave.id);
+
+    // 3. 구글 로그인이 되어 있다면 구글 드라이브에도 동시 저장
+    if (user?.accessToken) {
+      try {
+        await savePack(user.accessToken, packToSave);
+        alert('내자료함(로컬 및 구글 드라이브)에 저장되었습니다!');
+      } catch (err) {
+        if (err.code === 'TOKEN_EXPIRED') {
+          showAuthAlert(err.code, setUser);
+        } else {
+          alert(`로컬에는 저장되었으나, 구글 드라이브 동기화 중 오류가 발생했습니다: ${err.message}`);
+        }
+      }
+    } else {
+      alert('내자료함(로컬 저장소)에 저장되었습니다!');
     }
   };
 
@@ -295,6 +284,10 @@ function App() {
     } catch (e) { console.warn('localStorage 비활성화됨'); }
     setTtsApiKey(key);
   };
+
+  const handleTokenExpired = useCallback((reason) => {
+    showAuthAlert(reason, setUser);
+  }, [setUser]);
 
   // ── 집중모드 진입 상태 공유 ──────────────────────────────
   const roleplayProgressRef = useRef({ questions: null, index: 0 });
@@ -368,9 +361,7 @@ function App() {
             setCurrentPackId={setCurrentPackId}
             setRoleplayQuestions={setRoleplayQuestions}
             user={user}
-            onTokenExpired={(reason) => {
-              showAuthAlert(reason, setUser);
-            }}
+            onTokenExpired={handleTokenExpired}
           />
         </div>
         <div style={{ display: activeTab === 'store' ? 'block' : 'none' }}>
