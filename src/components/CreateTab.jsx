@@ -63,7 +63,7 @@ export default function CreateTab({ apiKey, onGenerate }) {
 
   const isCustom = availableModels.length > 0 
     ? !availableModels.includes(model)
-    : !['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-1.5-pro'].includes(model);
+    : !['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-1.5-pro', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-3.1-flash', 'gemini-3.1-flash-lite'].includes(model);
 
   
   
@@ -542,9 +542,13 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
                         </>
                       ) : (
                         <>
-                          <option value="gemini-1.5-flash">Gemini 1.5 Flash (표준)</option>
-                          <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B (가장 저렴)</option>
-                          <option value="gemini-1.5-pro">Gemini 1.5 Pro (고성능)</option>
+                          <option value="gemini-3.1-flash">Gemini 3.1 Flash (표준)</option>
+                          <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (빠름/저렴)</option>
+                          <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                          <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash-Lite</option>
+                          <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                          <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B</option>
+                          <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
                           <option value="custom">직접 입력...</option>
                         </>
                       )}
