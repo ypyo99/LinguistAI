@@ -260,9 +260,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     let pairs = [];
     if (isRoleplay) {
       pairs = [{ text: sentence.en, lang: 'en-US', isRoleplayAns: false }];
-      if (sentence.ko) {
-        pairs.push({ text: sentence.ko, lang: 'en-US', isRoleplayAns: true });
-      }
+      // 프리토킹 모드에서는 모델 답변을 읽지 않음
     } else {
       pairs = settingsRef.current.langOrder === 'en-ko'
         ? [{ text: sentence.en, lang: 'en-US' }, { text: koText, lang: 'ko-KR' }]
@@ -1145,11 +1143,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                   <div className="commute-text-en" style={{ ...getStyleCommuteRoleplayQ(), fontSize: '26px', transition: 'all 0.3s' }}>
                     {activeSentence.en}
                   </div>
-                  {activeSentence.ko && (
-                    <div className="commute-text-en" style={{ ...getStyleCommuteRoleplayAns(), fontSize: '18px', fontWeight: '400', transition: 'all 0.3s' }}>
-                      {activeSentence.ko}
-                    </div>
-                  )}
+                  {/* 프리토킹 모드에서는 모델 답변 숨김 */}
                 </div>
               ) : (
               langOrder === 'ko-en' ? (
