@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+﻿import { useEffect, useState, useRef, useCallback } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useGoogleLogin } from '@react-oauth/google';
 import { Capacitor } from '@capacitor/core';
@@ -251,9 +251,9 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
 
           <button
             className="icon-btn"
-            title={activeTab === 'quiz' ? '다크/라이트 모드' : '길게 누르면 집중 모드'}
+            title={!(activeTab === 'study' || activeTab === 'roleplay') ? '다크/라이트 모드' : '길게 누르면 집중 모드'}
             onMouseDown={() => {
-              if (activeTab === 'quiz') return; // 퀴즈 탭에서는 집중모드 비활성화
+              if (!(activeTab === 'study' || activeTab === 'roleplay')) return; // 학습/프리토킹 탭에서만 집중모드 허용
               themeWasLongPress.current = false;
               themePresTimer.current = setTimeout(() => {
                 themeWasLongPress.current = true;
@@ -263,7 +263,7 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
             onMouseUp={() => clearTimeout(themePresTimer.current)}
             onMouseLeave={() => clearTimeout(themePresTimer.current)}
             onTouchStart={(e) => {
-              if (activeTab === 'quiz') return; // 퀴즈 탭에서는 집중모드 비활성화
+              if (!(activeTab === 'study' || activeTab === 'roleplay')) return; // 학습/프리토킹 탭에서만 집중모드 허용
               themeWasLongPress.current = false;
               themePresTimer.current = setTimeout(() => {
                 themeWasLongPress.current = true;
@@ -366,3 +366,4 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
     </div>
   );
 }
+
