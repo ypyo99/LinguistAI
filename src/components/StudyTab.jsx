@@ -1130,7 +1130,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
           
           {!isLocked && (
             <div className="commute-controls" style={{ filter: `brightness(${commuteBrightness})` }}>
-              <button className="commute-btn" onClick={handlePrev}>
+              <button className="commute-btn" onClick={handlePrevSentence}>
                 <i className="material-symbols-outlined">skip_previous</i>
               </button>
               <button className="commute-btn" onClick={handleTogglePlay}>
@@ -1138,7 +1138,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
                   {(isPlaying || (singleIdx !== null && !isPaused)) ? "pause_circle" : "play_circle"}
                 </i>
               </button>
-              <button className="commute-btn" onClick={handleNext}>
+              <button className="commute-btn" onClick={handleNextSentence}>
                 <i className="material-symbols-outlined">skip_next</i>
               </button>
             </div>
