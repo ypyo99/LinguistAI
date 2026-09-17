@@ -283,8 +283,8 @@ function App() {
   const isRoleplayCommute = isCommuteMode && prevTabBeforeFocusRef.current === 'roleplay';
   const studyTabSentences = isRoleplayCommute && roleplayProgressRef.current.questions
     ? roleplayProgressRef.current.questions.map(q => {
-        if (typeof q === 'string') return { en: q, ko: '' };
-        return { en: q.question || '', ko: q.modelAnswer || '' };
+        if (typeof q === 'string') return { en: q, ko: '', type: 'roleplay' };
+        return { en: q.question || '', ko: q.modelAnswer || '', type: 'roleplay' };
       }).filter(s => s.en)
     : sentences;
   
