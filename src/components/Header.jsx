@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useGoogleLogin } from '@react-oauth/google';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { registerSilentRefresh, startAutoRefresh, stopAutoRefresh } from '../utils/tokenManager';
 
 const LANDMARKS = [
   "/images/landmarks/img0.jpg",
@@ -54,6 +55,58 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
     }
   });
 
+  // ── 웹 전용: silent refresh (prompt: 'none') ──────────────────────────────
+  // 사용자가 이미 로그인한 상태에서 조용히 새 액세스 토큰을 발급받습니다.
+  const silentLogin = useGoogleLogin({
+    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive',
+    prompt: 'none',           // 팝업/동의 화면 없이 백그라운드 갱신
+    hint: user?.email,        // 어느 계정인지 힌트를 주어 올바른 계정으로 갱신
+    onSuccess: (tokenResponse) => {
+      const newToken = tokenResponse.access_token;
+      setUser(prev => prev ? { ...prev, accessToken: newToken } : null);
+      window.dispatchEvent(new CustomEvent('token_refreshed', { detail: newToken }));
+      console.log('[Header] 웹 silent refresh 성공');
+    },
+    onError: (err) => {
+      // 조용히 실패 — 사용자에게 팝업 없이 처리 (만료 시 API 호출에서 안내)
+      console.warn('[Header] 웹 silent refresh 실패:', err);
+    },
+  });
+
+  // silent refresh 콜백 등록 및 자동 갱신 시작/중지
+  const silentRefreshFn = useCallback(() => {
+    return new Promise((resolve, reject) => {
+      // silentLogin은 콜백 기반이라 Promise wrapping 불가 → 이벤트로 결과 수신
+      const handler = (e) => {
+        window.removeEventListener('token_refreshed', handler);
+        resolve(e.detail);
+      };
+      window.addEventListener('token_refreshed', handler);
+      silentLogin();
+      // 5초 안에 결과가 없으면 타임아웃
+      setTimeout(() => {
+        window.removeEventListener('token_refreshed', handler);
+        reject(new Error('silent refresh timeout'));
+      }, 5000);
+    });
+  }, [silentLogin]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() && user) {
+      registerSilentRefresh(silentRefreshFn);
+      startAutoRefresh();
+    } else {
+      registerSilentRefresh(null);
+      stopAutoRefresh();
+    }
+    return () => {
+      // 컴포넌트 언마운트 시 정리
+      registerSilentRefresh(null);
+      stopAutoRefresh();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.email, silentRefreshFn]);
+
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       GoogleAuth.initialize({
@@ -94,6 +147,11 @@ export default function Header({ title = "병원 진료 표현 20개", sub = "�
       } catch(e) {
         console.error("Native Google Logout Failed", e);
       }
+    }
+    // 웹 환경: 자동 갱신 중지
+    if (!Capacitor.isNativePlatform()) {
+      registerSilentRefresh(null);
+      stopAutoRefresh();
     }
     setUser(null);
     setShowDropdown(false);

@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { doSilentRefresh } from './tokenManager';
 
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
@@ -7,29 +8,45 @@ const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
 // ── 내부 헬퍼 ─────────────────────────────────────────────────────────────────
 
 /**
- * 401 응답 시 모바일 환경이면 토큰을 백그라운드 갱신하고 API를 재요청합니다.
+ * 401 응답 시 토큰을 백그라운드 갱신하고 API를 재요청합니다.
+ * - 네이티브(iOS/Android): GoogleAuth.refresh() 사용
+ * - 웹: tokenManager의 doSilentRefresh() 사용
  */
-async function fetchWithAuth(url, options) {
+export async function fetchWithAuth(url, options) {
   let res = await fetch(url, options);
   
-  if (res.status === 401 && Capacitor.isNativePlatform()) {
-    try {
-      const authResult = await GoogleAuth.refresh();
-      const newAccessToken = authResult.authentication.accessToken;
-      
+  if (res.status === 401) {
+    let newAccessToken = null;
+
+    if (Capacitor.isNativePlatform()) {
+      // 네이티브 환경: Capacitor GoogleAuth 갱신
+      try {
+        const authResult = await GoogleAuth.refresh();
+        newAccessToken = authResult.authentication.accessToken;
+      } catch (refreshErr) {
+        console.error('네이티브 백그라운드 토큰 갱신 실패', refreshErr);
+      }
+    } else {
+      // 웹 환경: GIS silent refresh
+      try {
+        newAccessToken = await doSilentRefresh();
+      } catch (refreshErr) {
+        console.error('웹 백그라운드 토큰 갱신 실패', refreshErr);
+      }
+    }
+
+    if (newAccessToken) {
       // 앱(App.jsx 등)의 전역 상태 업데이트를 위한 이벤트 발생
       window.dispatchEvent(new CustomEvent('token_refreshed', { detail: newAccessToken }));
       
       // 헤더를 갱신하고 재시도
       options.headers.Authorization = `Bearer ${newAccessToken}`;
       res = await fetch(url, options);
-    } catch (refreshErr) {
-      console.error('백그라운드 토큰 갱신 실패', refreshErr);
-      // 갱신 실패 시 기존처럼 401 유지
     }
   }
   return res;
 }
+
 
 /**
  * 응답의 에러를 체크하고 throw합니다.

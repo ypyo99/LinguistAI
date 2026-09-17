@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
-import { getStoreFolderId, deletePackFile } from '../utils/googleDrive';
+import { getStoreFolderId, deletePackFile, fetchWithAuth } from '../utils/googleDrive';
 import { showAuthAlert } from '../utils/authAlert';
 import { DebouncedInput } from './DebouncedInput';
 import LongPressButton from './LongPressButton';
@@ -47,7 +47,7 @@ export default function DataTab({ isActive, apiKey, setUser: appSetUser, setSent
     try {
       const folderId = await getStoreFolderId(user.accessToken);
       if (!folderId) { setPacks([]); setLoading(false); return; }
-      const res = await fetch(
+      const res = await fetchWithAuth(
         `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folderId}' in parents and trashed=false`)}&fields=files(id,name,description,owners(displayName,me),createdTime)`,
         { headers: { Authorization: `Bearer ${user.accessToken}` } }
       );
@@ -78,7 +78,7 @@ export default function DataTab({ isActive, apiKey, setUser: appSetUser, setSent
     if (!user || !user.accessToken || loadingId) return;
     setLoadingId(pack.id);
     try {
-      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${pack.id}?alt=media`, {
+      const res = await fetchWithAuth(`https://www.googleapis.com/drive/v3/files/${pack.id}?alt=media`, {
         headers: { Authorization: `Bearer ${user.accessToken}` }
       });
       if (res.status === 401) {
