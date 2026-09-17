@@ -94,7 +94,7 @@ export default function CreateTab({ apiKey, onGenerate }) {
   const getDifficultyRule = (diff) => {
     switch (diff) {
       case '초급': return '- STRICT RULE: Use very simple vocabulary, short sentences, and basic grammar (A1-A2 level).';
-      case '중급': return '- STRICT RULE: Use everyday conversational vocabulary, moderate sentence length, and common idioms (B1-B2 level).';
+      case '중급': return '- STRICT RULE: Use everyday conversational vocabulary, common idioms, and slightly longer compound/complex sentences (B1-B2 level, approx. 12-18 words per sentence). Connect thoughts naturally using conjunctions (e.g., because, although, when, while, since, if) or relative clauses (e.g., which, that, who) rather than brief single-clause sentences.';
       case '고급': return '- STRICT RULE: Use sophisticated vocabulary, complex grammar structures, and advanced/native idiomatic expressions (C1-C2 level).';
       default: return '';
     }
@@ -103,7 +103,7 @@ export default function CreateTab({ apiKey, onGenerate }) {
   const getQuestionLengthRule = (diff) => {
     switch (diff) {
       case '초급': return '- Question length: Very short and simple (1 sentence maximum).';
-      case '중급': return '- Question length: Moderate (1-2 sentences), providing a little context.';
+      case '중급': return '- Question length: Slightly longer and conversational (1-2 sentences), providing clear context or a realistic scenario.';
       case '고급': return '- Question length: Detailed and elaborate (2-3 sentences), asking for in-depth opinions or complex scenarios.';
       default: return '';
     }
@@ -436,13 +436,13 @@ Format: [{"question": "Question 1?", "modelAnswer": "A natural model answer here
                       : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'
                 }`}
               >
-                API 자동 생성
+                자동 생성
               </button>
               <button
                 onClick={() => setInputMode('manual')}
                 className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${inputMode === 'manual' ? 'bg-orange-500 dark:bg-orange-600 shadow-sm text-white' : 'text-on-surface-variant dark:text-on-dark-surface-variant hover:text-on-surface'}`}
               >
-                직접 붙여넣기
+                수동 생성
               </button>
             </div>
           </div>
