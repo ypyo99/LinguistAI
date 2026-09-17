@@ -285,6 +285,7 @@ function App() {
         streak={streak}
         onResetProgress={() => setStudiedIndices([])}
         onOpenSettings={() => setActiveTab('setup')}
+        activeTab={activeTab}
         onFocusMode={() => {
           // 현재 탭이 study가 아닌 경우만 이전 탭을 저장 (study → study는 복원 불필요)
           if (activeTab !== 'study') {
