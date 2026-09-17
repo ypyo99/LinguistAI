@@ -82,14 +82,6 @@ function App() {
   // 집중모드 진입 전 탭을 저장 (종료 시 복원하기 위함)
   const prevTabBeforeFocusRef = useRef(null);
 
-  // 집중모드 종료 시 이전 탭으로 복원
-  useEffect(() => {
-    if (!isCommuteMode && prevTabBeforeFocusRef.current) {
-      setActiveTab(prevTabBeforeFocusRef.current);
-      prevTabBeforeFocusRef.current = null;
-    }
-  }, [isCommuteMode, setActiveTab]);
-
   // ── 공유 상태 ──────────────────────────────
   const [apiKey, setApiKey] = useState(() => {
     try { return localStorage.getItem('linguist-api-key') || ''; }
@@ -107,6 +99,19 @@ function App() {
     { en: 'What time is check-out?', ko: '체크아웃 시간이 언제인가요?', vocab: { "check-out": "체크아웃", "what time": "몇 시" } },
     { en: 'I have a reservation under the name John.', ko: '존이라는 이름으로 예약했습니다.', vocab: { "reservation": "예약", "under the name": "~의 이름으로" } },
   ]);
+
+  const DEFAULT_ROLEPLAY_QUESTIONS = [
+    { question: "Excuse me, where is the nearest train station, and how long does it take to walk there?", modelAnswer: "Go straight down this street for two blocks, then turn right. You will see the main train station right across from the bank. It takes about five minutes to walk." },
+    { question: "I would like to book a table for two at 7 PM tonight. Do you have any window seats available?", modelAnswer: "Yes, we have a lovely table by the window at 7 PM. May I have your name and contact number for the reservation, please?" },
+    { question: "Could you please speak a little slower? I am still practicing my English.", modelAnswer: "Of course, no problem at all! I will speak more slowly and clearly. Please let me know if you need me to repeat anything." },
+    { question: "How much does this souvenir cost, and do you offer any discounts for multiple items?", modelAnswer: "This item is twenty dollars. If you buy three or more, we can offer a ten percent discount on the total purchase." },
+    { question: "Can I get a glass of water with ice, please? Also, where is the restroom?", modelAnswer: "Sure thing, here is your iced water. The restroom is down the hallway on your left, right next to the emergency exit." },
+    { question: "What do you recommend on the menu for someone who likes pasta?", modelAnswer: "I highly recommend our seafood cream pasta or the chef's special spicy tomato spaghetti. Both dishes are very popular." },
+    { question: "I am looking for a pharmacy nearby. Is there one open late at night?", modelAnswer: "Yes, there is a 24-hour pharmacy just around the corner, right next to the supermarket." },
+    { question: "Do you take credit cards, or do you only accept cash payments?", modelAnswer: "We accept all major credit cards as well as mobile payments and cash." },
+    { question: "What time is check-out tomorrow morning, and can I store my luggage here?", modelAnswer: "Check-out is at 11 AM tomorrow. We would be happy to store your luggage at the front desk for free until you are ready to depart." },
+    { question: "I have a reservation under the name John. Could you check if my room is ready?", modelAnswer: "Welcome, John! Let me check your booking. Yes, your deluxe room on the 5th floor is ready for check-in." }
+  ];
   
   const [packTitle, setPackTitle] = usePersistentState('linguist-pack-title', '');
   const actualPackTitle = (packTitle === '기본 학습 데이터 3개' || packTitle === '기본 학습 데이터 10개') ? '' : packTitle;
@@ -119,7 +124,22 @@ function App() {
   const [favorites, setFavorites] = usePersistentState('linguist-study-favorites', []);
   const [savedPacks, setSavedPacks] = usePersistentState('linguist-saved-packs', []);
   const [currentPackId, setCurrentPackId] = usePersistentState('linguist-current-pack-id', null);
-  const [roleplayQuestions, setRoleplayQuestions] = usePersistentState('linguist-roleplay-questions', []);
+  const [roleplayQuestions, setRoleplayQuestions] = usePersistentState('linguist-roleplay-questions', DEFAULT_ROLEPLAY_QUESTIONS);
+
+  const effectiveRoleplayQuestions = (roleplayQuestions && roleplayQuestions.length > 0)
+    ? roleplayQuestions
+    : (sentences && sentences.length > 0
+        ? sentences.map(s => ({ question: s.en, modelAnswer: '' }))
+        : DEFAULT_ROLEPLAY_QUESTIONS);
+
+  // 집중모드 종료 시 이전 탭으로 복원
+  useEffect(() => {
+    if (!isCommuteMode && prevTabBeforeFocusRef.current) {
+      setActiveTab(prevTabBeforeFocusRef.current);
+      prevTabBeforeFocusRef.current = null;
+      roleplayProgressRef.current = { questions: null, index: 0 };
+    }
+  }, [isCommuteMode, setActiveTab]);
 
   // ── 스트릭 (연속 학습일) 관리 ──────────────────────────
   const [streak, setStreak] = usePersistentState('linguist-streak', 0);
@@ -281,14 +301,24 @@ function App() {
 
   // 프리토킹 탭에서 집중모드 진입 시 사용할 문장 처리
   const isRoleplayCommute = isCommuteMode && prevTabBeforeFocusRef.current === 'roleplay';
-  const studyTabSentences = isRoleplayCommute && roleplayProgressRef.current.questions
-    ? roleplayProgressRef.current.questions.map(q => {
+  
+  // 프리토킹 탭에서 진입한 경우:
+  // 1) 프리토킹 플레이 중이었다면 진행 중인 질문 목록 및 진행 인덱스 사용
+  // 2) 홈 화면에서 바로 진입했다면 현재 팩의 전체 프리토킹 질문 목록 및 첫 번째 인덱스(0) 사용
+  const targetRoleplayQuestions = (isRoleplayCommute && roleplayProgressRef.current.questions && roleplayProgressRef.current.questions.length > 0)
+    ? roleplayProgressRef.current.questions
+    : effectiveRoleplayQuestions;
+
+  const studyTabSentences = isRoleplayCommute && targetRoleplayQuestions && targetRoleplayQuestions.length > 0
+    ? targetRoleplayQuestions.map(q => {
         if (typeof q === 'string') return { en: q, ko: '', type: 'roleplay' };
         return { en: q.question || '', ko: q.modelAnswer || '', type: 'roleplay' };
       }).filter(s => s.en)
     : sentences;
   
-  const initialCommuteIndex = isRoleplayCommute ? roleplayProgressRef.current.index : 0;
+  const initialCommuteIndex = (isRoleplayCommute && roleplayProgressRef.current.questions) 
+    ? roleplayProgressRef.current.index 
+    : 0;
   
   // 프리토킹 문장을 읽을 때는 원본 학습 데이터의 진척도(progress, favorites)에 영향을 주지 않도록 함
   const studyTabStudiedIndices = isRoleplayCommute ? [] : studiedIndices;
@@ -321,7 +351,7 @@ function App() {
           <StudyTab sentences={studyTabSentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={studyTabSetStudiedIndices} studiedIndices={studyTabStudiedIndices} favorites={studyTabFavorites} setFavorites={studyTabSetFavorites} onSavePack={handleSavePack} user={user} isCommuteMode={isCommuteMode} setIsCommuteMode={setIsCommuteMode} isActive={activeTab === 'study'} initialCommuteIndex={initialCommuteIndex} />
         </div>
         <div style={{ display: activeTab === 'roleplay' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <RoleplayTab apiKey={apiKey} ttsApiKey={ttsApiKey} sentences={sentences} roleplayQuestions={roleplayQuestions} setRoleplayQuestions={setRoleplayQuestions} packTitle={displayTitle} isActive={activeTab === 'roleplay'} onProgress={(questions, index) => { roleplayProgressRef.current = { questions, index }; }} />
+          <RoleplayTab apiKey={apiKey} ttsApiKey={ttsApiKey} sentences={sentences} roleplayQuestions={effectiveRoleplayQuestions} setRoleplayQuestions={setRoleplayQuestions} packTitle={displayTitle} isActive={activeTab === 'roleplay'} onProgress={(questions, index) => { roleplayProgressRef.current = { questions, index }; }} />
         </div>
         <div style={{ display: activeTab === 'quiz' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <QuizTab sentences={sentences} />

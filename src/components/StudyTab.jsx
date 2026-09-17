@@ -499,15 +499,47 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     const justEnteredCommuteMode = isCommuteMode && !prevIsCommuteModeRef.current;
     prevIsCommuteModeRef.current = isCommuteMode;
 
-    if (justEnteredCommuteMode && !isPlaying && singleIdx === null && sentences.length > 0) {
-      // 짧은 딜레이를 두어 탭 전환 및 컴포넌트 마운트가 완료된 후 재생 시작
-      const t = setTimeout(() => {
-        handlePlayAll(initialCommuteIndex ?? null);
-      }, 150);
-      return () => clearTimeout(t);
+    if (justEnteredCommuteMode && sentences.length > 0) {
+      const isRoleplayMode = sentences[0]?.type === 'roleplay';
+      if (isRoleplayMode) {
+        // 프리토킹 모드인 경우 기존 일반 학습 재생을 멈추고 지정된 인덱스부터 프리토킹 질문 재생
+        if (isPlaying || singleIdx !== null) {
+          shouldStop.current = true;
+          playRunId.current++;
+          ttsStop();
+          setIsPlaying(false);
+          setSingleIdx(null);
+          setCurrentIdx(null);
+        }
+        const t = setTimeout(() => {
+          handlePlayAll(initialCommuteIndex ?? 0);
+        }, 150);
+        return () => clearTimeout(t);
+      } else if (!isPlaying && singleIdx === null) {
+        // 학습 탭에서 진입 시 재생 중이 아니면 시작
+        const t = setTimeout(() => {
+          handlePlayAll(initialCommuteIndex ?? null);
+        }, 150);
+        return () => clearTimeout(t);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCommuteMode]);
+  }, [isCommuteMode, initialCommuteIndex]);
+
+  // 비활성 탭 전환 시 (집중모드가 아닐 때) 일반 재생 자동 정지
+  useEffect(() => {
+    if (!isActive && !isCommuteMode) {
+      if (isPlaying || singleIdx !== null) {
+        shouldStop.current = true;
+        playRunId.current++;
+        ttsStop();
+        setIsPlaying(false);
+        setCurrentIdx(null);
+        setSingleIdx(null);
+        setIsWaiting(false);
+      }
+    }
+  }, [isActive, isCommuteMode, isPlaying, singleIdx, ttsStop]);
 
   // ── 출퇴근 모드 컨트롤 ─────────────────────────────────
   const handleNext = useCallback(() => {
