@@ -260,7 +260,7 @@ export default function LibraryTab({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#F97316', fontWeight: 'bold' }}>
             <i className="material-symbols-outlined" style={{ fontSize: '15px' }}>cloud_sync</i>
-            내 드라이브 › LinguistAI › 보관함 (로컬 동시 저장됨)
+            내 드라이브 › LinguistAI › 보관함
           </div>
           <button
             onClick={loadFromDrive}
@@ -281,7 +281,7 @@ export default function LibraryTab({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--on-surface-variant, #64748b)', fontWeight: '600' }}>
             <i className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--amber)' }}>smartphone</i>
-            기기 로컬 보관함 (구글 로그인 시 클라우드와 자동 동기화)
+            기기 로컬 보관함
           </div>
         </div>
       )}
