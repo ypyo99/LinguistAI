@@ -10,7 +10,7 @@ function normalizeQuestions(questions) {
   }).filter(Boolean);
 }
 
-function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
+function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey, onProgress }) {
   const normalized = normalizeQuestions(questions);
   const [shuffledQuestions] = useState(() => [...normalized].sort(() => Math.random() - 0.5));
   const [currentQIndex, setCurrentQIndex] = useState(0);
@@ -29,7 +29,10 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
   useEffect(() => {
     setIsStopped(false);
     isStoppedRef.current = false;
-  }, [currentQIndex]);
+    if (onProgress) {
+      onProgress(shuffledQuestions, currentQIndex);
+    }
+  }, [currentQIndex, shuffledQuestions, onProgress]);
 
   const toggleStop = () => {
     const next = !isStoppedRef.current;
@@ -279,7 +282,7 @@ function TopicQAPresenter({ questions, packTitle, onBack, ttsApiKey }) {
 }
 
 // ── Main RoleplayTab ────────────────────────────────────────────────────────
-export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], roleplayQuestions = [], setRoleplayQuestions, packTitle = '', isActive }) {
+export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], roleplayQuestions = [], setRoleplayQuestions, packTitle = '', isActive, onProgress }) {
   const [activeView, setActiveView] = useState('home'); // 'home' | 'qa'
 
   const hasQuestions = roleplayQuestions.length > 0;
@@ -306,6 +309,7 @@ export default function RoleplayTab({ apiKey, ttsApiKey, sentences = [], rolepla
         packTitle={packTitle}
         ttsApiKey={ttsApiKey}
         onBack={() => setActiveView('home')}
+        onProgress={onProgress}
       />
     );
   }

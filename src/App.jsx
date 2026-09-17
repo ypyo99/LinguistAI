@@ -276,14 +276,19 @@ function App() {
     setTtsApiKey(key);
   };
 
+  // ── 집중모드 진입 상태 공유 ──────────────────────────────
+  const roleplayProgressRef = useRef({ questions: null, index: 0 });
+
   // 프리토킹 탭에서 집중모드 진입 시 사용할 문장 처리
   const isRoleplayCommute = isCommuteMode && prevTabBeforeFocusRef.current === 'roleplay';
-  const studyTabSentences = isRoleplayCommute
-    ? roleplayQuestions.map(q => {
+  const studyTabSentences = isRoleplayCommute && roleplayProgressRef.current.questions
+    ? roleplayProgressRef.current.questions.map(q => {
         if (typeof q === 'string') return { en: q, ko: '' };
         return { en: q.question || '', ko: q.modelAnswer || '' };
       }).filter(s => s.en)
     : sentences;
+  
+  const initialCommuteIndex = isRoleplayCommute ? roleplayProgressRef.current.index : 0;
   
   // 프리토킹 문장을 읽을 때는 원본 학습 데이터의 진척도(progress, favorites)에 영향을 주지 않도록 함
   const studyTabStudiedIndices = isRoleplayCommute ? [] : studiedIndices;
@@ -313,10 +318,10 @@ function App() {
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="content">
         <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>
-          <StudyTab sentences={studyTabSentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={studyTabSetStudiedIndices} studiedIndices={studyTabStudiedIndices} favorites={studyTabFavorites} setFavorites={studyTabSetFavorites} onSavePack={handleSavePack} user={user} isCommuteMode={isCommuteMode} setIsCommuteMode={setIsCommuteMode} isActive={activeTab === 'study'} />
+          <StudyTab sentences={studyTabSentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={studyTabSetStudiedIndices} studiedIndices={studyTabStudiedIndices} favorites={studyTabFavorites} setFavorites={studyTabSetFavorites} onSavePack={handleSavePack} user={user} isCommuteMode={isCommuteMode} setIsCommuteMode={setIsCommuteMode} isActive={activeTab === 'study'} initialCommuteIndex={initialCommuteIndex} />
         </div>
         <div style={{ display: activeTab === 'roleplay' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <RoleplayTab apiKey={apiKey} ttsApiKey={ttsApiKey} sentences={sentences} roleplayQuestions={roleplayQuestions} setRoleplayQuestions={setRoleplayQuestions} packTitle={displayTitle} isActive={activeTab === 'roleplay'} />
+          <RoleplayTab apiKey={apiKey} ttsApiKey={ttsApiKey} sentences={sentences} roleplayQuestions={roleplayQuestions} setRoleplayQuestions={setRoleplayQuestions} packTitle={displayTitle} isActive={activeTab === 'roleplay'} onProgress={(questions, index) => { roleplayProgressRef.current = { questions, index }; }} />
         </div>
         <div style={{ display: activeTab === 'quiz' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <QuizTab sentences={sentences} />

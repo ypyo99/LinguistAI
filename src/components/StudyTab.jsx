@@ -85,7 +85,7 @@ function AutoWidthSelect({ value, onChange, children, className }) {
 }
 
 // ── 메인 컴포넌트 ────────────────────────────────────
-export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setStudiedIndices, studiedIndices, favorites, setFavorites, onSavePack, user, isCommuteMode, setIsCommuteMode, isActive }) {
+export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setStudiedIndices, studiedIndices, favorites, setFavorites, onSavePack, user, isCommuteMode, setIsCommuteMode, isActive, initialCommuteIndex = 0 }) {
   const [showSettings, setShowSettings] = usePersistentState('linguist-study-settings', false);
   const [showList, setShowList] = usePersistentState('linguist-study-list', true);
   const favoritesRef = useRef(favorites);
@@ -490,7 +490,7 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
     if (justEnteredCommuteMode && !isPlaying && singleIdx === null && sentences.length > 0) {
       // 짧은 딜레이를 두어 탭 전환 및 컴포넌트 마운트가 완료된 후 재생 시작
       const t = setTimeout(() => {
-        handlePlayAll();
+        handlePlayAll(initialCommuteIndex ?? null);
       }, 150);
       return () => clearTimeout(t);
     }
