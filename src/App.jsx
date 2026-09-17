@@ -276,6 +276,21 @@ function App() {
     setTtsApiKey(key);
   };
 
+  // 프리토킹 탭에서 집중모드 진입 시 사용할 문장 처리
+  const isRoleplayCommute = isCommuteMode && prevTabBeforeFocusRef.current === 'roleplay';
+  const studyTabSentences = isRoleplayCommute
+    ? roleplayQuestions.map(q => {
+        if (typeof q === 'string') return { en: q, ko: '' };
+        return { en: q.question || '', ko: q.modelAnswer || '' };
+      }).filter(s => s.en)
+    : sentences;
+  
+  // 프리토킹 문장을 읽을 때는 원본 학습 데이터의 진척도(progress, favorites)에 영향을 주지 않도록 함
+  const studyTabStudiedIndices = isRoleplayCommute ? [] : studiedIndices;
+  const studyTabSetStudiedIndices = isRoleplayCommute ? undefined : setStudiedIndices;
+  const studyTabFavorites = isRoleplayCommute ? [] : favorites;
+  const studyTabSetFavorites = isRoleplayCommute ? undefined : setFavorites;
+
   return (
     <div className="frame" id="frame">
       <Header 
@@ -298,7 +313,7 @@ function App() {
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="content">
         <div style={{ display: activeTab === 'study' ? 'block' : 'none' }}>
-          <StudyTab sentences={sentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={setStudiedIndices} studiedIndices={studiedIndices} favorites={favorites} setFavorites={setFavorites} onSavePack={handleSavePack} user={user} isCommuteMode={isCommuteMode} setIsCommuteMode={setIsCommuteMode} isActive={activeTab === 'study'} />
+          <StudyTab sentences={studyTabSentences} apiKey={apiKey} ttsApiKey={ttsApiKey} setStudiedIndices={studyTabSetStudiedIndices} studiedIndices={studyTabStudiedIndices} favorites={studyTabFavorites} setFavorites={studyTabSetFavorites} onSavePack={handleSavePack} user={user} isCommuteMode={isCommuteMode} setIsCommuteMode={setIsCommuteMode} isActive={activeTab === 'study'} />
         </div>
         <div style={{ display: activeTab === 'roleplay' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <RoleplayTab apiKey={apiKey} ttsApiKey={ttsApiKey} sentences={sentences} roleplayQuestions={roleplayQuestions} setRoleplayQuestions={setRoleplayQuestions} packTitle={displayTitle} isActive={activeTab === 'roleplay'} />
