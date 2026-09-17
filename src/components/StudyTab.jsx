@@ -479,6 +479,24 @@ export default function StudyTab({ sentences = [], apiKey, ttsApiKey = '', setSt
   const activeIdx = currentIdx !== null ? currentIdx : singleIdx;
   const activeSentence = activeIdx !== null ? sentences[activeIdx] : null;
 
+  // ── 집중모드 진입 시 자동 재생 시작 ────────────────────────────────────────
+  // 다른 탭(예: 프리토킹)에서 Header의 집중모드 버튼으로 진입하면
+  // StudyTab이 재생 중이 아닌 상태에서 isCommuteMode가 켜지므로 자동 재생해야 합니다.
+  const prevIsCommuteModeRef = useRef(false);
+  useEffect(() => {
+    const justEnteredCommuteMode = isCommuteMode && !prevIsCommuteModeRef.current;
+    prevIsCommuteModeRef.current = isCommuteMode;
+
+    if (justEnteredCommuteMode && !isPlaying && singleIdx === null && sentences.length > 0) {
+      // 짧은 딜레이를 두어 탭 전환 및 컴포넌트 마운트가 완료된 후 재생 시작
+      const t = setTimeout(() => {
+        handlePlayAll();
+      }, 150);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCommuteMode]);
+
   // ── 출퇴근 모드 컨트롤 ─────────────────────────────────
   const handleNext = useCallback(() => {
     if (!currentListRef.current) return;
