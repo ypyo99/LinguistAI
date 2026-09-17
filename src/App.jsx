@@ -79,6 +79,16 @@ function App() {
 
   // ── 집중모드 상태 ──────────────────────────────
   const [isCommuteMode, setIsCommuteMode] = useState(false);
+  // 집중모드 진입 전 탭을 저장 (종료 시 복원하기 위함)
+  const prevTabBeforeFocusRef = useRef(null);
+
+  // 집중모드 종료 시 이전 탭으로 복원
+  useEffect(() => {
+    if (!isCommuteMode && prevTabBeforeFocusRef.current) {
+      setActiveTab(prevTabBeforeFocusRef.current);
+      prevTabBeforeFocusRef.current = null;
+    }
+  }, [isCommuteMode, setActiveTab]);
 
   // ── 공유 상태 ──────────────────────────────
   const [apiKey, setApiKey] = useState(() => {
@@ -275,7 +285,14 @@ function App() {
         streak={streak}
         onResetProgress={() => setStudiedIndices([])}
         onOpenSettings={() => setActiveTab('setup')}
-        onFocusMode={() => { setActiveTab('study'); setIsCommuteMode(true); }}
+        onFocusMode={() => {
+          // 현재 탭이 study가 아닌 경우만 이전 탭을 저장 (study → study는 복원 불필요)
+          if (activeTab !== 'study') {
+            prevTabBeforeFocusRef.current = activeTab;
+          }
+          setActiveTab('study');
+          setIsCommuteMode(true);
+        }}
       />
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="content">
